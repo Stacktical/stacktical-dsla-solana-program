@@ -1,5 +1,10 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount};
+use anchor_spl::token::{Mint, Token, TokenAccount};
+use {
+    anchor_lang::{
+        prelude::*, solana_program::program::invoke, AnchorDeserialize, AnchorSerialize, Key,
+    },
+    metaplex_token_metadata::instruction::create_metadata_accounts,
+};
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
@@ -22,10 +27,17 @@ pub mod dsla_stacktical_contracts_solana {
     }
 
     pub fn stake(ctx: Context<Stake>, amount: u64, position: Position) -> ProgramResult {
-        // get token amount and store to
+        let data: Metadata = Metadata {
+            sla_address: ctx.program_id.clone(),
+            uri: String::new(),
+            name: String::from(""),
+            symbol: String::from(""),
+            position,
+        }; // TODO: sla stake rapresentation
+           // get token amount and store to DSLA pool
         anchor_spl::token::transfer(
             CpiContext::new_with_signer(
-                ctx.accounts.lp_token.to_account_info(),
+                ctx.accounts.dsla_pool.to_account_info(),
                 anchor_spl::token::Transfer {
                     from: ctx.accounts.payer.to_account_info(),
                     to: ctx.accounts.dsla_pool.to_account_info(),
@@ -36,37 +48,58 @@ pub mod dsla_stacktical_contracts_solana {
             amount,
         )?;
 
-        match position {
-            Position::Long => {
-                anchor_spl::token::mint_to(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.lp_token.to_account_info(),
-                        anchor_spl::token::MintTo {
-                            mint: ctx.accounts.mint.to_account_info(),
-                            to: ctx.accounts.payer.to_account_info(),
-                            authority: ctx.accounts.mint.to_account_info(),
-                        },
-                        &[&[&"mint".as_bytes()]],
-                    ),
-                    amount,
-                )?;
-            }
+        let creator: metaplex_token_metadata::state::Creator =
+            metaplex_token_metadata::state::Creator {
+                address: ctx.accounts.payer.key(),
+                verified: true,
+                share: 0,
+            };
 
-            Position::Short => {
-                anchor_spl::token::mint_to(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.sp_token.to_account_info(),
-                        anchor_spl::token::MintTo {
-                            mint: ctx.accounts.mint.to_account_info(),
-                            to: ctx.accounts.payer.to_account_info(),
-                            authority: ctx.accounts.mint.to_account_info(),
-                        },
-                        &[&[&"mint".as_bytes()]],
-                    ),
-                    amount,
-                )?;
-            }
-        }
+        invoke(
+            &create_metadata_accounts(
+                ctx.accounts.p_nft.key(),
+                ctx.accounts.metadata.key(),
+                ctx.accounts.mint.key(),
+                ctx.accounts.payer.key(),
+                ctx.accounts.payer.key(),
+                ctx.accounts.payer.key(), // FIXME:change authority to be the program
+                data.name,
+                data.symbol,
+                data.uri,
+                Some(vec![creator]),
+                0,
+                true,
+                false,
+            ),
+            &[
+                ctx.accounts.metadata.to_account_info().clone(),
+                ctx.accounts.mint.to_account_info().clone(),
+                ctx.accounts.payer.to_account_info().clone(),
+                ctx.accounts.payer.to_account_info().clone(),
+                ctx.accounts.payer.to_account_info().clone(),
+                ctx.accounts
+                    .token_metadata_program
+                    .to_account_info()
+                    .clone(),
+                ctx.accounts.token_program.to_account_info().clone(),
+                ctx.accounts.system_program.to_account_info().clone(),
+                ctx.accounts.rent.to_account_info().clone(),
+            ],
+        )?;
+
+        anchor_spl::token::mint_to(
+            CpiContext::new_with_signer(
+                ctx.accounts.p_nft.to_account_info(),
+                anchor_spl::token::MintTo {
+                    mint: ctx.accounts.mint.to_account_info(),
+                    to: ctx.accounts.payer.to_account_info(),
+                    authority: ctx.accounts.mint.to_account_info(),
+                },
+                &[&[&"mint".as_bytes()]],
+            ),
+            amount,
+        )?;
+
         Ok(())
     }
 }
@@ -83,8 +116,7 @@ pub struct Initialize<'info> {
 #[instruction(mint_bump: u8, amount: u64)]
 pub struct Stake<'info> {
     pub payer: Signer<'info>,
-    pub lp_token: Account<'info, TokenAccount>,
-    pub sp_token: Account<'info, TokenAccount>,
+    pub p_nft: Account<'info, TokenAccount>,
     pub dsla_pool: Account<'info, TokenAccount>,
     #[account(
         init,
@@ -97,7 +129,10 @@ pub struct Stake<'info> {
     pub mint: Account<'info, Mint>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+    pub token_metadata_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
+    #[account()]
+    pub metadata: Account<'info, Metadata>,
 }
 
 #[account]
@@ -107,6 +142,15 @@ pub struct SLA {
     pub breached: bool,
     pub timestamp_start: u128,
     pub duration: u128,
+}
+
+#[account]
+pub struct Metadata {
+    pub sla_address: Pubkey,
+    pub uri: String,
+    pub symbol: String,
+    pub name: String,
+    pub position: Position,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
