@@ -1,21 +1,22 @@
-use anchor_spl::token::{Mint, Token, TokenAccount};
-use {
-    anchor_lang::{
-        prelude::*, solana_program::program::invoke, AnchorDeserialize, AnchorSerialize, Key,
-    },
-    metaplex_token_metadata::instruction::create_metadata_accounts,
-};
+use anchor_lang::prelude::*;
+use anchor_spl::token::{self, Mint, SetAuthority, TokenAccount, Transfer};
+use spl_token::instruction::AuthorityType;
+
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
 pub mod dsla_stacktical_contracts_solana {
     use super::*;
-    pub fn initialize_sla(
+
+    const SLA_PDA_SEED: &[u8] = b"sla";
+
+    pub fn initialize(
         ctx: Context<Initialize>,
         slo_value: i128,
         slo_operand: Operand,
         timestamp_start: u128,
         duration: u128,
+        initializer_amount: u64,
     ) -> ProgramResult {
         let sla = &mut ctx.accounts.sla;
         sla.slo_value = slo_value;
@@ -23,81 +24,17 @@ pub mod dsla_stacktical_contracts_solana {
         sla.breached = false;
         sla.timestamp_start = timestamp_start;
         sla.duration = duration;
-        Ok(())
-    }
 
-    pub fn stake(ctx: Context<Stake>, amount: u64, position: Position) -> ProgramResult {
-        let data: Metadata = Metadata {
-            sla_address: ctx.program_id.clone(),
-            uri: String::new(),
-            name: String::from(""),
-            symbol: String::from(""),
-            position,
-        }; // TODO: sla stake rapresentation
-           // get token amount and store to DSLA pool
-        anchor_spl::token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.dsla_pool.to_account_info(),
-                anchor_spl::token::Transfer {
-                    from: ctx.accounts.payer.to_account_info(),
-                    to: ctx.accounts.dsla_pool.to_account_info(),
-                    authority: ctx.accounts.payer.to_account_info(),
-                },
-                &[&[&"stake".as_bytes()]],
-            ),
-            amount,
+        let (vault_authority, _) = Pubkey::find_program_address(&[SLA_PDA_SEED], ctx.program_id);
+        token::set_authority(
+            ctx.accounts.into_set_authority_context(),
+            AuthorityType::AccountOwner,
+            Some(vault_authority),
         )?;
 
-        let creator: metaplex_token_metadata::state::Creator =
-            metaplex_token_metadata::state::Creator {
-                address: ctx.accounts.payer.key(),
-                verified: true,
-                share: 0,
-            };
-
-        invoke(
-            &create_metadata_accounts(
-                ctx.accounts.p_nft.key(),
-                ctx.accounts.metadata.key(),
-                ctx.accounts.mint.key(),
-                ctx.accounts.payer.key(),
-                ctx.accounts.payer.key(),
-                ctx.accounts.payer.key(), // FIXME:change authority to be the program
-                data.name,
-                data.symbol,
-                data.uri,
-                Some(vec![creator]),
-                0,
-                true,
-                false,
-            ),
-            &[
-                ctx.accounts.metadata.to_account_info().clone(),
-                ctx.accounts.mint.to_account_info().clone(),
-                ctx.accounts.payer.to_account_info().clone(),
-                ctx.accounts.payer.to_account_info().clone(),
-                ctx.accounts.payer.to_account_info().clone(),
-                ctx.accounts
-                    .token_metadata_program
-                    .to_account_info()
-                    .clone(),
-                ctx.accounts.token_program.to_account_info().clone(),
-                ctx.accounts.system_program.to_account_info().clone(),
-                ctx.accounts.rent.to_account_info().clone(),
-            ],
-        )?;
-
-        anchor_spl::token::mint_to(
-            CpiContext::new_with_signer(
-                ctx.accounts.p_nft.to_account_info(),
-                anchor_spl::token::MintTo {
-                    mint: ctx.accounts.mint.to_account_info(),
-                    to: ctx.accounts.payer.to_account_info(),
-                    authority: ctx.accounts.mint.to_account_info(),
-                },
-                &[&[&"mint".as_bytes()]],
-            ),
-            amount,
+        token::transfer(
+            ctx.accounts.into_transfer_to_pda_context(),
+            initializer_amount,
         )?;
 
         Ok(())
@@ -105,34 +42,25 @@ pub mod dsla_stacktical_contracts_solana {
 }
 
 #[derive(Accounts)]
+#[instruction(initializer_amount: u64)]
 pub struct Initialize<'info> {
-    #[account(init, payer = owner, space = 1024)]
-    pub sla: Account<'info, SLA>,
-    pub owner: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-#[instruction(mint_bump: u8, amount: u64)]
-pub struct Stake<'info> {
-    pub payer: Signer<'info>,
-    pub p_nft: Account<'info, TokenAccount>,
-    pub dsla_pool: Account<'info, TokenAccount>,
+    #[account(mut, signer)]
+    pub initializer: AccountInfo<'info>,
+    pub mint: Account<'info, Mint>,
     #[account(
         init,
-        payer = payer,
-        seeds = [b"mint".as_ref()],
+        seeds = [b"token-seed".as_ref()],
         bump,
-        mint::decimals = 6,
-        mint::authority = mint
+        payer = initializer,
+        token::mint = mint,
+        token::authority = initializer,
     )]
-    pub mint: Account<'info, Mint>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-    pub token_metadata_program: Program<'info, Token>,
+    pub vault_account: Account<'info, TokenAccount>,
+    pub sla: Box<Account<'info, SLA>>,
+    pub initializer_deposit_token_account: Account<'info, TokenAccount>,
+    pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
-    #[account()]
-    pub metadata: Account<'info, Metadata>,
+    pub token_program: AccountInfo<'info>,
 }
 
 #[account]
@@ -169,4 +97,26 @@ pub enum Position {
 pub enum ErrorCode {
     #[msg("You are not authorized to perform this action.")]
     Unauthorized,
+}
+
+impl<'info> Initialize<'info> {
+    fn into_transfer_to_pda_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        let cpi_accounts = Transfer {
+            from: self
+                .initializer_deposit_token_account
+                .to_account_info()
+                .clone(),
+            to: self.vault_account.to_account_info().clone(),
+            authority: self.initializer.clone(),
+        };
+        CpiContext::new(self.token_program.clone(), cpi_accounts)
+    }
+
+    fn into_set_authority_context(&self) -> CpiContext<'_, '_, '_, 'info, SetAuthority<'info>> {
+        let cpi_accounts = SetAuthority {
+            account_or_mint: self.vault_account.to_account_info().clone(),
+            current_authority: self.initializer.clone(),
+        };
+        CpiContext::new(self.token_program.clone(), cpi_accounts)
+    }
 }
