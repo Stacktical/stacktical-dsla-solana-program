@@ -1,5 +1,10 @@
 # DSLA on Solana
 
-## Testing
+## Build
 
-`anchor test`
+- `yarn install`
+- `anchor build`
+
+## Test
+- `yarn install`
+- `anchor test`
