@@ -5,7 +5,7 @@ use spl_token::instruction::AuthorityType;
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
-pub mod dsla_stacktical_contracts_solana {
+pub mod stacktical_dsla_contracts_solana {
     use super::*;
 
     const SLA_PDA_SEED: &[u8] = b"sla";
@@ -17,7 +17,7 @@ pub mod dsla_stacktical_contracts_solana {
         timestamp_start: u128,
         duration: u128,
         initializer_amount: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let sla = &mut ctx.accounts.sla;
         sla.slo_value = slo_value;
         sla.slo_operand = slo_operand;
@@ -93,7 +93,7 @@ pub enum Position {
     Short,
 }
 
-#[error]
+#[error_code]
 pub enum ErrorCode {
     #[msg("You are not authorized to perform this action.")]
     Unauthorized,

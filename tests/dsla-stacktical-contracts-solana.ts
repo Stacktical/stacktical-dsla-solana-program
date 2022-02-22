@@ -5,24 +5,22 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
-  Connection,
-  Commitment,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 
 import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { expect } from "chai";
 
-import { DslaStackticalContractsSolana } from "../target/types/dsla_stacktical_contracts_solana";
+import { StackticalDslaContractsSolana } from "../target/types/stacktical_dsla_contracts_solana";
 
-describe("dsla-stacktical-contracts-solana", () => {
+describe("stacktical-dsla-contracts-solana", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.Provider.env();
 
   anchor.setProvider(provider);
 
   const program = anchor.workspace
-    .DslaStackticalContractsSolana as Program<DslaStackticalContractsSolana>;
+    .StackticalDslaContractsSolana as Program<StackticalDslaContractsSolana>;
 
   let mintDSLA = null as Token;
   let mintPFT = null as Token;
