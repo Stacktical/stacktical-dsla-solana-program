@@ -26,6 +26,7 @@ pub mod stacktical_dsla_contracts_solana {
         sla.duration = duration;
 
         let (vault_authority, _) = Pubkey::find_program_address(&[SLA_PDA_SEED], ctx.program_id);
+
         token::set_authority(
             ctx.accounts.into_set_authority_context(),
             AuthorityType::AccountOwner,

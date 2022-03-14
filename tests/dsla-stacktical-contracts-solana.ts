@@ -155,6 +155,7 @@ describe("stacktical-dsla-contracts-solana", () => {
       user2MainAccount.publicKey
     );
   });
+
   it("Account are initialized correctly!", async () => {
     await mintToChecked(
       provider.connection,
@@ -189,7 +190,6 @@ describe("stacktical-dsla-contracts-solana", () => {
       );
     vault_authority_pda = _vault_authority_pda;
 
-    console.log(vault_authority_pda);
     await program.rpc.initialize(
       sloValue,
       sloOperand,
