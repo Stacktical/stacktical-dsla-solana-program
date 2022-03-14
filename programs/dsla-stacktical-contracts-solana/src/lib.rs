@@ -44,6 +44,7 @@ pub mod stacktical_dsla_contracts_solana {
 #[derive(Accounts)]
 #[instruction(initializer_amount: u64)]
 pub struct Initialize<'info> {
+    /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut, signer)]
     pub initializer: AccountInfo<'info>,
     pub mint: Account<'info, Mint>,
@@ -56,10 +57,13 @@ pub struct Initialize<'info> {
         token::authority = initializer,
     )]
     pub vault_account: Account<'info, TokenAccount>,
+    #[account(zero)]
     pub sla: Box<Account<'info, SLA>>,
     pub initializer_deposit_token_account: Account<'info, TokenAccount>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
     pub token_program: AccountInfo<'info>,
 }
 
