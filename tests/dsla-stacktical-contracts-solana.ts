@@ -8,7 +8,13 @@ import {
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  createMint,
+  createAssociatedTokenAccount,
+  mintToChecked,
+  getAccount,
+} from "@solana/spl-token";
 import { expect } from "chai";
 
 import { StackticalDslaContractsSolana } from "../target/types/stacktical_dsla_contracts_solana";
@@ -22,17 +28,17 @@ describe("stacktical-dsla-contracts-solana", () => {
   const program = anchor.workspace
     .StackticalDslaContractsSolana as Program<StackticalDslaContractsSolana>;
 
-  let mintDSLA = null as Token;
-  let mintPFT = null as Token;
+  let mintCustomPubkey = null as PublicKey;
+  let mintPFTPubkey = null as PublicKey;
 
-  let initializerTokenAccountDSLA = null;
-  let initializerTokenAccountPFT = null;
+  let initializerTokenAccountCustomPubkey = null;
+  let initializerTokenAccountPFTPubkey = null;
 
-  let user1TokenAccountDSLA = null;
-  let user1TokenAccountPFT = null;
+  let user1TokenAccountCustomPubkey = null;
+  let user1TokenAccountPFTPubkey = null;
 
-  let user2TokenAccountDSLA = null;
-  let user2TokenAccountPFT = null;
+  let user2TokenAccountCustomPubkey = null;
+  let user2TokenAccountPFTPubkey = null;
 
   let vault_account_pda = null;
   let vault_account_bump = null;
@@ -53,13 +59,12 @@ describe("stacktical-dsla-contracts-solana", () => {
   const user1MainAccount = anchor.web3.Keypair.generate();
   const user2MainAccount = anchor.web3.Keypair.generate();
 
-  it("Is initialized!", async () => {
+  before(async () => {
     // Airdropping tokens to a payer.
     await provider.connection.confirmTransaction(
       await provider.connection.requestAirdrop(payer.publicKey, funding),
       "processed"
     );
-
     // Fund Main Accounts
     await provider.send(
       (() => {
@@ -86,62 +91,86 @@ describe("stacktical-dsla-contracts-solana", () => {
       [payer]
     );
 
-    mintDSLA = await Token.createMint(
+    mintCustomPubkey = await createMint(
       provider.connection,
       payer,
       mintAuthority.publicKey,
       null,
       18,
+      undefined,
+      undefined,
       TOKEN_PROGRAM_ID
     );
 
-    mintPFT = await Token.createMint(
+    mintPFTPubkey = await createMint(
       provider.connection,
       payer,
       mintAuthority.publicKey,
       null,
       18,
+      undefined,
+      undefined,
       TOKEN_PROGRAM_ID
     );
 
     // initializer
-    initializerTokenAccountDSLA = await mintDSLA.createAccount(
+    initializerTokenAccountCustomPubkey = await createAssociatedTokenAccount(
+      provider.connection,
+      initializerMainAccount,
+      mintCustomPubkey,
       initializerMainAccount.publicKey
     );
-    initializerTokenAccountPFT = await mintPFT.createAccount(
+    initializerTokenAccountPFTPubkey = await createAssociatedTokenAccount(
+      provider.connection,
+      initializerMainAccount,
+      mintPFTPubkey,
       initializerMainAccount.publicKey
     );
 
     // user 1
-    user1TokenAccountDSLA = await mintDSLA.createAccount(
+    user1TokenAccountCustomPubkey = await createAssociatedTokenAccount(
+      provider.connection,
+      user1MainAccount,
+      mintCustomPubkey,
       user1MainAccount.publicKey
     );
-    user1TokenAccountPFT = await mintPFT.createAccount(
+    user1TokenAccountPFTPubkey = await createAssociatedTokenAccount(
+      provider.connection,
+      user1MainAccount,
+      mintPFTPubkey,
       user1MainAccount.publicKey
     );
 
     // user 2
-    user2TokenAccountDSLA = await mintPFT.createAccount(
+    user2TokenAccountCustomPubkey = await createAssociatedTokenAccount(
+      provider.connection,
+      user2MainAccount,
+      mintCustomPubkey,
       user2MainAccount.publicKey
     );
-    user2TokenAccountPFT = await mintPFT.createAccount(
+    user2TokenAccountPFTPubkey = await createAssociatedTokenAccount(
+      provider.connection,
+      user2MainAccount,
+      mintPFTPubkey,
       user2MainAccount.publicKey
     );
-
-    await mintDSLA.mintTo(
-      initializerTokenAccountDSLA,
-      mintAuthority.publicKey,
-      [mintAuthority],
-      initializerAmount
+  });
+  it("Account are initialized correctly!", async () => {
+    await mintToChecked(
+      provider.connection,
+      initializerMainAccount,
+      mintCustomPubkey,
+      initializerTokenAccountCustomPubkey,
+      mintAuthority,
+      initializerAmount,
+      18
     );
 
-    let _initializerTokenAccountDSLA = await mintDSLA.getAccountInfo(
-      initializerTokenAccountDSLA
+    let tokenAmount = await provider.connection.getTokenAccountBalance(
+      initializerTokenAccountCustomPubkey
     );
 
-    expect(_initializerTokenAccountDSLA.amount.toNumber()).to.equal(
-      initializerAmount
-    );
+    expect(Number(tokenAmount.value.amount)).to.equal(initializerAmount);
   });
 
   it("Initialize SLA", async () => {
@@ -160,6 +189,7 @@ describe("stacktical-dsla-contracts-solana", () => {
       );
     vault_authority_pda = _vault_authority_pda;
 
+    console.log(vault_authority_pda);
     await program.rpc.initialize(
       sloValue,
       sloOperand,
@@ -169,9 +199,9 @@ describe("stacktical-dsla-contracts-solana", () => {
       {
         accounts: {
           initializer: initializerMainAccount.publicKey,
-          mint: mintDSLA.publicKey,
+          mint: mintCustomPubkey,
           vaultAccount: vault_account_pda,
-          initializerDepositTokenAccount: initializerTokenAccountDSLA,
+          initializerDepositTokenAccount: initializerTokenAccountCustomPubkey,
           sla: sla.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -182,7 +212,7 @@ describe("stacktical-dsla-contracts-solana", () => {
       }
     );
 
-    let _vault = await mintDSLA.getAccountInfo(vault_account_pda);
+    let _vault = await getAccount(provider.connection, vault_account_pda);
 
     let _sla = await program.account.sla.fetch(sla.publicKey);
 
