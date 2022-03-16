@@ -154,9 +154,7 @@ describe("stacktical-dsla-contracts-solana", () => {
       mintPFTPubkey,
       user2MainAccount.publicKey
     );
-  });
 
-  it("Account are initialized correctly!", async () => {
     await mintToChecked(
       provider.connection,
       initializerMainAccount,
@@ -166,7 +164,9 @@ describe("stacktical-dsla-contracts-solana", () => {
       initializerAmount,
       18
     );
+  });
 
+  it("Account are initialized correctly!", async () => {
     let tokenAmount = await provider.connection.getTokenAccountBalance(
       initializerTokenAccountCustomPubkey
     );
