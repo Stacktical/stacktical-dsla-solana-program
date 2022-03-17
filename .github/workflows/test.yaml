@@ -33,8 +33,7 @@ jobs:
             ./target/
           key: cargo-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
       - run: yarn install
-      - run: npx anchor build
       - run: cargo fmt -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - run: anchor build
-      - run: anchor test
+      - run: npx anchor build
+      - run: npx anchor test
