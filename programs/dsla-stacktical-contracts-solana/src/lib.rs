@@ -28,15 +28,12 @@ pub mod stacktical_dsla_contracts_solana {
         let (vault_authority, _) = Pubkey::find_program_address(&[SLA_PDA_SEED], ctx.program_id);
 
         token::set_authority(
-            ctx.accounts.into_set_authority_context(),
+            ctx.accounts.set_authority_context(),
             AuthorityType::AccountOwner,
             Some(vault_authority),
         )?;
 
-        token::transfer(
-            ctx.accounts.into_transfer_to_pda_context(),
-            initializer_amount,
-        )?;
+        token::transfer(ctx.accounts.transfer_to_pda_context(), initializer_amount)?;
 
         Ok(())
     }
@@ -105,7 +102,7 @@ pub enum ErrorCode {
 }
 
 impl<'info> Initialize<'info> {
-    fn into_transfer_to_pda_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+    fn transfer_to_pda_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         let cpi_accounts = Transfer {
             from: self
                 .initializer_deposit_token_account
@@ -117,7 +114,7 @@ impl<'info> Initialize<'info> {
         CpiContext::new(self.token_program.clone(), cpi_accounts)
     }
 
-    fn into_set_authority_context(&self) -> CpiContext<'_, '_, '_, 'info, SetAuthority<'info>> {
+    fn set_authority_context(&self) -> CpiContext<'_, '_, '_, 'info, SetAuthority<'info>> {
         let cpi_accounts = SetAuthority {
             account_or_mint: self.vault_account.to_account_info().clone(),
             current_authority: self.initializer.clone(),

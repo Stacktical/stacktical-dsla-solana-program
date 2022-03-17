@@ -1,0 +1,40 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+env:
+  SOLANA_CLI_VERSION: 1.8.14
+  NODE_VERSION: 17.0.1
+
+jobs:
+  test-core:
+    name: Core Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/setup/
+      - uses: ./.github/actions/setup-ts/
+      - uses: ./.github/actions/setup-solana/
+      - uses: actions/cache@v2
+        name: Cache Cargo registry + index
+        id: cache-cargo-build
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./target/
+          key: cargo-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+      - run: yarn install
+      - run: anchor build
+      - run: cargo fmt -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: anchor build
+      - run: anchor test
