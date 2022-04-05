@@ -788,6 +788,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "proof-of-concept"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "spl-token",
+ "spl-token-metadata",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1100,16 +1110,6 @@ dependencies = [
  "solana-program",
  "spl-token",
  "thiserror",
-]
-
-[[package]]
-name = "stacktical-dsla-contracts-solana"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "spl-token",
- "spl-token-metadata",
 ]
 
 [[package]]

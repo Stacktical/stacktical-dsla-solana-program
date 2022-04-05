@@ -1,12 +1,12 @@
 [package]
-name = "stacktical-dsla-contracts-solana"
+name = "proof-of-concept"
 version = "0.1.0"
-description = "stack dsla contracts on solana blockchain using anchor"
+description = "proof of concept dsla contracts on solana blockchain using anchor"
 edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "stacktical_dsla_contracts_solana"
+name = "proof_of_concept"
 
 [features]
 no-entrypoint = []

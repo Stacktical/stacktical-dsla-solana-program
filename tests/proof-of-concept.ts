@@ -17,16 +17,15 @@ import {
 } from "@solana/spl-token";
 import { expect } from "chai";
 
-import { StackticalDslaContractsSolana } from "../target/types/stacktical_dsla_contracts_solana";
+import { ProofOfConcept } from "../target/types/proof_of_concept";
 
-describe("stacktical-dsla-contracts-solana", () => {
+describe("proof-of-concept", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.Provider.env();
 
   anchor.setProvider(provider);
 
-  const program = anchor.workspace
-    .StackticalDslaContractsSolana as Program<StackticalDslaContractsSolana>;
+  const program = anchor.workspace.ProofOfConcept as Program<ProofOfConcept>;
 
   let mintCustomPubkey = null as PublicKey;
   let mintPFTPubkey = null as PublicKey;

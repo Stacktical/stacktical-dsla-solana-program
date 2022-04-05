@@ -5,7 +5,7 @@ use spl_token::instruction::AuthorityType;
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
-pub mod stacktical_dsla_contracts_solana {
+pub mod proof_of_concept {
     use super::*;
 
     const SLA_PDA_SEED: &[u8] = b"sla";
@@ -93,6 +93,12 @@ pub enum Operand {
 pub enum Position {
     Long,
     Short,
+}
+
+pub enum Status {
+    NotVerified,
+    Respected,
+    NotRespected,
 }
 
 #[error_code]
