@@ -1,0 +1,19 @@
+[package]
+name = "SLO-registry"
+version = "0.1.0"
+description = "SLO registry contract"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "slo_registry"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.23.0"
