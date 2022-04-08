@@ -59,6 +59,10 @@ impl SLORegistry {
     }
 
     pub fn get_deviation(&self, sli: u128, sla_address: Pubkey, precision: u128) -> Result<u128> {
+        if precision % 100 != 0 {
+            return err!(ErrorCode::InvalidPrecision);
+        }
+
         let registered_slo = match self.registered_slo.get(&sla_address) {
             Some(map) => map,
             None => return err!(ErrorCode::SLONotFound),
@@ -78,8 +82,8 @@ impl SLORegistry {
             deviation = precision * 25 / 100;
         }
         match slo_type {
-            SLOType::EqualTo => Ok(precision / 100),
-            SLOType::NotEqualTo => Ok(precision / 100),
+            // Deviation of 1%
+            SLOType::EqualTo | SLOType::NotEqualTo => Ok(precision / 100),
             _ => Ok(deviation),
         }
     }
@@ -115,6 +119,6 @@ pub enum ErrorCode {
     Unauthorized,
     #[msg("the SLA address provided does not have a SLO registered.")]
     SLONotFound,
-    #[msg("isRespected wasn't executed properly.")]
-    IsRespectedFailed,
+    #[msg("precision is not divisible by 100")]
+    InvalidPrecision,
 }
