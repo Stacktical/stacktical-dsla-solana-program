@@ -59,7 +59,7 @@ impl SLORegistry {
     }
 
     pub fn get_deviation(&self, sli: u128, sla_address: Pubkey, precision: u128) -> Result<u128> {
-        if precision % 100 != 0 {
+        if (precision % 100 != 0) || (precision == 0) {
             return err!(ErrorCode::InvalidPrecision);
         }
 
