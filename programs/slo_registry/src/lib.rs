@@ -14,14 +14,12 @@ pub mod slo_registry {
     ) -> Result<()> {
         let slo = &mut ctx.accounts.slo;
 
-        slo.bump = *match ctx.bumps.get("SLO-registry") {
+        slo.slo_type = slo_type;
+        slo.slo_value = slo_value;
+        slo.bump = *match ctx.bumps.get("slo") {
             Some(bump) => bump,
             None => return err!(ErrorCode::SLONotFound),
         };
-
-        slo.slo_type = slo_type;
-        slo.slo_value = slo_value;
-
         emit!(RegisteredSLO {
             sla_address: _sla_address,
             slo_value: slo.slo_value,
@@ -41,8 +39,9 @@ pub struct CreateSLO<'info> {
         init,
         payer = authority,
         space = 8 + SLO::MAX_SIZE,
-        seeds = [b"SLO-registry", authority.key().as_ref(), _sla_address.as_ref()],
+        seeds = [b"slo", authority.key().as_ref(), _sla_address.as_ref()],
         bump
+
     )]
     pub slo: Account<'info, SLO>,
     pub system_program: Program<'info, System>,
