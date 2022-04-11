@@ -13,10 +13,20 @@ pub mod slo_registry {
         slo_value: u128,
     ) -> Result<()> {
         let slo = &mut ctx.accounts.slo;
+
+        slo.bump = *match ctx.bumps.get("SLO-registry") {
+            Some(bump) => bump,
+            None => return err!(ErrorCode::SLONotFound),
+        };
+
         slo.slo_type = slo_type;
         slo.slo_value = slo_value;
-        slo.bump = *ctx.bumps.get("SLO-registry").unwrap();
 
+        emit!(RegisteredSLO {
+            sla_address: _sla_address,
+            slo_value: slo.slo_value,
+            slo_type: slo.slo_type
+        });
         Ok(())
     }
 }
@@ -40,7 +50,7 @@ pub struct CreateSLO<'info> {
 
 impl SLO {
     pub fn is_respected(&self, value: u128) -> Result<bool> {
-        let slo_type = &self.slo_type;
+        let slo_type = self.slo_type;
         let slo_value = self.slo_value;
 
         match slo_type {
@@ -58,7 +68,7 @@ impl SLO {
             return err!(ErrorCode::InvalidPrecision);
         }
 
-        let slo_type = &self.slo_type;
+        let slo_type = self.slo_type;
         let slo_value = self.slo_value;
 
         let mut deviation: u128 = (if sli >= slo_value {
@@ -79,7 +89,7 @@ impl SLO {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy)]
 pub enum SLOType {
     EqualTo,
     NotEqualTo,
@@ -107,4 +117,11 @@ pub enum ErrorCode {
     SLONotFound,
     #[msg("precision is not divisible by 100")]
     InvalidPrecision,
+}
+
+#[event]
+pub struct RegisteredSLO {
+    pub sla_address: Pubkey,
+    pub slo_value: u128,
+    pub slo_type: SLOType,
 }
