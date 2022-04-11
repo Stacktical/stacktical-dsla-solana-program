@@ -19,7 +19,7 @@ import { expect } from "chai";
 
 import { ProofOfConcept } from "../target/types/proof_of_concept";
 
-describe("proof-of-concept", () => {
+describe("proof_of_concept", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.Provider.env();
 

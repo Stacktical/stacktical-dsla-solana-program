@@ -1,5 +1,5 @@
 [package]
-name = "proof-of-concept"
+name = "proof_of_concept"
 version = "0.1.0"
 description = "proof of concept dsla contracts on solana blockchain using anchor"
 edition = "2018"

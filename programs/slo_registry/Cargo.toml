@@ -1,5 +1,5 @@
 [package]
-name = "SLO-registry"
+name = "slo_registry"
 version = "0.1.0"
 description = "SLO registry contract"
 edition = "2018"
