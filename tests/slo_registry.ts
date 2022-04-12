@@ -1,5 +1,5 @@
 import * as anchor from "@project-serum/anchor";
-import { Program, BN, ProgramErrorStack } from "@project-serum/anchor";
+import { Program, BN } from "@project-serum/anchor";
 import { SystemProgram } from "@solana/web3.js";
 import { expect } from "chai";
 import { SloRegistry } from "../target/types/slo_registry";
