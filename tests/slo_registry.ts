@@ -29,7 +29,7 @@ describe("slo-registry", async () => {
 
     await program.rpc.registerSlo(sla_address, slo_type, slo_value, {
       accounts: {
-        user: authority_address,
+        authority: authority_address,
         slo: sloPDA,
         systemProgram: SystemProgram.programId,
       },
@@ -64,7 +64,7 @@ describe("slo-registry", async () => {
 
     await program.rpc.registerSlo(sla_address, slo_type1, slo_value1, {
       accounts: {
-        user: authority_address,
+        authority: authority_address,
         slo: sloPDA,
         systemProgram: SystemProgram.programId,
       },
@@ -76,7 +76,7 @@ describe("slo-registry", async () => {
     try {
       await program.rpc.registerSlo(sla_address, slo_type2, slo_value2, {
         accounts: {
-          user: authority_address,
+          authority: authority_address,
           slo: sloPDA,
           systemProgram: SystemProgram.programId,
         },

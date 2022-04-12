@@ -31,13 +31,13 @@ pub mod slo_registry {
 #[instruction(sla_address: Pubkey)]
 pub struct CreateSlo<'info> {
     #[account(mut)]
-    pub user: Signer<'info>,
+    pub authority: Signer<'info>,
     // space: 8 discriminator + Slo max size
     #[account(
         init,
-        payer = user,
+        payer = authority,
         space = 8 + Slo::MAX_SIZE,
-        seeds = [b"slo", user.key().as_ref(), sla_address.as_ref()],
+        seeds = [b"slo", authority.key().as_ref(), sla_address.as_ref()],
         bump
     )]
     pub slo: Account<'info, Slo>,
