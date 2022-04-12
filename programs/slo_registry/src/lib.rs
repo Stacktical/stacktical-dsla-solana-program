@@ -1,64 +1,61 @@
 use anchor_lang::prelude::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnT");
-/// anybody can create an SLO
+declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
 pub mod slo_registry {
     use super::*;
 
     pub fn register_slo(
-        ctx: Context<CreateSLO>,
-        _sla_address: Pubkey,
-        slo_type: SLOType,
+        ctx: Context<CreateSlo>,
+        sla_address: Pubkey,
+        slo_type: SloType,
         slo_value: u128,
     ) -> Result<()> {
         let slo = &mut ctx.accounts.slo;
-
         slo.slo_type = slo_type;
         slo.slo_value = slo_value;
         slo.bump = *match ctx.bumps.get("slo") {
             Some(bump) => bump,
-            None => return err!(ErrorCode::SLONotFound),
+            None => return err!(ErrorCode::SloNotFound),
         };
-        emit!(RegisteredSLO {
-            sla_address: _sla_address,
-            slo_value: slo.slo_value,
-            slo_type: slo.slo_type
+        emit!(RegisteredSlo {
+            sla_address,
+            slo_type,
+            slo_value
         });
         Ok(())
     }
 }
 
 #[derive(Accounts)]
-#[instruction(_sla_address: Pubkey)]
-pub struct CreateSLO<'info> {
+#[instruction(sla_address: Pubkey)]
+pub struct CreateSlo<'info> {
     #[account(mut)]
-    pub authority: Signer<'info>,
-    // space: 8 discriminator + SLO max size
+    pub user: Signer<'info>,
+    // space: 8 discriminator + Slo max size
     #[account(
         init,
-        payer = authority,
-        space = 8 + SLO::MAX_SIZE,
-        seeds = [b"slo", authority.key().as_ref(), _sla_address.as_ref()],
+        payer = user,
+        space = 8 + Slo::MAX_SIZE,
+        seeds = [b"slo", user.key().as_ref(), sla_address.as_ref()],
         bump
-
     )]
-    pub slo: Account<'info, SLO>,
+    pub slo: Account<'info, Slo>,
     pub system_program: Program<'info, System>,
 }
 
-impl SLO {
+impl Slo {
     pub fn is_respected(&self, value: u128) -> Result<bool> {
         let slo_type = self.slo_type;
         let slo_value = self.slo_value;
 
         match slo_type {
-            SLOType::EqualTo => Ok(value == slo_value),
-            SLOType::NotEqualTo => Ok(value != slo_value),
-            SLOType::SmallerThan => Ok(value < slo_value),
-            SLOType::SmallerOrEqualTo => Ok(value <= slo_value),
-            SLOType::GreaterThan => Ok(value > slo_value),
-            SLOType::GreaterOrEqualTo => Ok(value >= slo_value),
+            SloType::EqualTo => Ok(value == slo_value),
+            SloType::NotEqualTo => Ok(value != slo_value),
+            SloType::SmallerThan => Ok(value < slo_value),
+            SloType::SmallerOrEqualTo => Ok(value <= slo_value),
+            SloType::GreaterThan => Ok(value > slo_value),
+            SloType::GreaterOrEqualTo => Ok(value >= slo_value),
         }
     }
 
@@ -82,14 +79,14 @@ impl SLO {
         }
         match slo_type {
             // Deviation of 1%
-            SLOType::EqualTo | SLOType::NotEqualTo => Ok(precision / 100),
+            SloType::EqualTo | SloType::NotEqualTo => Ok(precision / 100),
             _ => Ok(deviation),
         }
     }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy)]
-pub enum SLOType {
+pub enum SloType {
     EqualTo,
     NotEqualTo,
     SmallerThan,
@@ -99,28 +96,28 @@ pub enum SLOType {
 }
 
 #[account]
-pub struct SLO {
+pub struct Slo {
     pub slo_value: u128,
-    pub slo_type: SLOType,
+    pub slo_type: SloType,
     bump: u8,
 }
 
-impl SLO {
+impl Slo {
     // slo_value + slo_type + bump
     pub const MAX_SIZE: usize = 16 + 1 + 1;
 }
 
 #[error_code]
 pub enum ErrorCode {
-    #[msg("the SLA address provided does not have a SLO registered.")]
-    SLONotFound,
+    #[msg("the SLA address provided does not have a Slo registered.")]
+    SloNotFound,
     #[msg("precision is not divisible by 100")]
     InvalidPrecision,
 }
 
 #[event]
-pub struct RegisteredSLO {
+pub struct RegisteredSlo {
     pub sla_address: Pubkey,
     pub slo_value: u128,
-    pub slo_type: SLOType,
+    pub slo_type: SloType,
 }
