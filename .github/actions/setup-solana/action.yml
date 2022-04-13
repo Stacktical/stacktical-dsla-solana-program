@@ -13,9 +13,9 @@ runs:
         key: solana-${{ runner.os }}-v0000-${{ env.SOLANA_CLI_VERSION }}
     - run: sh -c "$(curl -sSfL https://release.solana.com/v${{ env.SOLANA_CLI_VERSION }}/install)"
       shell: bash
-    - run: echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+    - run: echo "/home/runner/.local/share/solana/install/${{ env.SOLANA_CLI_VERSION }}/bin" >> $GITHUB_PATH
       shell: bash
-    - run: export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
+    - run: export PATH="/home/runner/.local/share/solana/install/${{ env.SOLANA_CLI_VERSION }}/bin:$PATH"
       shell: bash
     - run: solana-keygen new --no-bip39-passphrase
       shell: bash
