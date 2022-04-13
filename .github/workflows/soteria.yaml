@@ -1,0 +1,46 @@
+name: Soteria Scan
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  CARGO_TERM_COLOR: always
+  SOLANA_VERSION: 1.9.13
+
+jobs:
+  test-core:
+    name: Soteria
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/setup/
+      - uses: ./.github/actions/setup-ts/
+      - uses: ./.github/actions/setup-solana/
+      - uses: actions/cache@v2
+        name: Cache Cargo registry + index
+        id: cache-cargo-build
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: cargo-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Soteria
+        run: |
+          echo Installing Soteria...
+          sh -c "$(curl -k https://supercompiler.xyz/install)"
+          export PATH=$PWD/soteria-linux-develop/bin/:$PATH
+          echo "$PWD/soteria-linux-develop/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Run Soteria # Not failing for the time being
+        run: soteria -analyzeAll . || exit 0
+        shell: bash
