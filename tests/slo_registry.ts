@@ -15,13 +15,13 @@ describe("slo-registry", async () => {
       "AXJ1hE87vEFemyqYdxeRoWhC2z4QydB9VWYtCmqL3uT2"
     );
 
-    let authority_address = anchor.getProvider().wallet.publicKey;
+    let owner_address = anchor.getProvider().wallet.publicKey;
     let slo_value = new BN("100000");
     let slo_type = { greaterThan: {} };
     const [sloPDA, _bump] = await PublicKey.findProgramAddress(
       [
         anchor.utils.bytes.utf8.encode("slo"),
-        authority_address.toBuffer(),
+        owner_address.toBuffer(),
         sla_address.toBuffer(),
       ],
       program.programId
@@ -29,7 +29,7 @@ describe("slo-registry", async () => {
 
     await program.rpc.registerSlo(sla_address, slo_type, slo_value, {
       accounts: {
-        authority: authority_address,
+        owner: owner_address,
         slo: sloPDA,
         systemProgram: SystemProgram.programId,
       },
@@ -50,13 +50,13 @@ describe("slo-registry", async () => {
     const sla_address = new PublicKey(
       "AXJ1hE87vEFemyqYdxeRoWhC2z4QydB9VWYtCmqL3uT1"
     );
-    let authority_address = anchor.getProvider().wallet.publicKey;
+    let owner_address = anchor.getProvider().wallet.publicKey;
     let slo_value1 = new BN("999999");
     let slo_type1 = { smallerThan: {} };
     const [sloPDA, _bump] = await PublicKey.findProgramAddress(
       [
         anchor.utils.bytes.utf8.encode("slo"),
-        authority_address.toBuffer(),
+        owner_address.toBuffer(),
         sla_address.toBuffer(),
       ],
       program.programId
@@ -64,7 +64,7 @@ describe("slo-registry", async () => {
 
     await program.rpc.registerSlo(sla_address, slo_type1, slo_value1, {
       accounts: {
-        authority: authority_address,
+        owner: owner_address,
         slo: sloPDA,
         systemProgram: SystemProgram.programId,
       },
@@ -76,7 +76,7 @@ describe("slo-registry", async () => {
     try {
       await program.rpc.registerSlo(sla_address, slo_type2, slo_value2, {
         accounts: {
-          authority: authority_address,
+          owner: owner_address,
           slo: sloPDA,
           systemProgram: SystemProgram.programId,
         },
