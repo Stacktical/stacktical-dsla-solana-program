@@ -17,9 +17,9 @@ runs:
       shell: bash
     - run: export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
       shell: bash
-    - run: (cd /home/runner/.local/share/solana/install/active_release/bin/sdk/bpf/scripts; ./install.sh)
-      shell: bash
     - run: solana-keygen new --no-bip39-passphrase
       shell: bash
     - run: solana config set --url localhost
+      shell: bash
+    - run: (cd /home/runner/.local/share/solana/install/active_release/bin/sdk/bpf/scripts; ./install.sh)
       shell: bash
