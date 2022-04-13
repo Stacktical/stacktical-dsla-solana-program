@@ -11,7 +11,7 @@ use state::*;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
-pub mod slo_registry {
+pub mod dsla {
     use super::*;
 
     pub fn register_slo(
@@ -20,6 +20,6 @@ pub mod slo_registry {
         slo_type: SloType,
         slo_value: u128,
     ) -> Result<()> {
-        handler(ctx, sla_address, slo_type, slo_value)
+        register_slo::handler(ctx, sla_address, slo_type, slo_value)
     }
 }

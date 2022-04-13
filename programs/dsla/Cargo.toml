@@ -1,12 +1,12 @@
 [package]
-name = "slo_registry"
+name = "dsla"
 version = "0.1.0"
-description = "SLO registry contract"
-edition = "2018"
+description = "Created with Anchor"
+edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "slo_registry"
+name = "dsla"
 
 [features]
 no-entrypoint = []
@@ -15,5 +15,8 @@ no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = []
 
+[profile.release]
+overflow-checks = true
+
 [dependencies]
-anchor-lang = "0.23.0"
+anchor-lang = "0.24.1"
