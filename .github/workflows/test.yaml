@@ -35,5 +35,4 @@ jobs:
       - run: yarn lint
       - run: cargo fmt -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - run: npx anchor build
       - run: npx anchor test

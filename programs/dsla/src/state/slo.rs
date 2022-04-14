@@ -10,7 +10,7 @@ pub struct Slo {
 }
 
 impl Slo {
-    // slo_value + slo_type + bump
+    /// slo_value + slo_type + bump
     pub const MAX_SIZE: usize = 16 + 1 + 1;
 
     pub fn is_respected(&self, value: u128) -> Result<bool> {
@@ -61,4 +61,32 @@ pub enum SloType {
     SmallerOrEqualTo,
     GreaterThan,
     GreaterOrEqualTo,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn get_deviation_invalid_precision_1() {
+        let slo = Slo {
+            slo_value: 10000,
+            slo_type: SloType::EqualTo,
+            bump: 1,
+        };
+
+        slo.get_deviation(5000, 10).unwrap();
+    }
+    #[test]
+    #[should_panic]
+    fn get_deviation_invalid_precision_2() {
+        let slo = Slo {
+            slo_value: 100000,
+            slo_type: SloType::NotEqualTo,
+            bump: 1,
+        };
+
+        slo.get_deviation(5000, 100001).unwrap();
+    }
 }

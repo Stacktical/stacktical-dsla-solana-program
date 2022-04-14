@@ -16,10 +16,18 @@ pub mod dsla {
 
     pub fn register_slo(
         ctx: Context<RegisterSlo>,
-        sla_address: Pubkey,
         slo_type: SloType,
         slo_value: u128,
     ) -> Result<()> {
-        register_slo::handler(ctx, sla_address, slo_type, slo_value)
+        instructions::register_slo::handler(ctx, slo_type, slo_value)
+    }
+
+    pub fn initialize_period(
+        ctx: Context<InitializePeriod>,
+        start: u128,
+        period_length: u128,
+        n_periods: u128,
+    ) -> Result<()> {
+        instructions::initialize_period::handler(ctx, start, period_length, n_periods)
     }
 }
