@@ -1,3 +1,4 @@
+use crate::state::period_registry::Period;
 use crate::state::slo::SloType;
 
 use anchor_lang::prelude::*;
@@ -9,8 +10,6 @@ pub struct RegisteredSloEvent {
 }
 
 #[event]
-pub struct InitializedPeriodEvent {
-    pub start: u128,
-    pub period_length: u128,
-    pub n_periods: u128,
+pub struct InitializedPeriodRegistryEvent {
+    pub periods: Vec<Period>,
 }

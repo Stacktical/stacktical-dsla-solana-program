@@ -22,12 +22,10 @@ pub mod dsla {
         instructions::register_slo::handler(ctx, slo_type, slo_value)
     }
 
-    pub fn initialize_period(
-        ctx: Context<InitializePeriod>,
-        start: u128,
-        period_length: u128,
-        n_periods: u128,
+    pub fn initialize_period_registry(
+        ctx: Context<InitializePeriodRegistry>,
+        periods: Vec<Period>,
     ) -> Result<()> {
-        instructions::initialize_period::handler(ctx, start, period_length, n_periods)
+        instructions::initialize_period_registry::handler(ctx, periods)
     }
 }

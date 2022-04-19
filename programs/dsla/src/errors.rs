@@ -9,9 +9,9 @@ pub enum ErrorCode {
     #[msg("period ID entered is not valid")]
     InvalidPeriodId,
     #[msg("the start is too close")]
-    InvalidPeriodGeneratorStart,
+    InvalidPeriodStart,
     #[msg("the period lenght is too short")]
-    InvalidPeriodGeneratorPeriodLength,
+    InvalidPeriodLength,
     #[msg("Number of periods cannot be 0")]
     ZeroNumberOfPeriods,
 }
