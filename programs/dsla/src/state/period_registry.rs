@@ -30,7 +30,7 @@ impl PeriodRegistry {
     /// minumum delay beetween period
     pub const MIN_PERIOD_LENGTH: u64 = 60000;
 
-    pub fn verify_period_length(periods: &Vec<Period>) -> bool {
+    pub fn verify_period_length(periods: &[Period]) -> bool {
         for (i, period) in periods.iter().enumerate() {
             if period.end < (period.start + PeriodRegistry::MIN_PERIOD_LENGTH) {
                 return false;
@@ -72,12 +72,12 @@ impl PeriodRegistry {
     pub fn has_started(&self, period_id: usize) -> Result<bool> {
         // TODO: to be test using the client needs the underlying blockchain for time
         let timestamp = Clock::get()?.unix_timestamp as u64;
-        return Ok(timestamp >= self.get_start(period_id)?);
+        Ok(timestamp >= self.get_start(period_id)?)
     }
     pub fn has_finished(&self, period_id: usize) -> Result<bool> {
         // TODO: to be test using the client needs the underlying blockchain for time
         let timestamp = Clock::get()?.unix_timestamp as u64;
-        return Ok(timestamp > self.get_end(period_id)?);
+        Ok(timestamp > self.get_end(period_id)?)
     }
 }
 
