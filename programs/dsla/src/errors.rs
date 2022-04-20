@@ -14,4 +14,6 @@ pub enum ErrorCode {
     InvalidPeriodLength,
     #[msg("Number of periods cannot be 0")]
     ZeroNumberOfPeriods,
+    #[msg("Number of periods is capped based on account storage requirment")]
+    MaxNumberOfPeriods,
 }

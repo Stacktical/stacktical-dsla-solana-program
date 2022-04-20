@@ -6,15 +6,14 @@ use crate::state::period_registry::Period;
 use crate::state::period_registry::PeriodRegistry;
 
 #[derive(Accounts)]
-#[instruction(periods: Vec<u128>)]
 pub struct InitializePeriodRegistry<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
-    // space: 8 discriminator +
+    // space: 8 discriminator + 4 vector overhead + (period number * (Period Max Size))
     #[account(
         init,
         payer = owner,
-        space = 8 + 4 + (periods.len() * Period::MAX_SIZE),
+        space = 8 + 4 + (600 * (Period::MAX_SIZE)),
         seeds = [b"period_registry", owner.key().as_ref()],
         bump
     )]
@@ -23,15 +22,16 @@ pub struct InitializePeriodRegistry<'info> {
 }
 
 pub fn handler(ctx: Context<InitializePeriodRegistry>, periods: Vec<Period>) -> Result<()> {
-    let leftover_space = 10_000 - 8 - 4 - (periods.len() * 4);
-    require_gte!(leftover_space, 0_usize);
+    let periods_len = periods.len();
+    require_gt!(periods_len, 0_usize, ErrorCode::ZeroNumberOfPeriods);
+    require_gt!(600, periods_len, ErrorCode::MaxNumberOfPeriods);
+
     let earliest_possible_start = Clock::get()?.unix_timestamp as u64 + PeriodRegistry::MIN_DELAY;
     require_gte!(
         periods[0].start,
         earliest_possible_start,
         ErrorCode::InvalidPeriodStart
     );
-    require_gt!(periods.len(), 0_usize, ErrorCode::ZeroNumberOfPeriods);
     require!(
         PeriodRegistry::verify_period_length(&periods),
         ErrorCode::InvalidPeriodLength

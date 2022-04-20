@@ -23,9 +23,9 @@ describe("initialize Period", async () => {
   // 5 min, 10 hour, 10 days
   let periods = [
     [
-      { start: new BN(100000060000), end: new BN(1000000119999) },
-      { start: new BN(1000000119999), end: new BN(1000000180000) },
-      { start: new BN(1000000180000), end: new BN(1000000240000) },
+      { start: new BN(100000060000), end: new BN(100000119999) },
+      { start: new BN(100000119999), end: new BN(100000180000) },
+      { start: new BN(100000180000), end: new BN(100000240000) },
     ],
     [
       { start: new BN(100000060000), end: new BN(1000000120000) },
@@ -109,9 +109,9 @@ describe("initialize Period", async () => {
     );
 
     expect(
-      period_account.periods,
+      period_account.periods[1].end.toNumber(),
       "period start does not match the input"
-    ).to.equal(periods[1]);
+    ).to.equal(periods[1][1].end.toNumber());
   });
 
   it("should fail to initialize the same Period for the same SLA twice", async () => {
@@ -134,8 +134,8 @@ describe("initialize Period", async () => {
     );
 
     expect(
-      period_account.periods,
+      period_account.periods[0].start.toNumber(),
       "period start does not match the input"
-    ).to.equal(periods[1]);
+    ).to.equal(periods[1][0].start.toNumber());
   });
 });
