@@ -223,11 +223,11 @@ mod tests {
     #[test]
     fn verify_period_length_invalid_period_length() {
         let vector = get_period_vec_2();
-        assert_eq!(PeriodRegistry::verify_period_length(&vector), false);
+        assert!(PeriodRegistry::verify_period_length(&vector));
     }
     #[test]
     fn verify_period_length_invalid_periods() {
         let vector = get_period_vec_3();
-        assert_eq!(PeriodRegistry::verify_period_length(&vector), false);
+        assert!(PeriodRegistry::verify_period_length(&vector));
     }
 }
