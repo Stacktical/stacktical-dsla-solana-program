@@ -21,5 +21,3 @@ runs:
       shell: bash
     - run: solana config set --url localhost
       shell: bash
-    - run: rustup toolchain install bpf
-      shell: bash
