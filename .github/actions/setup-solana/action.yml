@@ -15,7 +15,11 @@ runs:
       shell: bash
     - run: echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       shell: bash
+    - run: cargo install --git https://github.com/jet-lab/anchor anchor-cli --locked
+      shell: bash
     - run: solana-keygen new --no-bip39-passphrase
       shell: bash
     - run: solana config set --url localhost
+      shell: bash
+    - run: rustup toolchain install bpf
       shell: bash
