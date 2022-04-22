@@ -1,5 +1,3 @@
-pub mod initialize_period_registry;
-pub mod register_slo;
+pub mod create_sla;
 
-pub use initialize_period_registry::*;
-pub use register_slo::*;
+pub use create_sla::*;

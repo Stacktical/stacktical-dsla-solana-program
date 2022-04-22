@@ -2,7 +2,5 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct SlaRegistry {
-    slas: Vec<Pubkey>,
+    pub sla_account_addresses: Vec<Pubkey>,
 }
-
-impl SlaRegistry {}

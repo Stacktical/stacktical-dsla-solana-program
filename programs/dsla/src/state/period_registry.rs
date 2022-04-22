@@ -8,20 +8,29 @@ use crate::errors::ErrorCode;
 /// # Fields
 ///
 ///  * `periods` - the timestamps of each step
+///
 #[account]
 pub struct PeriodRegistry {
     pub periods: Vec<Period>,
     pub bump: u8,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Period {
     pub start: u64,
     pub end: u64,
+    pub status: Status,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub enum Status {
+    NotVerified,
+    Respected(u128),
+    NotRespected(u128),
 }
 
 impl Period {
-    pub const MAX_SIZE: usize = 8 + 8;
+    pub const MAX_SIZE: usize = 8 + 8 + 1 + 16;
 }
 
 impl PeriodRegistry {
@@ -30,12 +39,27 @@ impl PeriodRegistry {
     /// minumum delay beetween period
     pub const MIN_PERIOD_LENGTH: u64 = 60000;
 
+    pub fn vec_from_timestamps(timestamps_vec: Vec<(u64, u64)>) -> Vec<Period> {
+        let mut periods = Vec::new();
+        for period in timestamps_vec {
+            periods.push(Period {
+                start: period.0,
+                end: period.1,
+                status: Status::NotVerified,
+            });
+        }
+        periods
+    }
+
     pub fn verify_period_length(periods: &[Period]) -> bool {
         for (i, period) in periods.iter().enumerate() {
+            dbg!(period);
+
             if period.end < (period.start + PeriodRegistry::MIN_PERIOD_LENGTH) {
                 return false;
             }
-            if i < periods.len() - 1 {
+
+            if i < (periods.len() - 1) {
                 if period.end > periods[i + 1].start {
                     return false;
                 };
@@ -91,42 +115,52 @@ mod tests {
                 Period {
                     start: 100,
                     end: 200,
+                    status: Status::Respected(100),
                 },
                 Period {
                     start: 200,
                     end: 300,
+                    status: Status::Respected(99),
                 },
                 Period {
                     start: 300,
                     end: 400,
+                    status: Status::NotRespected(50),
                 },
                 Period {
                     start: 400,
                     end: 500,
+                    status: Status::NotVerified,
                 },
                 Period {
                     start: 500,
                     end: 600,
+                    status: Status::NotVerified,
                 },
                 Period {
                     start: 600,
                     end: 700,
+                    status: Status::NotVerified,
                 },
                 Period {
                     start: 700,
                     end: 800,
+                    status: Status::NotVerified,
                 },
                 Period {
                     start: 800,
                     end: 900,
+                    status: Status::NotVerified,
                 },
                 Period {
                     start: 900,
                     end: 1000,
+                    status: Status::NotVerified,
                 },
                 Period {
                     start: 1000,
                     end: 1100,
+                    status: Status::NotVerified,
                 },
             ],
             bump: 1,
@@ -138,14 +172,17 @@ mod tests {
             Period {
                 start: 60000,
                 end: 120000,
+                status: Status::NotVerified,
             },
             Period {
                 start: 120000,
                 end: 180000,
+                status: Status::NotVerified,
             },
             Period {
                 start: 180000,
                 end: 240000,
+                status: Status::NotVerified,
             },
         ]
     }
@@ -155,14 +192,17 @@ mod tests {
             Period {
                 start: 60000,
                 end: 119999,
+                status: Status::NotVerified,
             },
             Period {
                 start: 119999,
                 end: 180000,
+                status: Status::NotVerified,
             },
             Period {
                 start: 180000,
                 end: 240000,
+                status: Status::NotVerified,
             },
         ]
     }
@@ -172,14 +212,17 @@ mod tests {
             Period {
                 start: 60000,
                 end: 120000,
+                status: Status::NotVerified,
             },
             Period {
                 start: 119999,
                 end: 180000,
+                status: Status::NotVerified,
             },
             Period {
                 start: 180000,
                 end: 240000,
+                status: Status::NotVerified,
             },
         ]
     }
@@ -223,11 +266,11 @@ mod tests {
     #[test]
     fn verify_period_length_invalid_period_length() {
         let vector = get_period_vec_2();
-        assert!(PeriodRegistry::verify_period_length(&vector));
+        assert!(!PeriodRegistry::verify_period_length(&vector));
     }
     #[test]
     fn verify_period_length_invalid_periods() {
         let vector = get_period_vec_3();
-        assert!(PeriodRegistry::verify_period_length(&vector));
+        assert!(!PeriodRegistry::verify_period_length(&vector));
     }
 }
