@@ -11,3 +11,8 @@ pub struct InitializedPeriodRegistryEvent {
 pub struct CreatedSlaEvent {
     pub sla_account_address: Pubkey,
 }
+
+#[event]
+pub struct InitializedSlaRegistryEvent {
+    pub sla_addresses: Vec<Pubkey>,
+}

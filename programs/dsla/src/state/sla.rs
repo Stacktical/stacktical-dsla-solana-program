@@ -10,16 +10,20 @@ pub struct Sla {
     pub ipfs_hash: String,
 }
 
+impl Sla {
+    // discriminator + pubkey + SLO + leverage + ipfs_hash
+    pub const MAX_SIZE: usize = 8 + 32 + Slo::MAX_SIZE + 8 + 32;
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Slo {
     pub slo_value: u128,
     pub slo_type: SloType,
-    pub bump: u8,
 }
 
 impl Slo {
-    /// slo_value + slo_type + bump
-    pub const MAX_SIZE: usize = 16 + 1 + 1;
+    /// slo_value + slo_type
+    pub const MAX_SIZE: usize = 16 + 1;
 
     pub fn is_respected(&self, value: u128) -> Result<bool> {
         let slo_type = self.slo_type;
@@ -81,7 +85,6 @@ mod tests {
         let slo = Slo {
             slo_value: 10000,
             slo_type: SloType::EqualTo,
-            bump: 1,
         };
 
         slo.get_deviation(5000, 10).unwrap();
@@ -92,7 +95,6 @@ mod tests {
         let slo = Slo {
             slo_value: 100000,
             slo_type: SloType::NotEqualTo,
-            bump: 1,
         };
 
         slo.get_deviation(5000, 100001).unwrap();

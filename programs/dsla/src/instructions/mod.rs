@@ -1,3 +1,3 @@
-pub mod create_sla;
+pub mod deploy_sla;
 
-pub use create_sla::*;
+pub use deploy_sla::*;

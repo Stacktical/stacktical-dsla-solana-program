@@ -25,8 +25,8 @@ pub struct Period {
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub enum Status {
     NotVerified,
-    Respected(u128),
-    NotRespected(u128),
+    Respected { value: u128 },
+    NotRespected { value: u128 },
 }
 
 impl Period {
@@ -38,18 +38,6 @@ impl PeriodRegistry {
     pub const MIN_DELAY: u64 = 600000;
     /// minumum delay beetween period
     pub const MIN_PERIOD_LENGTH: u64 = 60000;
-
-    pub fn vec_from_timestamps(timestamps_vec: Vec<(u64, u64)>) -> Vec<Period> {
-        let mut periods = Vec::new();
-        for period in timestamps_vec {
-            periods.push(Period {
-                start: period.0,
-                end: period.1,
-                status: Status::NotVerified,
-            });
-        }
-        periods
-    }
 
     pub fn verify_period_length(periods: &[Period]) -> bool {
         for (i, period) in periods.iter().enumerate() {
@@ -115,17 +103,17 @@ mod tests {
                 Period {
                     start: 100,
                     end: 200,
-                    status: Status::Respected(100),
+                    status: Status::Respected { value: 100 },
                 },
                 Period {
                     start: 200,
                     end: 300,
-                    status: Status::Respected(99),
+                    status: Status::Respected { value: 99 },
                 },
                 Period {
                     start: 300,
                     end: 400,
-                    status: Status::NotRespected(50),
+                    status: Status::NotRespected { value: 50 },
                 },
                 Period {
                     start: 400,

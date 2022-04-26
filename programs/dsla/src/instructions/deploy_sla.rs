@@ -1,42 +1,44 @@
 use anchor_lang::prelude::*;
 
 use crate::errors::ErrorCode;
-use crate::state::period_registry::PeriodRegistry;
+use crate::events::*;
+use crate::state::period_registry::{Period, PeriodRegistry};
 use crate::state::sla::{Sla, Slo};
 use crate::state::sla_registry::SlaRegistry;
-use crate::events::*;
 
 #[derive(Accounts)]
-pub struct CreateSla<'info> {
+pub struct DeploySla<'info> {
     #[account(mut)]
-    pub creator: Signer<'info>,
+    pub deployer: Signer<'info>,
     pub sla_registry: Account<'info, SlaRegistry>,
+    #[account(
+        init,
+        payer = deployer,
+        space = 10_000
+    )]
     pub sla: Account<'info, Sla>,
     #[account(
         init,
-        payer = creator,
-        space = 10000, 
+        payer = deployer,
+        space = Sla::MAX_SIZE,
         seeds = [b"period-registry", sla.key().to_bytes().as_ref()],
         bump
     )]
     pub period_registry: Account<'info, PeriodRegistry>,
-    #[account(mut)]
-    pub deployer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 pub fn handler(
-    ctx: Context<CreateSla>,
+    ctx: Context<DeploySla>,
     ipfs_hash: String,
-    slo: Slo,
+    // slo: Slo,
     messenger_address: Pubkey,
-    periods: Vec<(u64, u64)>,
+    periods: Vec<Period>,
     leverage: u64,
 ) -> Result<()> {
     let sla_registry = &mut ctx.accounts.sla_registry;
     let sla = &mut ctx.accounts.sla;
     let period_registry = &mut ctx.accounts.period_registry;
-
 
     // SLA REGISTRY
     // check that SLA registry still has space
@@ -47,8 +49,7 @@ pub fn handler(
     sla.leverage = leverage;
     sla.messenger_address = messenger_address;
     sla.ipfs_hash = ipfs_hash;
-    sla.slo = slo;
-
+    // sla.slo = slo;
 
     // PERIOD REGISTRY
     require_gt!(300, periods.len());
@@ -56,7 +57,7 @@ pub fn handler(
         Some(bump) => bump,
         None => return err!(ErrorCode::BumpNotFound),
     };
-    period_registry.periods = PeriodRegistry::vec_from_timestamps(periods);
+    period_registry.periods = periods;
     emit!(InitializedPeriodRegistryEvent {
         periods: period_registry.periods.clone()
     });
