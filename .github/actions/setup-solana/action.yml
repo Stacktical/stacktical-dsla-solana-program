@@ -17,5 +17,5 @@ runs:
       shell: bash
     - run: solana config set --url localhost
       shell: bash
-    - run: echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$PATH" >> $GITHUB_ENV
+    - run: echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
       shell: bash
