@@ -10,6 +10,7 @@ use crate::state::sla_registry::SlaRegistry;
 pub struct DeploySla<'info> {
     #[account(mut)]
     pub deployer: Signer<'info>,
+    #[account(mut)]
     pub sla_registry: Account<'info, SlaRegistry>,
     #[account(
         init,
@@ -20,8 +21,8 @@ pub struct DeploySla<'info> {
     #[account(
         init,
         payer = deployer,
-        space = Sla::MAX_SIZE,
-        seeds = [b"period-registry", sla.key().to_bytes().as_ref()],
+        space = 10_000,
+        seeds = [b"period-registry", sla.key().as_ref()],
         bump
     )]
     pub period_registry: Account<'info, PeriodRegistry>,
@@ -31,7 +32,7 @@ pub struct DeploySla<'info> {
 pub fn handler(
     ctx: Context<DeploySla>,
     ipfs_hash: String,
-    // slo: Slo,
+    slo: Slo,
     messenger_address: Pubkey,
     periods: Vec<Period>,
     leverage: u64,
@@ -44,16 +45,16 @@ pub fn handler(
     // check that SLA registry still has space
     require_gt!(312499, sla_registry.sla_account_addresses.len());
     sla_registry.sla_account_addresses.push(sla.key());
-
+    msg!("{}", sla_registry.sla_account_addresses[0]);
     // SLA initialization
     sla.leverage = leverage;
     sla.messenger_address = messenger_address;
     sla.ipfs_hash = ipfs_hash;
-    // sla.slo = slo;
+    sla.slo = slo;
 
     // PERIOD REGISTRY
     require_gt!(300, periods.len());
-    period_registry.bump = *match ctx.bumps.get("period-registry") {
+    period_registry.bump = *match ctx.bumps.get("period_registry") {
         Some(bump) => bump,
         None => return err!(ErrorCode::BumpNotFound),
     };

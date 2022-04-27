@@ -1,7 +1,5 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
-import chai from "chai";
-import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
 import { Dsla, IDL } from "../target/types/dsla";
 import {
@@ -12,8 +10,6 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
 } from "@solana/web3.js";
-import { encodeIdlAccount } from "@project-serum/anchor/dist/cjs/idl";
-chai.use(chaiAsPromised);
 
 describe("Deploy SLA", () => {
   // Configure the client to use the local cluster.
@@ -25,10 +21,13 @@ describe("Deploy SLA", () => {
   const slaRegistryKeypair = anchor.web3.Keypair.generate();
 
   const deployer = Keypair.generate();
-  const sla = Keypair.generate();
 
   const space = 10_000_000;
-
+  const slaKeypairs = [
+    Keypair.generate(),
+    Keypair.generate(),
+    Keypair.generate(),
+  ];
   before(async function () {
     const rentExemptionAmount =
       await connection.getMinimumBalanceForRentExemption(space);
@@ -55,9 +54,18 @@ describe("Deploy SLA", () => {
       deployer,
       slaRegistryKeypair,
     ]);
+
+    await program.methods
+      .initSlaRegistry()
+      .accounts({
+        deployer: deployer.publicKey,
+        slaRegistry: slaRegistryKeypair.publicKey,
+      })
+      .signers([deployer])
+      .rpc();
   });
 
-  it("Deploys an SLA", async () => {
+  it("Deploys an SLA 1", async () => {
     const ipfsHash = "t";
     let sloType = { greaterThan: {} };
     const slo = { sloValue: new anchor.BN("100"), sloType };
@@ -74,21 +82,99 @@ describe("Deploy SLA", () => {
     const [periodRegistryPda, _bump] = await PublicKey.findProgramAddress(
       [
         anchor.utils.bytes.utf8.encode("period-registry"),
-        sla.publicKey.toBuffer(),
+        slaKeypairs[0].publicKey.toBuffer(),
       ],
       program.programId
     );
 
     await program.methods
-      .deploySla(ipfsHash, messengerAddress, periods, leverage)
+      .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
       .accounts({
         deployer: deployer.publicKey,
         slaRegistry: slaRegistryKeypair.publicKey,
-        sla: sla.publicKey,
+        sla: slaKeypairs[0].publicKey,
         periodRegistry: periodRegistryPda,
         systemProgram: SystemProgram.programId,
       })
-      .signers([deployer, sla])
+      .signers([deployer, slaKeypairs[0]])
       .rpc();
+
+    const expectedSlaAccountAddresses = [slaKeypairs[0].publicKey];
+    const actualSlaAccountAddresses = (
+      await program.account.slaRegistry.fetch(slaRegistryKeypair.publicKey)
+    ).slaAccountAddresses;
+
+    expect(
+      actualSlaAccountAddresses[0].toString(),
+      "SLA registry address doesn't match  the expected address"
+    ).to.equal(expectedSlaAccountAddresses[0].toString());
+
+    expect(
+      actualSlaAccountAddresses.length,
+      "SLA registry lenghth doesn't match"
+    ).to.equal(expectedSlaAccountAddresses.length);
+
+    expect(
+      actualSlaAccountAddresses[0].toString(),
+      "match to wrong address"
+    ).to.not.equal(slaKeypairs[1].publicKey.toString());
+  });
+
+  it("Deploys an SLA 2", async () => {
+    const ipfsHash = "tt";
+    let sloType = { smallerThan: {} };
+    const slo = { sloValue: new anchor.BN("999"), sloType };
+    const messengerAddress = anchor.web3.Keypair.generate().publicKey;
+    const periods = [
+      {
+        start: new anchor.BN("99999999"),
+        end: new anchor.BN("10000000000"),
+        status: { notVerified: {} },
+      },
+    ];
+    const leverage = new anchor.BN("5");
+
+    const [periodRegistryPda, _bump] = await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode("period-registry"),
+        slaKeypairs[1].publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    await program.methods
+      .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
+      .accounts({
+        deployer: deployer.publicKey,
+        slaRegistry: slaRegistryKeypair.publicKey,
+        sla: slaKeypairs[1].publicKey,
+        periodRegistry: periodRegistryPda,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([deployer, slaKeypairs[1]])
+      .rpc();
+
+    const expectedSlaAccountAddresses = [
+      slaKeypairs[0].publicKey,
+      slaKeypairs[1].publicKey,
+    ];
+    const actualSlaAccountAddresses = (
+      await program.account.slaRegistry.fetch(slaRegistryKeypair.publicKey)
+    ).slaAccountAddresses;
+
+    expect(
+      actualSlaAccountAddresses[0].toString(),
+      "SLA registry address doesn't match  the expected address"
+    ).to.equal(expectedSlaAccountAddresses[0].toString());
+
+    expect(
+      actualSlaAccountAddresses[1].toString(),
+      "SLA registry address doesn't match  the expected address"
+    ).to.equal(expectedSlaAccountAddresses[1].toString());
+
+    expect(
+      actualSlaAccountAddresses.length,
+      "SLA registry lenghth doesn't match"
+    ).to.equal(expectedSlaAccountAddresses.length);
   });
 });
