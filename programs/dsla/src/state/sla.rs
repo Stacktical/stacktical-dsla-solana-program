@@ -1,6 +1,5 @@
-use anchor_lang::prelude::*;
-
 use crate::errors::ErrorCode;
+use anchor_lang::prelude::*;
 
 #[account]
 pub struct Sla {
@@ -11,8 +10,8 @@ pub struct Sla {
 }
 
 impl Sla {
-    // discriminator + pubkey + SLO + leverage + ipfs_hash
-    pub const MAX_SIZE: usize = 8 + 32 + Slo::MAX_SIZE + 8 + 32;
+    // discriminator + pubkey + SLO + leverage + ipfs_hash + mint + authority
+    pub const MAX_SIZE: usize = 8 + 32 + Slo::MAX_SIZE + 8 + 32 + 32 + 32;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]

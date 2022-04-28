@@ -1,7 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { expect } from "chai";
-import { Dsla, IDL } from "../target/types/dsla";
+import { Dsla } from "../target/types/dsla";
 import {
   SystemProgram,
   Transaction,
@@ -10,6 +10,7 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
 } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID, createMint, Mint } from "@solana/spl-token";
 
 describe("Deploy SLA", () => {
   // Configure the client to use the local cluster.
@@ -28,6 +29,9 @@ describe("Deploy SLA", () => {
     Keypair.generate(),
     Keypair.generate(),
   ];
+
+  let mint = null;
+
   before(async function () {
     const rentExemptionAmount =
       await connection.getMinimumBalanceForRentExemption(space);
@@ -63,6 +67,17 @@ describe("Deploy SLA", () => {
       })
       .signers([deployer])
       .rpc();
+
+    mint = await createMint(
+      provider.connection,
+      deployer,
+      deployer.publicKey,
+      null,
+      0,
+      Keypair.generate(),
+      {},
+      TOKEN_PROGRAM_ID
+    );
   });
 
   it("Deploys an SLA 1", async () => {
@@ -79,9 +94,18 @@ describe("Deploy SLA", () => {
     ];
     const leverage = new anchor.BN("1");
 
-    const [periodRegistryPda, _bump] = await PublicKey.findProgramAddress(
+    const [periodRegistryPda, _periodRegistryBump] =
+      await PublicKey.findProgramAddress(
+        [
+          anchor.utils.bytes.utf8.encode("period-registry"),
+          slaKeypairs[0].publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+
+    const [vaultPda, _vaultBump] = await PublicKey.findProgramAddress(
       [
-        anchor.utils.bytes.utf8.encode("period-registry"),
+        anchor.utils.bytes.utf8.encode("vault"),
         slaKeypairs[0].publicKey.toBuffer(),
       ],
       program.programId
@@ -94,6 +118,9 @@ describe("Deploy SLA", () => {
         slaRegistry: slaRegistryKeypair.publicKey,
         sla: slaKeypairs[0].publicKey,
         periodRegistry: periodRegistryPda,
+        mint: mint,
+        vault: vaultPda,
+
         systemProgram: SystemProgram.programId,
       })
       .signers([deployer, slaKeypairs[0]])
@@ -134,9 +161,18 @@ describe("Deploy SLA", () => {
     ];
     const leverage = new anchor.BN("5");
 
-    const [periodRegistryPda, _bump] = await PublicKey.findProgramAddress(
+    const [periodRegistryPda, _periodRegistryBump] =
+      await PublicKey.findProgramAddress(
+        [
+          anchor.utils.bytes.utf8.encode("period-registry"),
+          slaKeypairs[1].publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+
+    const [vaultPda, _vaultBump] = await PublicKey.findProgramAddress(
       [
-        anchor.utils.bytes.utf8.encode("period-registry"),
+        anchor.utils.bytes.utf8.encode("vault"),
         slaKeypairs[1].publicKey.toBuffer(),
       ],
       program.programId
@@ -149,6 +185,8 @@ describe("Deploy SLA", () => {
         slaRegistry: slaRegistryKeypair.publicKey,
         sla: slaKeypairs[1].publicKey,
         periodRegistry: periodRegistryPda,
+        mint: mint,
+        vault: vaultPda,
         systemProgram: SystemProgram.programId,
       })
       .signers([deployer, slaKeypairs[1]])
