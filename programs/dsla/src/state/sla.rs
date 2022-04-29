@@ -1,17 +1,28 @@
+use crate::errors::ErrorCode;
 use anchor_lang::prelude::*;
 
-use crate::errors::ErrorCode;
-
 #[account]
+pub struct Sla {
+    pub messenger_address: Pubkey,
+    pub slo: Slo,
+    pub leverage: u64,
+    pub ipfs_hash: String,
+}
+
+impl Sla {
+    // discriminator + pubkey + SLO + leverage + ipfs_hash + mint + authority
+    pub const MAX_SIZE: usize = 8 + 32 + Slo::MAX_SIZE + 8 + 32 + 32 + 32;
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Slo {
     pub slo_value: u128,
     pub slo_type: SloType,
-    pub bump: u8,
 }
 
 impl Slo {
-    // slo_value + slo_type + bump
-    pub const MAX_SIZE: usize = 16 + 1 + 1;
+    /// slo_value + slo_type
+    pub const MAX_SIZE: usize = 16 + 1;
 
     pub fn is_respected(&self, value: u128) -> Result<bool> {
         let slo_type = self.slo_type;
@@ -61,4 +72,30 @@ pub enum SloType {
     SmallerOrEqualTo,
     GreaterThan,
     GreaterOrEqualTo,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn get_deviation_invalid_precision_1() {
+        let slo = Slo {
+            slo_value: 10000,
+            slo_type: SloType::EqualTo,
+        };
+
+        slo.get_deviation(5000, 10).unwrap();
+    }
+    #[test]
+    #[should_panic]
+    fn get_deviation_invalid_precision_2() {
+        let slo = Slo {
+            slo_value: 100000,
+            slo_type: SloType::NotEqualTo,
+        };
+
+        slo.get_deviation(5000, 100001).unwrap();
+    }
 }

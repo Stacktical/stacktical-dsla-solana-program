@@ -2,11 +2,10 @@ name: Tests
 
 on:
   push:
-    branches:
-      - master
+    branches: [master, develop]
   pull_request:
-    branches:
-      - master
+    branches: [master, develop]
+
 env:
   SOLANA_CLI_VERSION: 1.10.8
   NODE_VERSION: 16.14.2
@@ -33,7 +32,8 @@ jobs:
             ./target/
           key: cargo-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
       - run: yarn install
+      - run: yarn lint
       - run: cargo fmt -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - run: npx anchor build
-      - run: npx anchor test
+      - run: cargo test
+      - run: anchor test

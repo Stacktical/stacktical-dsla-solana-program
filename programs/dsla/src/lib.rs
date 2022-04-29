@@ -7,19 +7,27 @@ pub mod state;
 pub mod utils;
 
 use instructions::*;
-use state::*;
+
+use crate::state::period_registry::Period;
+use crate::state::sla::Slo;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
 pub mod dsla {
     use super::*;
 
-    pub fn register_slo(
-        ctx: Context<RegisterSlo>,
-        sla_address: Pubkey,
-        slo_type: SloType,
-        slo_value: u128,
+    pub fn init_sla_registry(ctx: Context<InitSlaRegistry>) -> Result<()> {
+        instructions::init_sla_registry::handler(ctx)
+    }
+
+    pub fn deploy_sla(
+        ctx: Context<DeploySla>,
+        ipfs_hash: String,
+        slo: Slo,
+        messenger_address: Pubkey,
+        periods: Vec<Period>,
+        leverage: u64,
     ) -> Result<()> {
-        register_slo::handler(ctx, sla_address, slo_type, slo_value)
+        instructions::deploy_sla::handler(ctx, ipfs_hash, slo, messenger_address, periods, leverage)
     }
 }

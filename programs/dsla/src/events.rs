@@ -1,10 +1,18 @@
-use crate::state::slo::SloType;
+use crate::state::period_registry::Period;
 
 use anchor_lang::prelude::*;
 
 #[event]
-pub struct RegisteredSloEvent {
-    pub sla_address: Pubkey,
-    pub slo_value: u128,
-    pub slo_type: SloType,
+pub struct InitializedPeriodRegistryEvent {
+    pub periods: Vec<Period>,
+}
+
+#[event]
+pub struct CreatedSlaEvent {
+    pub sla_account_address: Pubkey,
+}
+
+#[event]
+pub struct InitializedSlaRegistryEvent {
+    pub sla_addresses: Vec<Pubkey>,
 }
