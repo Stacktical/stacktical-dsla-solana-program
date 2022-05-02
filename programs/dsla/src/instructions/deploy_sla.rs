@@ -65,11 +65,14 @@ pub fn handler(
     require_gt!(312499, sla_registry.sla_account_addresses.len());
     sla_registry.sla_account_addresses.push(sla.key());
     msg!("{}", sla_registry.sla_account_addresses[0]);
+
     // SLA initialization
     sla.leverage = leverage;
     sla.messenger_address = messenger_address;
     sla.ipfs_hash = ipfs_hash;
     sla.slo = slo;
+    sla.user_lamports_pool = 0;
+    sla.provider_lamports_pool = 0;
 
     // PERIOD REGISTRY
     let period_registry = &mut ctx.accounts.period_registry;

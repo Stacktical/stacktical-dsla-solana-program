@@ -7,11 +7,13 @@ pub struct Sla {
     pub slo: Slo,
     pub leverage: u64,
     pub ipfs_hash: String,
+    pub user_lamports_pool: u128,
+    pub provider_lamports_pool: u128,
 }
 
 impl Sla {
     // discriminator + pubkey + SLO + leverage + ipfs_hash + mint + authority
-    pub const MAX_SIZE: usize = 8 + 32 + Slo::MAX_SIZE + 8 + 32 + 32 + 32;
+    pub const MAX_SIZE: usize = 8 + 32 + Slo::MAX_SIZE + 8 + 32 + 32 + 32 + 16 + 16;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
