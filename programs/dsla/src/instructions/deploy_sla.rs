@@ -2,10 +2,16 @@ use anchor_lang::prelude::*;
 
 use crate::errors::ErrorCode;
 use crate::events::*;
-use crate::state::period_registry::{Period, PeriodRegistry};
+use crate::state::period_registry::{Period, PeriodRegistry, Status};
 use crate::state::sla::{Sla, Slo};
 use crate::state::sla_registry::SlaRegistry;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+
+const PERIOD_REGISTRY: &str = "period-registry";
+const PROVIDER_VAULT: &str = "provider-vault";
+const USER_VAULT: &str = "user-vault";
+const UT_MINT: &str = "ut-mint";
+const PT_MINT: &str = "pt-mint";
 
 #[derive(Accounts)]
 pub struct DeploySla<'info> {
@@ -18,7 +24,7 @@ pub struct DeploySla<'info> {
     #[account(
         init,
         payer = deployer,
-        space = Sla::MAX_SIZE,
+        space = Sla::LEN,
     )]
     pub sla: Account<'info, Sla>,
 
@@ -26,7 +32,7 @@ pub struct DeploySla<'info> {
         init,
         payer = deployer,
         space = 10_000,
-        seeds = [b"period-registry", sla.key().as_ref()],
+        seeds = [PERIOD_REGISTRY.as_bytes(), sla.key().as_ref()],
         bump
     )]
     pub period_registry: Account<'info, PeriodRegistry>,
@@ -36,16 +42,54 @@ pub struct DeploySla<'info> {
     #[account(
         init,
         payer = deployer,
-        seeds = [b"vault", sla.key().as_ref()],
+        seeds = [PROVIDER_VAULT.as_bytes(), sla.key().as_ref()],
         token::mint = mint,
         token::authority = sla,
+        bump,
+    )]
+    pub provider_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        init,
+        payer = deployer,
+        seeds = [USER_VAULT.as_bytes(), sla.key().as_ref()],
+        token::mint = mint,
+        token::authority = sla,
+        bump,
+    )]
+    pub user_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        init,
+        payer = deployer,
+        seeds = [
+            UT_MINT.as_bytes(),
+            sla.key().as_ref(),
+        ],
+        mint::decimals = 6,
+        mint::authority = sla, 
         bump
     )]
-    pub vault: Account<'info, TokenAccount>,
+    pub ut_mint: Box<Account<'info, Mint>>,
 
-    pub rent: Sysvar<'info, Rent>,
-    pub system_program: Program<'info, System>,
+    #[account(
+        init,
+        payer = deployer,
+        seeds = [
+            PT_MINT.as_bytes(),
+            sla.key().as_ref(),
+        ],
+        mint::decimals = 6,
+        mint::authority = sla, 
+        bump
+    )]
+    pub pt_mint: Box<Account<'info, Mint>>,
+
+    /// The program for interacting with the token.
     pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
+
+    pub system_program: Program<'info, System>,
 }
 
 pub fn handler(
@@ -77,6 +121,13 @@ pub fn handler(
     // PERIOD REGISTRY
     let period_registry = &mut ctx.accounts.period_registry;
     require_gt!(300, periods.len());
+
+    for period in &periods {
+        require!(
+            period.status == Status::NotVerified,
+            ErrorCode::PeriodAlreadyVerified
+        );
+    }
     period_registry.bump = *match ctx.bumps.get("period_registry") {
         Some(bump) => bump,
         None => return err!(ErrorCode::BumpNotFound),

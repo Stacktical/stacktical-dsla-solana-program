@@ -16,4 +16,6 @@ pub enum ErrorCode {
     ZeroNumberOfPeriods,
     #[msg("Number of periods is capped based on account storage requirment")]
     MaxNumberOfPeriods,
+    #[msg("all periods should be set as unverified")]
+    PeriodAlreadyVerified,
 }

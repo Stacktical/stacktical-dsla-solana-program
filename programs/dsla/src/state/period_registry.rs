@@ -22,7 +22,7 @@ pub struct Period {
     pub status: Status,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Clone)]
 pub enum Status {
     NotVerified,
     Respected { value: u128 },
@@ -30,7 +30,7 @@ pub enum Status {
 }
 
 impl Period {
-    pub const MAX_SIZE: usize = 8 + 8 + 1 + 16;
+    pub const LEN: usize = 8 + 8 + 1 + 16;
 }
 
 impl PeriodRegistry {

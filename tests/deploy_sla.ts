@@ -10,9 +10,14 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
 } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, createMint, Mint } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, createMint } from "@solana/spl-token";
 
 describe("Deploy SLA", () => {
+  const PERIOD_REGISTRY: string = "period-registry";
+  const PROVIDER_VAULT: string = "provider-vault";
+  const USER_VAULT: string = "user-vault";
+  const UT_MINT: string = "ut-mint";
+  const PT_MINT: string = "pt-mint";
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.local();
   // Configure the client to use the local cluster.
@@ -97,34 +102,65 @@ describe("Deploy SLA", () => {
     const [periodRegistryPda, _periodRegistryBump] =
       await PublicKey.findProgramAddress(
         [
-          anchor.utils.bytes.utf8.encode("period-registry"),
+          anchor.utils.bytes.utf8.encode(PERIOD_REGISTRY),
           slaKeypairs[0].publicKey.toBuffer(),
         ],
         program.programId
       );
 
-    const [vaultPda, _vaultBump] = await PublicKey.findProgramAddress(
+    const [userVaultPda, _userVaultBump] = await PublicKey.findProgramAddress(
       [
-        anchor.utils.bytes.utf8.encode("vault"),
+        anchor.utils.bytes.utf8.encode(USER_VAULT),
         slaKeypairs[0].publicKey.toBuffer(),
       ],
       program.programId
     );
 
-    await program.methods
-      .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
-      .accounts({
-        deployer: deployer.publicKey,
-        slaRegistry: slaRegistryKeypair.publicKey,
-        sla: slaKeypairs[0].publicKey,
-        periodRegistry: periodRegistryPda,
-        mint: mint,
-        vault: vaultPda,
+    const [providerVaultPda, _providerVaultBump] =
+      await PublicKey.findProgramAddress(
+        [
+          anchor.utils.bytes.utf8.encode(PROVIDER_VAULT),
+          slaKeypairs[0].publicKey.toBuffer(),
+        ],
+        program.programId
+      );
 
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([deployer, slaKeypairs[0]])
-      .rpc();
+    const [utMintPda, _utMintBump] = await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode(UT_MINT),
+        slaKeypairs[0].publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    const [ptMintPda, _ptMintBump] = await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode(PT_MINT),
+        slaKeypairs[0].publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    try {
+      await program.methods
+        .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
+        .accounts({
+          deployer: deployer.publicKey,
+          slaRegistry: slaRegistryKeypair.publicKey,
+          sla: slaKeypairs[0].publicKey,
+          periodRegistry: periodRegistryPda,
+          mint: mint,
+          providerVault: providerVaultPda,
+          userVault: userVaultPda,
+          utMint: utMintPda,
+          ptMint: ptMintPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([deployer, slaKeypairs[0]])
+        .rpc();
+    } catch (err) {
+      console.log(err);
+    }
 
     const expectedSlaAccountAddresses = [slaKeypairs[0].publicKey];
     const actualSlaAccountAddresses = (
@@ -164,33 +200,65 @@ describe("Deploy SLA", () => {
     const [periodRegistryPda, _periodRegistryBump] =
       await PublicKey.findProgramAddress(
         [
-          anchor.utils.bytes.utf8.encode("period-registry"),
+          anchor.utils.bytes.utf8.encode(PERIOD_REGISTRY),
           slaKeypairs[1].publicKey.toBuffer(),
         ],
         program.programId
       );
 
-    const [vaultPda, _vaultBump] = await PublicKey.findProgramAddress(
+    const [userVaultPda, _userVaultBump] = await PublicKey.findProgramAddress(
       [
-        anchor.utils.bytes.utf8.encode("vault"),
+        anchor.utils.bytes.utf8.encode(USER_VAULT),
         slaKeypairs[1].publicKey.toBuffer(),
       ],
       program.programId
     );
 
-    await program.methods
-      .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
-      .accounts({
-        deployer: deployer.publicKey,
-        slaRegistry: slaRegistryKeypair.publicKey,
-        sla: slaKeypairs[1].publicKey,
-        periodRegistry: periodRegistryPda,
-        mint: mint,
-        vault: vaultPda,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([deployer, slaKeypairs[1]])
-      .rpc();
+    const [providerVaultPda, _providerVaultBump] =
+      await PublicKey.findProgramAddress(
+        [
+          anchor.utils.bytes.utf8.encode(PROVIDER_VAULT),
+          slaKeypairs[1].publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+
+    const [utMintPda, _utMintBump] = await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode(UT_MINT),
+        slaKeypairs[1].publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    const [ptMintPda, _ptMintBump] = await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode(PT_MINT),
+        slaKeypairs[1].publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    try {
+      await program.methods
+        .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
+        .accounts({
+          deployer: deployer.publicKey,
+          slaRegistry: slaRegistryKeypair.publicKey,
+          sla: slaKeypairs[1].publicKey,
+          periodRegistry: periodRegistryPda,
+          mint: mint,
+          providerVault: providerVaultPda,
+          userVault: userVaultPda,
+          utMint: utMintPda,
+          ptMint: ptMintPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([deployer, slaKeypairs[1]])
+        .rpc();
+    } catch (err) {
+      console.log(err);
+    }
 
     const expectedSlaAccountAddresses = [
       slaKeypairs[0].publicKey,

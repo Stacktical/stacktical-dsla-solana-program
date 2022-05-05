@@ -13,7 +13,7 @@ pub struct Sla {
 
 impl Sla {
     // discriminator + pubkey + SLO + leverage + ipfs_hash + mint + authority
-    pub const MAX_SIZE: usize = 8 + 32 + Slo::MAX_SIZE + 8 + 32 + 32 + 32 + 16 + 16;
+    pub const LEN: usize = 8 + 32 + Slo::LEN + 8 + 32 + 32 + 32 + 16 + 16;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
@@ -24,7 +24,7 @@ pub struct Slo {
 
 impl Slo {
     /// slo_value + slo_type
-    pub const MAX_SIZE: usize = 16 + 1;
+    pub const LEN: usize = 16 + 1;
 
     pub fn is_respected(&self, value: u128) -> Result<bool> {
         let slo_type = self.slo_type;
