@@ -67,8 +67,8 @@ pub struct DeploySla<'info> {
             sla.key().as_ref(),
         ],
         mint::decimals = 6,
-        mint::authority = sla, 
-        bump
+        mint::authority = sla,
+        bump,
     )]
     pub ut_mint: Box<Account<'info, Mint>>,
 
@@ -80,7 +80,7 @@ pub struct DeploySla<'info> {
             sla.key().as_ref(),
         ],
         mint::decimals = 6,
-        mint::authority = sla, 
+        mint::authority = sla,
         bump
     )]
     pub pt_mint: Box<Account<'info, Mint>>,
