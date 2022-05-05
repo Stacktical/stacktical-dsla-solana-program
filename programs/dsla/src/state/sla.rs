@@ -9,11 +9,12 @@ pub struct Sla {
     pub ipfs_hash: String,
     pub user_lamports_pool: u128,
     pub provider_lamports_pool: u128,
+    pub mint_address: Pubkey,
 }
 
 impl Sla {
-    // discriminator + pubkey + SLO + leverage + ipfs_hash + mint + authority
-    pub const LEN: usize = 8 + 32 + Slo::LEN + 8 + 32 + 32 + 32 + 16 + 16;
+    // discriminator + messenger_address + SLO + leverage + ipfs_hash + mint + authority + mint_address
+    pub const LEN: usize = 8 + 32 + Slo::LEN + 8 + 32 + 32 + 32 + 16 + 16 + 32;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
