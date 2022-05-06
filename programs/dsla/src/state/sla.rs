@@ -7,8 +7,6 @@ pub struct Sla {
     pub slo: Slo,
     pub leverage: u64,
     pub ipfs_hash: String,
-    pub user_lamports_pool: u128,
-    pub provider_lamports_pool: u128,
     pub mint_address: Pubkey,
 }
 

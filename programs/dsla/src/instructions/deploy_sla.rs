@@ -37,22 +37,22 @@ pub struct DeploySla<'info> {
     #[account(
         init,
         payer = deployer,
-        seeds = [PROVIDER_VAULT_SEED.as_bytes(), sla.key().as_ref()],
+        seeds = [PROVIDER_POOL_SEED.as_bytes(), sla.key().as_ref()],
         token::mint = mint,
         token::authority = sla,
         bump,
     )]
-    pub provider_vault: Box<Account<'info, TokenAccount>>,
+    pub provider_pool: Box<Account<'info, TokenAccount>>,
 
     #[account(
         init,
         payer = deployer,
-        seeds = [USER_VAULT_SEED.as_bytes(), sla.key().as_ref()],
+        seeds = [USER_POOL_SEED.as_bytes(), sla.key().as_ref()],
         token::mint = mint,
         token::authority = sla,
         bump,
     )]
-    pub user_vault: Box<Account<'info, TokenAccount>>,
+    pub user_pool: Box<Account<'info, TokenAccount>>,
 
     #[account(
         init,
@@ -110,8 +110,7 @@ pub fn handler(
     sla.messenger_address = messenger_address;
     sla.ipfs_hash = ipfs_hash;
     sla.slo = slo;
-    sla.user_lamports_pool = 0;
-    sla.provider_lamports_pool = 0;
+
     sla.mint_address = ctx.accounts.mint.key();
 
     // PERIOD REGISTRY

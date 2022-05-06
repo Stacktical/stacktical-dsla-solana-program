@@ -20,12 +20,8 @@ pub mod dsla {
         instructions::init_sla_registry::handler(ctx)
     }
 
-    pub fn stake_provider_side(ctx: Context<StakeProviderSide>, token_amount: u64) -> Result<()> {
-        instructions::stake_provider_side::handler(ctx, token_amount)
-    }
-
-    pub fn stake_user_side(ctx: Context<StakeUserSide>, token_amount: u64) -> Result<()> {
-        instructions::stake_user_side::handler(ctx, token_amount)
+    pub fn stake(ctx: Context<Stake>, token_amount: u64, side: Side) -> Result<()> {
+        instructions::stake::handler(ctx, token_amount, side)
     }
 
     pub fn deploy_sla(
