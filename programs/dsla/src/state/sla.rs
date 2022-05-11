@@ -2,12 +2,22 @@ use crate::errors::ErrorCode;
 use anchor_lang::prelude::*;
 
 #[account]
+pub struct SlaAuthority {}
+#[account]
 pub struct Sla {
     pub messenger_address: Pubkey,
     pub slo: Slo,
     pub leverage: u64,
     pub ipfs_hash: String,
     pub mint_address: Pubkey,
+    /// The account derived by the program, which has authority over all
+    /// assets in the SLA.
+    pub sla_authority: Pubkey,
+    /// The address used as the seed for generating the SLA authority
+    /// address. Typically this is the SLA account's own address.
+    pub authority_seed: Pubkey,
+    /// The bump seed value for generating the authority address.
+    pub authority_bump_seed: [u8; 1],
 }
 
 impl Sla {

@@ -10,14 +10,21 @@ import {
   LAMPORTS_PER_SOL,
   PublicKey,
 } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, createMint } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  createMint,
+  createAssociatedTokenAccount,
+  mintToChecked,
+} from "@solana/spl-token";
 
-describe("Deploy SLA", () => {
+describe("Initialize UT, PT accounts", () => {
   const PERIOD_REGISTRY: string = "period-registry";
   const PROVIDER_POOL: string = "provider-vault";
   const USER_POOL: string = "user-vault";
   const UT_MINT: string = "ut-mint";
   const PT_MINT: string = "pt-mint";
+  const UT_ACCOUNT: string = "ut-account";
+  const PT_ACCOUNT: string = "pt-account";
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.local();
   // Configure the client to use the local cluster.
@@ -27,6 +34,8 @@ describe("Deploy SLA", () => {
   const slaRegistryKeypair = anchor.web3.Keypair.generate();
 
   const deployer = Keypair.generate();
+  const staker = Keypair.generate();
+  let stakerTokenAccount;
 
   const space = 10_000_000;
   const slaKeypairs = [
@@ -49,11 +58,17 @@ describe("Deploy SLA", () => {
       programId: program.programId,
     };
 
-    let airdropSignature = await connection.requestAirdrop(
+    let airdropSignature1 = await connection.requestAirdrop(
       deployer.publicKey,
       LAMPORTS_PER_SOL * 1000
     );
-    await connection.confirmTransaction(airdropSignature);
+    await connection.confirmTransaction(airdropSignature1);
+
+    let airdropSignature2 = await connection.requestAirdrop(
+      staker.publicKey,
+      LAMPORTS_PER_SOL * 1000
+    );
+    await connection.confirmTransaction(airdropSignature2);
 
     const createAccountTransaction = new Transaction().add(
       SystemProgram.createAccount(createAccountParams)
@@ -83,9 +98,26 @@ describe("Deploy SLA", () => {
       {},
       TOKEN_PROGRAM_ID
     );
+
+    stakerTokenAccount = await createAssociatedTokenAccount(
+      provider.connection, // connection
+      staker, // fee payer
+      mint, // mint
+      staker.publicKey // owner,
+    );
+
+    await mintToChecked(
+      provider.connection, // connection
+      deployer, // fee payer
+      mint, // Mint for the account
+      stakerTokenAccount, // receiver (sholud be a token account)
+      deployer, // mint authority
+      LAMPORTS_PER_SOL * 100, // amount
+      0 // decimals
+    );
   });
 
-  it("Deploys an SLA 1", async () => {
+  it("initializes the UT and PT accounts", async () => {
     const ipfsHash = "t";
     let sloType = { greaterThan: {} };
     const slo = { sloValue: new anchor.BN("100"), sloType };
@@ -141,6 +173,24 @@ describe("Deploy SLA", () => {
       program.programId
     );
 
+    const [utAccountPda, _utAccountBump] = await PublicKey.findProgramAddress(
+      [
+        staker.publicKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode(UT_ACCOUNT),
+        slaKeypairs[0].publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    const [ptAccountPda, _ptAccountBump] = await PublicKey.findProgramAddress(
+      [
+        staker.publicKey.toBuffer(),
+        anchor.utils.bytes.utf8.encode(PT_ACCOUNT),
+        slaKeypairs[0].publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
     const [slaAuthorityPda, _slaAuthorityBump] =
       await PublicKey.findProgramAddress(
         [slaKeypairs[0].publicKey.toBuffer()],
@@ -169,132 +219,22 @@ describe("Deploy SLA", () => {
       console.log(err);
     }
 
-    const expectedSlaAccountAddresses = [slaKeypairs[0].publicKey];
-    const actualSlaAccountAddresses = (
-      await program.account.slaRegistry.fetch(slaRegistryKeypair.publicKey)
-    ).slaAccountAddresses;
-
-    expect(
-      actualSlaAccountAddresses[0].toString(),
-      "SLA registry address doesn't match  the expected address"
-    ).to.equal(expectedSlaAccountAddresses[0].toString());
-
-    expect(
-      actualSlaAccountAddresses.length,
-      "SLA registry lenghth doesn't match"
-    ).to.equal(expectedSlaAccountAddresses.length);
-
-    expect(
-      actualSlaAccountAddresses[0].toString(),
-      "match to wrong address"
-    ).to.not.equal(slaKeypairs[1].publicKey.toString());
-  });
-
-  it("Deploys an SLA 2", async () => {
-    const ipfsHash = "tt";
-    let sloType = { smallerThan: {} };
-    const slo = { sloValue: new anchor.BN("999"), sloType };
-    const messengerAddress = anchor.web3.Keypair.generate().publicKey;
-    const periods = [
-      {
-        start: new anchor.BN("99999999"),
-        end: new anchor.BN("10000000000"),
-        status: { notVerified: {} },
-      },
-    ];
-    const leverage = new anchor.BN("5");
-
-    const [periodRegistryPda, _periodRegistryBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(PERIOD_REGISTRY),
-          slaKeypairs[1].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-
-    const [userPoolPda, _userPoolBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(USER_POOL),
-        slaKeypairs[1].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [providerPoolPda, _providerPoolBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(PROVIDER_POOL),
-          slaKeypairs[1].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-
-    const [utMintPda, _utMintBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(UT_MINT),
-        slaKeypairs[1].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [ptMintPda, _ptMintBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(PT_MINT),
-        slaKeypairs[1].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [slaAuthorityPda, _slaAuthorityBump] =
-      await PublicKey.findProgramAddress(
-        [slaKeypairs[1].publicKey.toBuffer()],
-        program.programId
-      );
-
     try {
       await program.methods
-        .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
+        .initUtPtAccounts()
         .accounts({
-          deployer: deployer.publicKey,
-          slaRegistry: slaRegistryKeypair.publicKey,
-          sla: slaKeypairs[1].publicKey,
-          slaAuthority: slaAuthorityPda,
-          periodRegistry: periodRegistryPda,
-          mint: mint,
-          providerPool: providerPoolPda,
-          userPool: userPoolPda,
+          signer: staker.publicKey,
+          sla: slaKeypairs[0].publicKey,
+          stakerUtAccount: utAccountPda,
+          stakerPtAccount: ptAccountPda,
           utMint: utMintPda,
           ptMint: ptMintPda,
           systemProgram: SystemProgram.programId,
         })
-        .signers([deployer, slaKeypairs[1]])
+        .signers([staker])
         .rpc();
     } catch (err) {
       console.log(err);
     }
-
-    const expectedSlaAccountAddresses = [
-      slaKeypairs[0].publicKey,
-      slaKeypairs[1].publicKey,
-    ];
-    const actualSlaAccountAddresses = (
-      await program.account.slaRegistry.fetch(slaRegistryKeypair.publicKey)
-    ).slaAccountAddresses;
-
-    expect(
-      actualSlaAccountAddresses[0].toString(),
-      "SLA registry address doesn't match  the expected address"
-    ).to.equal(expectedSlaAccountAddresses[0].toString());
-
-    expect(
-      actualSlaAccountAddresses[1].toString(),
-      "SLA registry address doesn't match  the expected address"
-    ).to.equal(expectedSlaAccountAddresses[1].toString());
-
-    expect(
-      actualSlaAccountAddresses.length,
-      "SLA registry lenghth doesn't match"
-    ).to.equal(expectedSlaAccountAddresses.length);
   });
 });

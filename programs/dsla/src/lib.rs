@@ -20,6 +20,10 @@ pub mod dsla {
         instructions::init_sla_registry::handler(ctx)
     }
 
+    pub fn init_ut_pt_accounts(ctx: Context<InitUtPtAccounts>) -> Result<()> {
+        instructions::init_ut_pt_accounts::handler(ctx)
+    }
+
     pub fn stake(ctx: Context<Stake>, token_amount: u64, side: Side) -> Result<()> {
         instructions::stake::handler(ctx, token_amount, side)
     }

@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::errors::ErrorCode;
 use crate::events::*;
 use crate::state::period_registry::{Period, PeriodRegistry, Status};
-use crate::state::sla::{Sla, Slo};
+use crate::state::sla::{Sla, SlaAuthority, Slo};
 use crate::state::sla_registry::SlaRegistry;
 use crate::utils::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -26,6 +26,15 @@ pub struct DeploySla<'info> {
     #[account(
         init,
         payer = deployer,
+        space = 8,
+        seeds = [sla.key().as_ref()],
+        bump
+    )]
+    pub sla_authority: Account<'info, SlaAuthority>,
+
+    #[account(
+        init,
+        payer = deployer,
         space = 10_000,
         seeds = [PERIOD_REGISTRY_SEED.as_bytes(), sla.key().as_ref()],
         bump
@@ -39,7 +48,7 @@ pub struct DeploySla<'info> {
         payer = deployer,
         seeds = [PROVIDER_POOL_SEED.as_bytes(), sla.key().as_ref()],
         token::mint = mint,
-        token::authority = sla,
+        token::authority = sla_authority,
         bump,
     )]
     pub provider_pool: Box<Account<'info, TokenAccount>>,
@@ -49,7 +58,7 @@ pub struct DeploySla<'info> {
         payer = deployer,
         seeds = [USER_POOL_SEED.as_bytes(), sla.key().as_ref()],
         token::mint = mint,
-        token::authority = sla,
+        token::authority = sla_authority,
         bump,
     )]
     pub user_pool: Box<Account<'info, TokenAccount>>,
@@ -62,7 +71,7 @@ pub struct DeploySla<'info> {
             sla.key().as_ref(),
         ],
         mint::decimals = 6,
-        mint::authority = sla,
+        mint::authority = sla_authority,
         bump,
     )]
     pub ut_mint: Box<Account<'info, Mint>>,
@@ -75,7 +84,7 @@ pub struct DeploySla<'info> {
             sla.key().as_ref(),
         ],
         mint::decimals = 6,
-        mint::authority = sla,
+        mint::authority = sla_authority,
         bump
     )]
     pub pt_mint: Box<Account<'info, Mint>>,
@@ -106,6 +115,12 @@ pub fn handler(
     msg!("{}", sla_registry.sla_account_addresses[0]);
 
     // SLA initialization
+    let initial_seeds = &[sla.to_account_info().key.as_ref()];
+    let (authority, authority_seed) = Pubkey::find_program_address(initial_seeds, ctx.program_id);
+
+    sla.sla_authority = authority;
+    sla.authority_seed = sla.key();
+    sla.authority_bump_seed = [authority_seed];
     sla.leverage = leverage;
     sla.messenger_address = messenger_address;
     sla.ipfs_hash = ipfs_hash;
