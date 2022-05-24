@@ -10,14 +10,16 @@ use instructions::*;
 
 use crate::state::period_registry::Period;
 use crate::state::sla::Slo;
+use crate::state::governance::Governance;
+
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
 pub mod dsla {
     use super::*;
 
-    pub fn init_sla_registry(ctx: Context<InitSlaRegistry>) -> Result<()> {
-        instructions::init_sla_registry::handler(ctx)
+    pub fn init_sla_registry(ctx: Context<InitSlaRegistry>, governance_parameters: Governance) -> Result<()> {
+        instructions::init_sla_registry::handler(ctx, governance_parameters)
     }
 
     pub fn init_ut_pt_accounts(ctx: Context<InitUtPtAccounts>) -> Result<()> {
