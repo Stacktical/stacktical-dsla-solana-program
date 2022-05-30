@@ -5,10 +5,14 @@ use anchor_lang::prelude::*;
 pub struct SlaAuthority {}
 #[account]
 pub struct Sla {
+    /// address of the messeger providing the data
     pub messenger_address: Pubkey,
+    /// service level objective, the objective to achieve for the provider to be rewarded
     pub slo: Slo,
+    ///  leverage for the SLA between provider and user pool
     pub leverage: u64,
     pub ipfs_hash: String,
+    /// address of the coin to be used as SLA reward for users and providers
     pub mint_address: Pubkey,
     /// The account derived by the program, which has authority over all
     /// assets in the SLA.
@@ -24,6 +28,8 @@ impl Sla {
     // discriminator + messenger_address + SLO + leverage + ipfs_hash + mint + authority + mint_address
     pub const LEN: usize = 8 + 32 + Slo::LEN + 8 + 32 + 32 + 32 + 16 + 16 + 32;
 }
+
+
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Slo {

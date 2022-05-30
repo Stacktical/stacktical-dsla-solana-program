@@ -7,3 +7,4 @@ pub const UT_MINT_SEED: &str = "ut-mint";
 pub const PT_MINT_SEED: &str = "pt-mint";
 pub const UT_ACCOUNT_SEED: &str = "ut-account";
 pub const PT_ACCOUNT_SEED: &str = "pt-account";
+pub const GOVERNANCE_SEED: &str = "governance";

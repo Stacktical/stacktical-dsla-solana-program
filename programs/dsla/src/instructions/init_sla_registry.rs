@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 
-use crate::state::sla_registry::SlaRegistry;
 use crate::state::governance::Governance;
-
+use crate::state::sla_registry::SlaRegistry;
+use crate::utils::*;
 
 #[derive(Accounts)]
 pub struct InitSlaRegistry<'info> {
@@ -10,7 +10,13 @@ pub struct InitSlaRegistry<'info> {
     pub deployer: Signer<'info>,
     #[account(zero)]
     pub sla_registry: Account<'info, SlaRegistry>,
-    #[account(zero)]
+    #[account(
+        init,
+        payer = deployer,
+        space = Governance::LEN,
+        seeds = [GOVERNANCE_SEED.as_bytes()],
+        bump
+    )]
     pub governance: Account<'info, Governance>,
 
     pub system_program: Program<'info, System>,
@@ -27,7 +33,6 @@ pub fn handler(ctx: Context<InitSlaRegistry>, governance_parameters: Governance)
     governance.max_token_length = governance_parameters.max_token_length;
     governance.max_leverage = governance_parameters.max_leverage;
     governance.burn_dsla = governance_parameters.burn_dsla;
-
 
     msg!("SLA registry Initialized");
     Ok(())

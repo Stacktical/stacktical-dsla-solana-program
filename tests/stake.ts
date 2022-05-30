@@ -79,10 +79,32 @@ describe("Stake", () => {
       slaRegistryKeypair,
     ]);
 
+    const [governancePda, _governanceBump] =
+    await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode("governance"),
+      ],
+      program.programId
+    );
+    
+    let governanceParameters = {
+      dslaBurnRate: new anchor.BN(10),
+      dslaDepositByPeriod: new anchor.BN(10),
+      dslaPlatformReward: new anchor.BN(10),
+      dslaMessengerReward: new anchor.BN(10),
+      dslaUserReward: new anchor.BN(10),
+      dslaBurnedByVerification: new anchor.BN(10),
+      maxTokenLength: new anchor.BN(10),
+      maxLeverage: new anchor.BN(10),
+      burnDsla: true
+    }
+
+
     await program.methods
-      .initSlaRegistry()
+      .initSlaRegistry(governanceParameters)
       .accounts({
         deployer: deployer.publicKey,
+        governance: governancePda,
         slaRegistry: slaRegistryKeypair.publicKey,
       })
       .signers([deployer])
