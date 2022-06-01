@@ -15,7 +15,9 @@ import {
   createMint,
   createAssociatedTokenAccount,
   mintToChecked,
+  NATIVE_MINT,
 } from "@solana/spl-token";
+import { SLA_REGISTRY_KEYPAIR, SLA_REGISTRY_SPACE } from "./constants";
 
 describe("Stake", () => {
   const PERIOD_REGISTRY: string = "period-registry";
@@ -31,13 +33,11 @@ describe("Stake", () => {
   anchor.setProvider(provider);
   let connection = provider.connection;
   const program = anchor.workspace.Dsla as Program<Dsla>;
-  const slaRegistryKeypair = anchor.web3.Keypair.generate();
 
   const deployer = Keypair.generate();
   const staker = Keypair.generate();
   let stakerTokenAccount;
 
-  const space = 10_000_000;
   const slaKeypairs = [
     Keypair.generate(),
     Keypair.generate(),
@@ -47,17 +47,6 @@ describe("Stake", () => {
   let mint = null;
 
   before(async function () {
-    const rentExemptionAmount =
-      await connection.getMinimumBalanceForRentExemption(space);
-
-    const createAccountParams = {
-      fromPubkey: deployer.publicKey,
-      newAccountPubkey: slaRegistryKeypair.publicKey,
-      lamports: rentExemptionAmount,
-      space,
-      programId: program.programId,
-    };
-
     let airdropSignature1 = await connection.requestAirdrop(
       deployer.publicKey,
       LAMPORTS_PER_SOL * 1000
@@ -69,46 +58,6 @@ describe("Stake", () => {
       LAMPORTS_PER_SOL * 1000
     );
     await connection.confirmTransaction(airdropSignature2);
-
-    const createAccountTransaction = new Transaction().add(
-      SystemProgram.createAccount(createAccountParams)
-    );
-
-    await sendAndConfirmTransaction(connection, createAccountTransaction, [
-      deployer,
-      slaRegistryKeypair,
-    ]);
-
-    const [governancePda, _governanceBump] =
-    await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode("governance"),
-      ],
-      program.programId
-    );
-    
-    let governanceParameters = {
-      dslaBurnRate: new anchor.BN(10),
-      dslaDepositByPeriod: new anchor.BN(10),
-      dslaPlatformReward: new anchor.BN(10),
-      dslaMessengerReward: new anchor.BN(10),
-      dslaUserReward: new anchor.BN(10),
-      dslaBurnedByVerification: new anchor.BN(10),
-      maxTokenLength: new anchor.BN(10),
-      maxLeverage: new anchor.BN(10),
-      burnDsla: true
-    }
-
-
-    await program.methods
-      .initSlaRegistry(governanceParameters)
-      .accounts({
-        deployer: deployer.publicKey,
-        governance: governancePda,
-        slaRegistry: slaRegistryKeypair.publicKey,
-      })
-      .signers([deployer])
-      .rpc();
 
     mint = await createMint(
       provider.connection,
@@ -225,7 +174,7 @@ describe("Stake", () => {
         .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
         .accounts({
           deployer: deployer.publicKey,
-          slaRegistry: slaRegistryKeypair.publicKey,
+          slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
           sla: slaKeypairs[0].publicKey,
           slaAuthority: slaAuthorityPda,
           periodRegistry: periodRegistryPda,

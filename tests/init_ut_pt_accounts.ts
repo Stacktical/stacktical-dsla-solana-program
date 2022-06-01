@@ -1,63 +1,40 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
-import { expect } from "chai";
 import { Dsla } from "../target/types/dsla";
+import { TOKEN_PROGRAM_ID, createMint } from "@solana/spl-token";
+
 import {
   SystemProgram,
-  Transaction,
-  sendAndConfirmTransaction,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
 } from "@solana/web3.js";
+import { NATIVE_MINT } from "@solana/spl-token";
 import {
-  TOKEN_PROGRAM_ID,
-  createMint,
-  createAssociatedTokenAccount,
-  mintToChecked,
-} from "@solana/spl-token";
+  PERIOD_REGISTRY_SEED,
+  PROVIDER_POOL_SEED,
+  PT_ACCOUNT_SEED,
+  PT_MINT_SEED,
+  SLA_REGISTRY_KEYPAIR,
+  USER_POOL_SEED,
+  UT_ACCOUNT_SEED,
+  UT_MINT_SEED,
+} from "./constants";
 
 describe("Initialize UT, PT accounts", () => {
-  const PERIOD_REGISTRY: string = "period-registry";
-  const PROVIDER_POOL: string = "provider-vault";
-  const USER_POOL: string = "user-vault";
-  const UT_MINT: string = "ut-mint";
-  const PT_MINT: string = "pt-mint";
-  const UT_ACCOUNT: string = "ut-account";
-  const PT_ACCOUNT: string = "pt-account";
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.local();
   // Configure the client to use the local cluster.
   anchor.setProvider(provider);
   let connection = provider.connection;
   const program = anchor.workspace.Dsla as Program<Dsla>;
-  const slaRegistryKeypair = anchor.web3.Keypair.generate();
+
+  const slaKeypairs = [Keypair.generate()];
 
   const deployer = Keypair.generate();
   const staker = Keypair.generate();
-  let stakerTokenAccount;
-
-  const space = 10_000_000;
-  const slaKeypairs = [
-    Keypair.generate(),
-    Keypair.generate(),
-    Keypair.generate(),
-  ];
-
-  let mint = null;
 
   before(async function () {
-    const rentExemptionAmount =
-      await connection.getMinimumBalanceForRentExemption(space);
-
-    const createAccountParams = {
-      fromPubkey: deployer.publicKey,
-      newAccountPubkey: slaRegistryKeypair.publicKey,
-      lamports: rentExemptionAmount,
-      space,
-      programId: program.programId,
-    };
-
     let airdropSignature1 = await connection.requestAirdrop(
       deployer.publicKey,
       LAMPORTS_PER_SOL * 1000
@@ -69,73 +46,6 @@ describe("Initialize UT, PT accounts", () => {
       LAMPORTS_PER_SOL * 1000
     );
     await connection.confirmTransaction(airdropSignature2);
-
-    const createAccountTransaction = new Transaction().add(
-      SystemProgram.createAccount(createAccountParams)
-    );
-
-    await sendAndConfirmTransaction(connection, createAccountTransaction, [
-      deployer,
-      slaRegistryKeypair,
-    ]);
-
-    const [governancePda, _governanceBump] =
-    await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode("governance"),
-      ],
-      program.programId
-    );
-    
-    let governanceParameters = {
-      dslaBurnRate: new anchor.BN(10),
-      dslaDepositByPeriod: new anchor.BN(10),
-      dslaPlatformReward: new anchor.BN(10),
-      dslaMessengerReward: new anchor.BN(10),
-      dslaUserReward: new anchor.BN(10),
-      dslaBurnedByVerification: new anchor.BN(10),
-      maxTokenLength: new anchor.BN(10),
-      maxLeverage: new anchor.BN(10),
-      burnDsla: true
-    }
-
-
-    await program.methods
-      .initSlaRegistry(governanceParameters)
-      .accounts({
-        deployer: deployer.publicKey,
-        governance: governancePda,
-        slaRegistry: slaRegistryKeypair.publicKey,
-      })
-      .signers([deployer])
-      .rpc();
-    mint = await createMint(
-      provider.connection,
-      deployer,
-      deployer.publicKey,
-      null,
-      0,
-      Keypair.generate(),
-      {},
-      TOKEN_PROGRAM_ID
-    );
-
-    stakerTokenAccount = await createAssociatedTokenAccount(
-      provider.connection, // connection
-      staker, // fee payer
-      mint, // mint
-      staker.publicKey // owner,
-    );
-
-    await mintToChecked(
-      provider.connection, // connection
-      deployer, // fee payer
-      mint, // Mint for the account
-      stakerTokenAccount, // receiver (sholud be a token account)
-      deployer, // mint authority
-      LAMPORTS_PER_SOL * 100, // amount
-      0 // decimals
-    );
   });
 
   it("initializes the UT and PT accounts", async () => {
@@ -155,7 +65,7 @@ describe("Initialize UT, PT accounts", () => {
     const [periodRegistryPda, _periodRegistryBump] =
       await PublicKey.findProgramAddress(
         [
-          anchor.utils.bytes.utf8.encode(PERIOD_REGISTRY),
+          anchor.utils.bytes.utf8.encode(PERIOD_REGISTRY_SEED),
           slaKeypairs[0].publicKey.toBuffer(),
         ],
         program.programId
@@ -163,7 +73,7 @@ describe("Initialize UT, PT accounts", () => {
 
     const [userPoolPda, _userPoolBump] = await PublicKey.findProgramAddress(
       [
-        anchor.utils.bytes.utf8.encode(USER_POOL),
+        anchor.utils.bytes.utf8.encode(USER_POOL_SEED),
         slaKeypairs[0].publicKey.toBuffer(),
       ],
       program.programId
@@ -172,7 +82,7 @@ describe("Initialize UT, PT accounts", () => {
     const [providerPoolPda, _providerPoolBump] =
       await PublicKey.findProgramAddress(
         [
-          anchor.utils.bytes.utf8.encode(PROVIDER_POOL),
+          anchor.utils.bytes.utf8.encode(PROVIDER_POOL_SEED),
           slaKeypairs[0].publicKey.toBuffer(),
         ],
         program.programId
@@ -180,7 +90,7 @@ describe("Initialize UT, PT accounts", () => {
 
     const [utMintPda, _utMintBump] = await PublicKey.findProgramAddress(
       [
-        anchor.utils.bytes.utf8.encode(UT_MINT),
+        anchor.utils.bytes.utf8.encode(UT_MINT_SEED),
         slaKeypairs[0].publicKey.toBuffer(),
       ],
       program.programId
@@ -188,7 +98,7 @@ describe("Initialize UT, PT accounts", () => {
 
     const [ptMintPda, _ptMintBump] = await PublicKey.findProgramAddress(
       [
-        anchor.utils.bytes.utf8.encode(PT_MINT),
+        anchor.utils.bytes.utf8.encode(PT_MINT_SEED),
         slaKeypairs[0].publicKey.toBuffer(),
       ],
       program.programId
@@ -197,7 +107,7 @@ describe("Initialize UT, PT accounts", () => {
     const [utAccountPda, _utAccountBump] = await PublicKey.findProgramAddress(
       [
         staker.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode(UT_ACCOUNT),
+        anchor.utils.bytes.utf8.encode(UT_ACCOUNT_SEED),
         slaKeypairs[0].publicKey.toBuffer(),
       ],
       program.programId
@@ -206,7 +116,7 @@ describe("Initialize UT, PT accounts", () => {
     const [ptAccountPda, _ptAccountBump] = await PublicKey.findProgramAddress(
       [
         staker.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode(PT_ACCOUNT),
+        anchor.utils.bytes.utf8.encode(PT_ACCOUNT_SEED),
         slaKeypairs[0].publicKey.toBuffer(),
       ],
       program.programId
@@ -223,11 +133,11 @@ describe("Initialize UT, PT accounts", () => {
         .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
         .accounts({
           deployer: deployer.publicKey,
-          slaRegistry: slaRegistryKeypair.publicKey,
+          slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
           sla: slaKeypairs[0].publicKey,
           slaAuthority: slaAuthorityPda,
           periodRegistry: periodRegistryPda,
-          mint: mint,
+          mint: NATIVE_MINT,
           providerPool: providerPoolPda,
           userPool: userPoolPda,
           utMint: utMintPda,

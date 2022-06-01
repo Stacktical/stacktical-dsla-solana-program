@@ -1,15 +1,21 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { expect } from "chai";
-import { Dsla, IDL } from "../target/types/dsla";
+import { Dsla } from "../target/types/dsla";
 import {
   SystemProgram,
   Transaction,
   sendAndConfirmTransaction,
-  Keypair,
   LAMPORTS_PER_SOL,
-  PublicKey
+  PublicKey,
 } from "@solana/web3.js";
+import {
+  DEPLOYER,
+  GOVERNANCE_SEED,
+  SLA_REGISTRY_SPACE,
+  GOVERNANCE_PARAMETERS,
+  SLA_REGISTRY_KEYPAIR,
+} from "./constants";
 
 describe("Initialize SLA registry", () => {
   // Configure the client to use the local cluster.
@@ -18,26 +24,21 @@ describe("Initialize SLA registry", () => {
   anchor.setProvider(provider);
   let connection = provider.connection;
   const program = anchor.workspace.Dsla as Program<Dsla>;
-  const slaRegistryKeypair = anchor.web3.Keypair.generate();
-
-  const deployer = Keypair.generate();
-
-  const space = 10_000_000;
 
   before(async function () {
     const rentExemptionAmount =
-      await connection.getMinimumBalanceForRentExemption(space);
+      await connection.getMinimumBalanceForRentExemption(SLA_REGISTRY_SPACE);
 
     const createAccountParams = {
-      fromPubkey: deployer.publicKey,
-      newAccountPubkey: slaRegistryKeypair.publicKey,
+      fromPubkey: DEPLOYER.publicKey,
+      newAccountPubkey: SLA_REGISTRY_KEYPAIR.publicKey,
       lamports: rentExemptionAmount,
-      space,
+      space: SLA_REGISTRY_SPACE,
       programId: program.programId,
     };
 
     let airdropSignature = await connection.requestAirdrop(
-      deployer.publicKey,
+      DEPLOYER.publicKey,
       LAMPORTS_PER_SOL * 1000
     );
     await connection.confirmTransaction(airdropSignature);
@@ -47,46 +48,30 @@ describe("Initialize SLA registry", () => {
     );
 
     await sendAndConfirmTransaction(connection, createAccountTransaction, [
-      deployer,
-      slaRegistryKeypair,
+      DEPLOYER,
+      SLA_REGISTRY_KEYPAIR,
     ]);
   });
 
   it("initializes an SLA registry", async () => {
-    const [governancePda, _governanceBump] =
-    await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode("governance"),
-      ],
+    const [governancePda, _governanceBump] = await PublicKey.findProgramAddress(
+      [anchor.utils.bytes.utf8.encode(GOVERNANCE_SEED)],
       program.programId
     );
 
-      let governanceParameters = {
-        dslaBurnRate: new anchor.BN(10),
-        dslaDepositByPeriod: new anchor.BN(10),
-        dslaPlatformReward: new anchor.BN(10),
-        dslaMessengerReward: new anchor.BN(10),
-        dslaUserReward: new anchor.BN(10),
-        dslaBurnedByVerification: new anchor.BN(10),
-        maxTokenLength: new anchor.BN(10),
-        maxLeverage: new anchor.BN(10),
-        burnDsla: true
-      }
-
-
     await program.methods
-      .initSlaRegistry(governanceParameters)
+      .initSlaRegistry(GOVERNANCE_PARAMETERS)
       .accounts({
-        deployer: deployer.publicKey,
+        deployer: DEPLOYER.publicKey,
         governance: governancePda,
-        slaRegistry: slaRegistryKeypair.publicKey,
+        slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
       })
-      .signers([deployer])
+      .signers([DEPLOYER])
       .rpc();
 
     const expectedSlaAccountAddresses = [];
     const actualSlaAccountAddresses = (
-      await program.account.slaRegistry.fetch(slaRegistryKeypair.publicKey)
+      await program.account.slaRegistry.fetch(SLA_REGISTRY_KEYPAIR.publicKey)
     ).slaAccountAddresses;
 
     expect(
