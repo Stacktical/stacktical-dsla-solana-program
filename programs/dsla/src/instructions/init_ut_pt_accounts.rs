@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
+use crate::constants::*;
 use crate::state::sla::Sla;
-use crate::utils::*;
 
 #[derive(Accounts)]
 pub struct InitUtPtAccounts<'info> {

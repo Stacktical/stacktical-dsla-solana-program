@@ -1,16 +1,17 @@
 use anchor_lang::prelude::*;
 
+pub mod constants;
 pub mod errors;
 pub mod events;
 pub mod instructions;
 pub mod state;
-pub mod utils;
 
 use instructions::*;
 
 use crate::state::governance::Governance;
 use crate::state::period_registry::Period;
 use crate::state::sla::Slo;
+use crate::state::utils::Side;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]

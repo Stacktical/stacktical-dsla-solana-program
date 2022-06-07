@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 
+use crate::constants::*;
 use crate::state::governance::Governance;
 use crate::state::sla_registry::SlaRegistry;
-use crate::utils::*;
 
 #[derive(Accounts)]
 pub struct InitSlaRegistry<'info> {

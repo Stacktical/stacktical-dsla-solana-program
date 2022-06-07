@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
 
+use crate::constants::*;
 use crate::events::StakedUserSideEvent;
 use crate::state::sla::{Sla, SlaAuthority};
-use crate::utils::*;
-
+use crate::state::utils::Side;
 #[derive(Accounts)]
 pub struct Stake<'info> {
     // provide or user
@@ -126,10 +126,4 @@ pub fn handler(ctx: Context<Stake>, token_amount: u64, side: Side) -> Result<()>
 
     emit!(StakedUserSideEvent { token_amount });
     Ok(())
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Copy, Clone)]
-pub enum Side {
-    Provider,
-    User,
 }
