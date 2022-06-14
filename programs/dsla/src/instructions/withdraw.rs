@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{burn, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 
 use crate::constants::*;
 use crate::state::period_registry::{Period, PeriodRegistry, Status};
@@ -24,9 +24,12 @@ pub struct Stake<'info> {
     #[account(mut)]
     pub withdrawer_token_account: Box<Account<'info, TokenAccount>>,
 
-    /// The token account with the ut tokens
     #[account(mut)]
     pub withdrawer_ut_account: Box<Account<'info, TokenAccount>>,
+
+    /// The token account with the ut tokens
+    #[account(mut)]
+    pub withdrawer_dsla_account: Box<Account<'info, TokenAccount>>,
 
     /// The token account with pt tokens
     #[account(mut)]
@@ -64,6 +67,8 @@ pub struct Stake<'info> {
     )]
     pub pt_mint: Box<Account<'info, Mint>>,
 
+    pub dsla_mint: Box<Account<'info, Mint>>,
+
     #[account(
         seeds = [PERIOD_REGISTRY_SEED.as_bytes(), sla.key().as_ref()],
         bump
@@ -96,16 +101,31 @@ impl<'info> Stake<'info> {
             ),
         }
     }
+    fn check_available_withdrawal_funds(&self, side: Side) -> bool {
+        unimplemented!();
+    }
 }
 
-pub fn handler(ctx: Context<Stake>, token_amount: u64, side: Side, periodId: usize) -> Result<()> {
+pub fn handler(ctx: Context<Stake>, token_amount: u64, side: Side, period_id: usize) -> Result<()> {
     let period_registry = &ctx.accounts.period_registry;
-    let status = &period_registry.periods[periodId].status;
+    let status = &period_registry.periods[period_id].status;
     match status {
         Status::Respected { value: _ } => {
             // CHECK AVAILABLE
+            ctx.accounts.check_available_withdrawal_funds(side);
             // BURN TOKENS
+            let burn_cpi_context = CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                Burn {
+                    mint: ctx.accounts.dsla_mint.to_account_info(),
+                    from: ctx.accounts.withdrawer_dsla_account.to_account_info(),
+                    authority: ctx.accounts.withdrawer.to_account_info(),
+                },
+            );
+            token::burn(burn_cpi_context, token_amount)?;
             // TRANSFER TOKENS
+            let transfer_cpi_context = ctx.accounts.transfer_context(side);
+            token::transfer(transfer_cpi_context, token_amount)?;
         }
         _ => {}
     }
