@@ -3,7 +3,7 @@ import functions from "@google-cloud/functions-framework";
 import moment from "moment";
 const ENDPOINT = "https://status.solana.com/api/v2/incidents.json";
 
-functions.mothlyUptime = async (req, res) => {
+functions.monthlyUptime = async (req, res) => {
   const json = await got.get(ENDPOINT).json();
 
   const incidents = json.incidents;
