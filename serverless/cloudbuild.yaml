@@ -1,0 +1,13 @@
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - functions
+      - deploy
+      - stacktical-dsla-solana-uptime
+      - --region=europe-west3
+      - --source=.
+      - --trigger-http
+      - --allow-unauthenticated
+      - --runtime=nodejs16
+      - --timeout=540s
