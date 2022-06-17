@@ -19,18 +19,6 @@ pub struct Stake<'info> {
     )]
     pub sla_authority: Account<'info, SlaAuthority>,
 
-    /// The token account with the tokens to be staked
-    #[account(mut)]
-    pub staker_token_account: Box<Account<'info, TokenAccount>>,
-
-    /// The token account with the ut tokens
-    #[account(mut)]
-    pub staker_ut_account: Box<Account<'info, TokenAccount>>,
-
-    /// The token account with pt tokens
-    #[account(mut)]
-    pub staker_pt_account: Box<Account<'info, TokenAccount>>,
-
     #[account(
         mut,
         seeds = [USER_POOL_SEED.as_bytes(), sla.key().as_ref()],

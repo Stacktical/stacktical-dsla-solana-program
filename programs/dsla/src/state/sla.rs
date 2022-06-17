@@ -29,8 +29,6 @@ impl Sla {
     pub const LEN: usize = 8 + 32 + Slo::LEN + 8 + 32 + 32 + 32 + 16 + 16 + 32;
 }
 
-
-
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Slo {
     pub slo_value: u128,
