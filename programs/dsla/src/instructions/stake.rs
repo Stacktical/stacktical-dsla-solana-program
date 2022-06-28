@@ -51,6 +51,33 @@ pub struct Stake<'info> {
     )]
     pub pt_mint: Box<Account<'info, Mint>>,
 
+    /// The account to withdraw the money from
+    pub staker_token_account: Box<Account<'info, TokenAccount>>,
+
+    /// PDA with pt tokens
+    #[account(
+        mut,
+        seeds = [
+            staker.key().as_ref(),
+            PT_ACCOUNT_SEED.as_bytes(),
+            sla.key().as_ref()
+        ],
+        bump
+        )]
+    pub staker_pt_account: Box<Account<'info, TokenAccount>>,
+
+    /// PDA with ut tokens
+    #[account(
+            mut,
+            seeds = [
+                staker.key().as_ref(),
+                UT_ACCOUNT_SEED.as_bytes(),
+                sla.key().as_ref()
+            ],
+            bump
+            )]
+    pub staker_ut_account: Box<Account<'info, TokenAccount>>,
+
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,

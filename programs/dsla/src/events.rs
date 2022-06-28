@@ -1,10 +1,10 @@
-use crate::state::period_registry::Period;
+use crate::state::status_registry::Status;
 
 use anchor_lang::prelude::*;
 
 #[event]
-pub struct InitializedPeriodRegistryEvent {
-    pub periods: Vec<Period>,
+pub struct InitializedStatusRegistryEvent {
+    pub periods: Vec<Status>,
 }
 
 #[event]

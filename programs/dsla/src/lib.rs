@@ -9,8 +9,8 @@ pub mod state;
 use instructions::*;
 
 use crate::state::governance::Governance;
-use crate::state::period_registry::Period;
 use crate::state::sla::Slo;
+use crate::state::status_registry::Status;
 use crate::state::utils::Side;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
@@ -38,9 +38,8 @@ pub mod dsla {
         ipfs_hash: String,
         slo: Slo,
         messenger_address: Pubkey,
-        periods: Vec<Period>,
         leverage: u64,
     ) -> Result<()> {
-        instructions::deploy_sla::handler(ctx, ipfs_hash, slo, messenger_address, periods, leverage)
+        instructions::deploy_sla::handler(ctx, ipfs_hash, slo, messenger_address, leverage)
     }
 }

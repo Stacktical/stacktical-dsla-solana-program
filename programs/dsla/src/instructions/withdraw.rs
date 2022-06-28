@@ -2,8 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 
 use crate::constants::*;
-use crate::state::period_registry::{Period, PeriodRegistry, Status};
 use crate::state::sla::{Sla, SlaAuthority};
+use crate::state::status_registry::{Status, StatusRegistry};
 use crate::state::utils::Side;
 
 #[derive(Accounts)]
@@ -70,10 +70,10 @@ pub struct Stake<'info> {
     pub dsla_mint: Box<Account<'info, Mint>>,
 
     #[account(
-        seeds = [PERIOD_REGISTRY_SEED.as_bytes(), sla.key().as_ref()],
+        seeds = [STATUS_REGISTRY_SEED.as_bytes(), sla.key().as_ref()],
         bump
     )]
-    pub period_registry: Account<'info, PeriodRegistry>,
+    pub status_registry: Account<'info, StatusRegistry>,
 
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
@@ -107,8 +107,8 @@ impl<'info> Stake<'info> {
 }
 
 pub fn handler(ctx: Context<Stake>, token_amount: u64, side: Side, period_id: usize) -> Result<()> {
-    let period_registry = &ctx.accounts.period_registry;
-    let status = &period_registry.periods[period_id].status;
+    let status_registry = &ctx.accounts.status_registry;
+    let status = &status_registry.statuses[period_id];
     match status {
         Status::Respected { value: _ } => {
             // CHECK AVAILABLE

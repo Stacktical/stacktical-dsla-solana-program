@@ -3,9 +3,9 @@ use anchor_lang::prelude::*;
 use crate::constants::*;
 use crate::errors::ErrorCode;
 use crate::events::*;
-use crate::state::period_registry::{Period, PeriodRegistry, Status};
 use crate::state::sla::{Sla, SlaAuthority, Slo};
 use crate::state::sla_registry::SlaRegistry;
+use crate::state::status_registry::{Status, StatusRegistry};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]
@@ -36,10 +36,10 @@ pub struct DeploySla<'info> {
         init,
         payer = deployer,
         space = 10_000,
-        seeds = [PERIOD_REGISTRY_SEED.as_bytes(), sla.key().as_ref()],
+        seeds = [STATUS_REGISTRY_SEED.as_bytes(), sla.key().as_ref()],
         bump
     )]
-    pub period_registry: Account<'info, PeriodRegistry>,
+    pub status_registry: Account<'info, StatusRegistry>,
 
     pub mint: Account<'info, Mint>,
 
@@ -101,7 +101,6 @@ pub fn handler(
     ipfs_hash: String,
     slo: Slo,
     messenger_address: Pubkey,
-    periods: Vec<Period>,
     leverage: u64,
 ) -> Result<()> {
     let sla = &mut ctx.accounts.sla;
@@ -129,20 +128,20 @@ pub fn handler(
     sla.mint_address = ctx.accounts.mint.key();
 
     // PERIOD REGISTRY
-    let period_registry = &mut ctx.accounts.period_registry;
-    require_gt!(300, periods.len());
+    // let period_registry = &mut ctx.accounts.period_registry;
+    // require_gt!(300, periods.len());
 
-    for period in &periods {
-        require!(
-            period.status == Status::NotVerified,
-            ErrorCode::PeriodAlreadyVerified
-        );
-    }
-    period_registry.bump = *match ctx.bumps.get("period_registry") {
-        Some(bump) => bump,
-        None => return err!(ErrorCode::BumpNotFound),
-    };
-    period_registry.periods = periods;
+    // for period in &periods {
+    //     require!(
+    //         period.status == Status::NotVerified,
+    //         ErrorCode::PeriodAlreadyVerified
+    //     );
+    // }
+    // period_registry.bump = *match ctx.bumps.get("period_registry") {
+    //     Some(bump) => bump,
+    //     None => return err!(ErrorCode::BumpNotFound),
+    // };
+    // period_registry.periods = periods;
 
     emit!(DeployedSlaEvent {
         sla_account_address: sla.key()
