@@ -1,4 +1,5 @@
 use crate::errors::ErrorCode;
+use crate::state::utils::Decimal;
 use anchor_lang::prelude::*;
 
 #[account]
@@ -31,7 +32,7 @@ impl Sla {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Slo {
-    pub slo_value: u128,
+    pub slo_value: Decimal,
     pub slo_type: SloType,
 }
 
@@ -39,7 +40,7 @@ impl Slo {
     /// slo_value + slo_type
     pub const LEN: usize = 16 + 1;
 
-    pub fn is_respected(&self, value: u128) -> Result<bool> {
+    pub fn is_respected(&self, value: Decimal) -> Result<bool> {
         let slo_type = self.slo_type;
         let slo_value = self.slo_value;
 
@@ -53,7 +54,7 @@ impl Slo {
         }
     }
 
-    pub fn get_deviation(&self, sli: u128, precision: u128) -> Result<u128> {
+    pub fn get_deviation(&self, sli: Decimal, precision: u128) -> Result<u128> {
         if (precision % 100 != 0) || (precision == 0) {
             return err!(ErrorCode::InvalidPrecision);
         }

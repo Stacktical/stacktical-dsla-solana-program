@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::constants::*;
 use crate::errors::ErrorCode;
 use crate::events::*;
-use crate::state::sla::{Sla, SlaAuthority, Slo};
+use crate::state::sla::{Sla, SlaAuthority};
 use crate::state::sla_registry::SlaRegistry;
 use crate::state::status_registry::{Status, StatusRegistry};
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -126,22 +126,6 @@ pub fn handler(
     sla.slo = slo;
 
     sla.mint_address = ctx.accounts.mint.key();
-
-    // PERIOD REGISTRY
-    // let period_registry = &mut ctx.accounts.period_registry;
-    // require_gt!(300, periods.len());
-
-    // for period in &periods {
-    //     require!(
-    //         period.status == Status::NotVerified,
-    //         ErrorCode::PeriodAlreadyVerified
-    //     );
-    // }
-    // period_registry.bump = *match ctx.bumps.get("period_registry") {
-    //     Some(bump) => bump,
-    //     None => return err!(ErrorCode::BumpNotFound),
-    // };
-    // period_registry.periods = periods;
 
     emit!(DeployedSlaEvent {
         sla_account_address: sla.key()

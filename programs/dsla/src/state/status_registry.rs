@@ -1,13 +1,11 @@
 use anchor_lang::prelude::*;
 
-use crate::errors::ErrorCode;
-
-/// struct used to generate the periods for an SLA
+/// struct used to generate the statuses for an SLA
 ///
 ///
 /// # Fields
 ///
-///  * `periods` - the timestamps of each step
+///  * `statuses` - the status of a given period
 ///
 #[account]
 pub struct StatusRegistry {
