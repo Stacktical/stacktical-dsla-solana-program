@@ -1,11 +1,10 @@
 use anchor_lang::prelude::*;
 
 use crate::constants::*;
-use crate::errors::ErrorCode;
 use crate::events::*;
-use crate::state::sla::{Sla, SlaAuthority};
+use crate::state::sla::{Sla, SlaAuthority, Slo};
 use crate::state::sla_registry::SlaRegistry;
-use crate::state::status_registry::{Status, StatusRegistry};
+use crate::state::status_registry::StatusRegistry;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]

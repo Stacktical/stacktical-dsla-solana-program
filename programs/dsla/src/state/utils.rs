@@ -10,9 +10,8 @@ pub enum Side {
 #[zero_copy]
 #[derive(PartialEq, Default, Debug, AnchorDeserialize, AnchorSerialize)]
 pub struct Decimal {
-    // 17
-    pub val: u128, // 16
-    pub scale: u8, // 1
+    pub val: u128,
+    pub scale: u8,
 }
 
 impl Decimal {
@@ -655,5 +654,12 @@ mod test {
             let b = Decimal::new(10, 0);
             assert_eq!(a.div_up(b), Decimal::new(5, 2));
         }
+    }
+    #[test]
+    fn test_0_scale() {
+        let decimal100 = Decimal::new(100, 0);
+        let decimal5 = Decimal::new(5, 0);
+
+        assert_eq!(decimal100.mul(decimal5), Decimal::new(500, 0));
     }
 }

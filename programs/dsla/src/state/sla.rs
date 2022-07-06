@@ -1,7 +1,6 @@
 use crate::errors::ErrorCode;
-use crate::state::utils::Decimal;
+use crate::state::utils::{Add, Compare, Decimal, Div, Mul, Sub};
 use anchor_lang::prelude::*;
-
 #[account]
 pub struct SlaAuthority {}
 #[account]
@@ -45,36 +44,46 @@ impl Slo {
         let slo_value = self.slo_value;
 
         match slo_type {
-            SloType::EqualTo => Ok(value == slo_value),
-            SloType::NotEqualTo => Ok(value != slo_value),
-            SloType::SmallerThan => Ok(value < slo_value),
-            SloType::SmallerOrEqualTo => Ok(value <= slo_value),
-            SloType::GreaterThan => Ok(value > slo_value),
-            SloType::GreaterOrEqualTo => Ok(value >= slo_value),
+            SloType::EqualTo => Ok(value.eq(slo_value).unwrap()),
+            SloType::NotEqualTo => Ok(value.ne(&slo_value)),
+            SloType::SmallerThan => Ok(value.lt(slo_value).unwrap()),
+            SloType::SmallerOrEqualTo => Ok(value.lte(slo_value).unwrap()),
+            SloType::GreaterThan => Ok(value.gt(slo_value).unwrap()),
+            SloType::GreaterOrEqualTo => Ok(value.gte(slo_value).unwrap()),
         }
     }
 
-    pub fn get_deviation(&self, sli: Decimal, precision: u128) -> Result<u128> {
+    pub fn get_deviation(&self, sli: Decimal, precision: u128) -> Result<Decimal> {
         if (precision % 100 != 0) || (precision == 0) {
             return err!(ErrorCode::InvalidPrecision);
         }
-
+        let precision = Decimal::new(precision, 0);
         let slo_type = self.slo_type;
         let slo_value = self.slo_value;
 
-        let mut deviation: u128 = (if sli >= slo_value {
-            sli - slo_value
+        let mut deviation: Decimal = (if sli.gte(slo_value).unwrap() {
+            sli.sub(slo_value).unwrap()
         } else {
             slo_value
-        }) * precision
-            / ((sli + slo_value) / 2);
+        })
+        .mul(precision)
+        .div((sli.add(slo_value)).unwrap().div(Decimal::new(2, 0)));
 
-        if deviation > (precision * 25 / 100) {
-            deviation = precision * 25 / 100;
+        if deviation
+            .gt(precision
+                .mul(25)
+                .div(Decimal::new(100, 0))
+                .to_scale(deviation.scale))
+            .unwrap()
+        {
+            deviation = precision
+                .mul(25)
+                .div(Decimal::new(100, 0))
+                .to_scale(deviation.scale);
         }
         match slo_type {
             // Deviation of 1%
-            SloType::EqualTo | SloType::NotEqualTo => Ok(precision / 100),
+            SloType::EqualTo | SloType::NotEqualTo => Ok(precision.div(Decimal::new(100, 0))),
             _ => Ok(deviation),
         }
     }
@@ -88,30 +97,4 @@ pub enum SloType {
     SmallerOrEqualTo,
     GreaterThan,
     GreaterOrEqualTo,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    #[should_panic]
-    fn get_deviation_invalid_precision_1() {
-        let slo = Slo {
-            slo_value: 10000,
-            slo_type: SloType::EqualTo,
-        };
-
-        slo.get_deviation(5000, 10).unwrap();
-    }
-    #[test]
-    #[should_panic]
-    fn get_deviation_invalid_precision_2() {
-        let slo = Slo {
-            slo_value: 100000,
-            slo_type: SloType::NotEqualTo,
-        };
-
-        slo.get_deviation(5000, 100001).unwrap();
-    }
 }
