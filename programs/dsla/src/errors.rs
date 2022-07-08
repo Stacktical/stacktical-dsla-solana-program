@@ -18,6 +18,6 @@ pub enum ErrorCode {
     MaxNumberOfPeriods = 7,
     #[msg("all periods should be set as unverified")]
     PeriodAlreadyVerified = 8,
-    #[msg("Scale is different")]
-    DifferentScale = 9,
+    #[msg("decimals is different")]
+    Differentdecimals = 9,
 }

@@ -44,12 +44,12 @@ impl Slo {
         let slo_value = self.slo_value;
 
         match slo_type {
-            SloType::EqualTo => Ok(value.eq(slo_value).unwrap()),
+            SloType::EqualTo => Ok(value.eq(slo_value)),
             SloType::NotEqualTo => Ok(value.ne(&slo_value)),
-            SloType::SmallerThan => Ok(value.lt(slo_value).unwrap()),
-            SloType::SmallerOrEqualTo => Ok(value.lte(slo_value).unwrap()),
-            SloType::GreaterThan => Ok(value.gt(slo_value).unwrap()),
-            SloType::GreaterOrEqualTo => Ok(value.gte(slo_value).unwrap()),
+            SloType::SmallerThan => Ok(value.lt(slo_value)),
+            SloType::SmallerOrEqualTo => Ok(value.lte(slo_value)),
+            SloType::GreaterThan => Ok(value.gt(slo_value)),
+            SloType::GreaterOrEqualTo => Ok(value.gte(slo_value)),
         }
     }
 
@@ -61,25 +61,23 @@ impl Slo {
         let slo_type = self.slo_type;
         let slo_value = self.slo_value;
 
-        let mut deviation: Decimal = (if sli.gte(slo_value).unwrap() {
-            sli.sub(slo_value).unwrap()
+        let mut deviation: Decimal = (if sli.gte(slo_value) {
+            sli.sub(slo_value)
         } else {
             slo_value
         })
         .mul(precision)
-        .div((sli.add(slo_value)).unwrap().div(Decimal::new(2, 0)));
+        .div((sli.add(slo_value)).div(Decimal::new(2, 0)));
 
-        if deviation
-            .gt(precision
-                .mul(25)
-                .div(Decimal::new(100, 0))
-                .to_scale(deviation.scale))
-            .unwrap()
+        if deviation.gt(precision
+            .mul(Decimal::new(25, 0))
+            .div(Decimal::new(100, 0))
+            .to_decimals(deviation.decimals))
         {
             deviation = precision
-                .mul(25)
+                .mul(Decimal::new(25, 0))
                 .div(Decimal::new(100, 0))
-                .to_scale(deviation.scale);
+                .to_decimals(deviation.decimals);
         }
         match slo_type {
             // Deviation of 1%
