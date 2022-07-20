@@ -10,7 +10,6 @@ use instructions::*;
 
 use crate::state::governance::Governance;
 use crate::state::sla::Slo;
-use crate::state::status_registry::Status;
 use crate::state::utils::Side;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");

@@ -20,7 +20,7 @@ pub struct PeriodGenerator {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Clone)]
 pub enum PeriodLength {
-    Custom(u128),
+    Custom { length: u128 },
     Monthly,
     Yearly,
 }
@@ -43,7 +43,9 @@ impl PeriodGenerator {
         require!(period_id < self.n_periods, ErrorCode::InvalidPeriodId);
 
         match self.period_length {
-            PeriodLength::Custom(period_length) => Ok(self.start + (period_length * period_id)),
+            PeriodLength::Custom {
+                length: period_length,
+            } => Ok(self.start + (period_length * period_id)),
             PeriodLength::Monthly => unimplemented!(),
             PeriodLength::Yearly => unimplemented!(),
         }
@@ -55,9 +57,9 @@ impl PeriodGenerator {
     /// * `period_id` - the period id of which to get the end timestamp of
     pub fn get_end(&self, period_id: u128) -> Result<u128> {
         match self.period_length {
-            PeriodLength::Custom(period_length) => {
-                Ok(self.get_start(period_id)? + (period_length - 1))
-            }
+            PeriodLength::Custom {
+                length: period_length,
+            } => Ok(self.get_start(period_id)? + (period_length - 1)),
             PeriodLength::Monthly => unimplemented!(),
             PeriodLength::Yearly => unimplemented!(),
         }
@@ -88,7 +90,7 @@ mod tests {
     fn get_start_valid_id_1() {
         let period = PeriodGenerator {
             start: 100,
-            period_length: PeriodLength::Custom(50),
+            period_length: PeriodLength::Custom { length: 50 },
             n_periods: 2,
             bump: 1,
         };
@@ -99,7 +101,7 @@ mod tests {
     fn get_start_id_too_large() {
         let period = PeriodGenerator {
             start: 100,
-            period_length: PeriodLength::Custom(50),
+            period_length: PeriodLength::Custom { length: 50 },
             n_periods: 10,
             bump: 1,
         };
@@ -109,7 +111,7 @@ mod tests {
     fn get_start_valid_last() {
         let period = PeriodGenerator {
             start: 100,
-            period_length: PeriodLength::Custom(50),
+            period_length: PeriodLength::Custom { length: 50 },
             n_periods: 10,
             bump: 1,
         };
@@ -119,7 +121,7 @@ mod tests {
     fn get_end_valid_id_1() {
         let period = PeriodGenerator {
             start: 100,
-            period_length: PeriodLength::Custom(50),
+            period_length: PeriodLength::Custom { length: 50 },
             n_periods: 10,
             bump: 1,
         };
@@ -130,7 +132,7 @@ mod tests {
     fn get_end_id_too_large() {
         let period = PeriodGenerator {
             start: 100,
-            period_length: PeriodLength::Custom(50),
+            period_length: PeriodLength::Custom { length: 50 },
             n_periods: 10,
             bump: 1,
         };
@@ -140,7 +142,7 @@ mod tests {
     fn get_end_valid_last() {
         let period = PeriodGenerator {
             start: 100,
-            period_length: PeriodLength::Custom(50),
+            period_length: PeriodLength::Custom { length: 50 },
             n_periods: 10,
             bump: 1,
         };
