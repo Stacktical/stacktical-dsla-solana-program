@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use std::cmp::Ordering;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Copy, Clone)]
 pub enum Side {
@@ -42,11 +43,13 @@ impl Decimal {
     fn to_equal_decimals(one: Decimal, two: Decimal) -> (Decimal, Decimal) {
         let mut one_decimalsd = one;
         let mut two_decimalsd = two;
-        if one.decimals > two.decimals {
-            two_decimalsd = two.to_decimals(one.decimals);
-        } else if one.decimals < two.decimals {
-            one_decimalsd = one.to_decimals(two.decimals);
-        };
+
+        match one.decimals.cmp(&two.decimals) {
+            Ordering::Greater => two_decimalsd = two.to_decimals(one.decimals),
+            Ordering::Less => one_decimalsd = one.to_decimals(two.decimals),
+            Ordering::Equal => (),
+        }
+
         (one_decimalsd, two_decimalsd)
     }
 }

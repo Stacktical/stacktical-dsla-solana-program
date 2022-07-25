@@ -114,7 +114,7 @@ pub fn handler(ctx: Context<Stake>, token_amount: u64, side: Side) -> Result<()>
     }
 
     token::transfer(ctx.accounts.transfer_context(side), token_amount)?;
-    let auth_seed = ctx.accounts.sla.authority_seed.clone();
+    let auth_seed = ctx.accounts.sla.authority_seed;
     let seeds = &[auth_seed.as_ref(), &ctx.accounts.sla.authority_bump_seed];
     let signer = &[&seeds[..]];
 

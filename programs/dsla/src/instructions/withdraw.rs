@@ -109,25 +109,23 @@ impl<'info> Stake<'info> {
 pub fn handler(ctx: Context<Stake>, token_amount: u64, side: Side, period_id: usize) -> Result<()> {
     let status_registry = &ctx.accounts.status_registry;
     let status = &status_registry.statuses[period_id];
-    match status {
-        Status::Respected { value: _ } => {
-            // CHECK AVAILABLE
-            ctx.accounts.check_available_withdrawal_funds(side);
-            // BURN TOKENS
-            let burn_cpi_context = CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                Burn {
-                    mint: ctx.accounts.dsla_mint.to_account_info(),
-                    from: ctx.accounts.withdrawer_dsla_account.to_account_info(),
-                    authority: ctx.accounts.withdrawer.to_account_info(),
-                },
-            );
-            token::burn(burn_cpi_context, token_amount)?;
-            // TRANSFER TOKENS
-            let transfer_cpi_context = ctx.accounts.transfer_context(side);
-            token::transfer(transfer_cpi_context, token_amount)?;
-        }
-        _ => {}
+
+    if let Status::Respected { value: _ } = status {
+        // CHECK AVAILABLE
+        ctx.accounts.check_available_withdrawal_funds(side);
+        // BURN TOKENS
+        let burn_cpi_context = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            Burn {
+                mint: ctx.accounts.dsla_mint.to_account_info(),
+                from: ctx.accounts.withdrawer_dsla_account.to_account_info(),
+                authority: ctx.accounts.withdrawer.to_account_info(),
+            },
+        );
+        token::burn(burn_cpi_context, token_amount)?;
+        // TRANSFER TOKENS
+        let transfer_cpi_context = ctx.accounts.transfer_context(side);
+        token::transfer(transfer_cpi_context, token_amount)?;
     }
     Ok(())
 }

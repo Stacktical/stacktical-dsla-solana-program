@@ -73,12 +73,12 @@ impl PeriodGenerator {
     pub fn has_started(&self, period_id: u128) -> Result<bool> {
         // TODO: to be test using the client needs the underlying blockchain for time
         let timestamp = Clock::get()?.unix_timestamp as u128;
-        return Ok(timestamp >= self.get_start(period_id)?);
+        Ok(timestamp >= self.get_start(period_id)?)
     }
     pub fn has_finished(&self, period_id: u128) -> Result<bool> {
         // TODO: to be test using the client needs the underlying blockchain for time
         let timestamp = Clock::get()?.unix_timestamp as u128;
-        return Ok(timestamp > self.get_end(period_id)?);
+        Ok(timestamp > self.get_end(period_id)?)
     }
 }
 
