@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 
 use crate::constants::*;
-use crate::state::sla::{Sla, SlaAuthority, Slo};
-use crate::state::status_registry::{Status, StatusRegistry};
+use crate::state::sla::Sla;
+use crate::state::status_registry::StatusRegistry;
 use crate::state::utils::Decimal;
 #[derive(Accounts)]
 pub struct ValidatePeriod<'info> {
@@ -17,8 +17,8 @@ pub struct ValidatePeriod<'info> {
     pub sla: Account<'info, Sla>,
 }
 
-pub fn handler(ctx: Context<ValidatePeriod>, period: u128, sli: Decimal) -> Result<()> {
-    let slo = &ctx.accounts.sla.slo;
+pub fn handler(ctx: Context<ValidatePeriod>, _period: u128, _sli: Decimal) -> Result<()> {
+    let _slo = &ctx.accounts.sla.slo;
     // TODO: get_sli somehow;
     unimplemented!()
 }

@@ -6,7 +6,7 @@ import { SystemProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, createMint, NATIVE_MINT } from "@solana/spl-token";
 import {
   DEPLOYER,
-  PERIOD_REGISTRY_SEED,
+  STATUS_REGISTRY_SEED,
   PROVIDER_POOL_SEED,
   PT_MINT_SEED,
   SLA_REGISTRY_KEYPAIR,
@@ -40,10 +40,10 @@ describe("Deploy SLA", () => {
     ];
     const leverage = new anchor.BN("1");
 
-    const [periodRegistryPda, _periodRegistryBump] =
+    const [statusRegistryPda, _statusRegistryBump] =
       await PublicKey.findProgramAddress(
         [
-          anchor.utils.bytes.utf8.encode(PERIOD_REGISTRY_SEED),
+          anchor.utils.bytes.utf8.encode(STATUS_REGISTRY_SEED),
           slaKeypairs[0].publicKey.toBuffer(),
         ],
         program.programId
@@ -90,15 +90,15 @@ describe("Deploy SLA", () => {
 
     try {
       await program.methods
-        .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
+        .deploySla(ipfsHash, slo, messengerAddress, leverage)
         .accounts({
           deployer: DEPLOYER.publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
           sla: slaKeypairs[0].publicKey,
           slaAuthority: slaAuthorityPda,
-          periodRegistry: periodRegistryPda,
           mint: NATIVE_MINT,
           providerPool: providerPoolPda,
+          statusRegistry: statusRegistryPda,
           userPool: userPoolPda,
           utMint: utMintPda,
           ptMint: ptMintPda,
@@ -145,10 +145,10 @@ describe("Deploy SLA", () => {
     ];
     const leverage = new anchor.BN("5");
 
-    const [periodRegistryPda, _periodRegistryBump] =
+    const [statusRegistryPda, _statusRegistryBump] =
       await PublicKey.findProgramAddress(
         [
-          anchor.utils.bytes.utf8.encode(PERIOD_REGISTRY_SEED),
+          anchor.utils.bytes.utf8.encode(STATUS_REGISTRY_SEED),
           slaKeypairs[1].publicKey.toBuffer(),
         ],
         program.programId
@@ -195,15 +195,15 @@ describe("Deploy SLA", () => {
 
     try {
       await program.methods
-        .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
+        .deploySla(ipfsHash, slo, messengerAddress, leverage)
         .accounts({
           deployer: DEPLOYER.publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
           sla: slaKeypairs[1].publicKey,
           slaAuthority: slaAuthorityPda,
-          periodRegistry: periodRegistryPda,
           mint: NATIVE_MINT,
           providerPool: providerPoolPda,
+          statusRegistry: statusRegistryPda,
           userPool: userPoolPda,
           utMint: utMintPda,
           ptMint: ptMintPda,

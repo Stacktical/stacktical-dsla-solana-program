@@ -11,7 +11,7 @@ import {
 } from "@solana/web3.js";
 import { NATIVE_MINT } from "@solana/spl-token";
 import {
-  PERIOD_REGISTRY_SEED,
+  STATUS_REGISTRY_SEED,
   PROVIDER_POOL_SEED,
   PT_ACCOUNT_SEED,
   PT_MINT_SEED,
@@ -62,10 +62,10 @@ describe("Initialize UT, PT accounts", () => {
     ];
     const leverage = new anchor.BN("1");
 
-    const [periodRegistryPda, _periodRegistryBump] =
+    const [statusRegistryPda, _statusRegistryBump] =
       await PublicKey.findProgramAddress(
         [
-          anchor.utils.bytes.utf8.encode(PERIOD_REGISTRY_SEED),
+          anchor.utils.bytes.utf8.encode(STATUS_REGISTRY_SEED),
           slaKeypairs[0].publicKey.toBuffer(),
         ],
         program.programId
@@ -130,13 +130,13 @@ describe("Initialize UT, PT accounts", () => {
 
     try {
       await program.methods
-        .deploySla(ipfsHash, slo, messengerAddress, periods, leverage)
+        .deploySla(ipfsHash, slo, messengerAddress, leverage)
         .accounts({
           deployer: deployer.publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
           sla: slaKeypairs[0].publicKey,
           slaAuthority: slaAuthorityPda,
-          periodRegistry: periodRegistryPda,
+          statusRegistry: statusRegistryPda,
           mint: NATIVE_MINT,
           providerPool: providerPoolPda,
           userPool: userPoolPda,

@@ -101,7 +101,7 @@ impl<'info> Stake<'info> {
             ),
         }
     }
-    fn check_available_withdrawal_funds(&self, side: Side) -> bool {
+    fn check_available_withdrawal_funds(&self, _side: Side) -> bool {
         unimplemented!();
     }
 }
