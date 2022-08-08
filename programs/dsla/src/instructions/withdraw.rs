@@ -7,7 +7,7 @@ use crate::state::status_registry::{Status, StatusRegistry};
 use crate::state::utils::Side;
 
 #[derive(Accounts)]
-pub struct Stake<'info> {
+pub struct Withdraw<'info> {
     // provide or user
     #[account(mut)]
     pub withdrawer: Signer<'info>,
@@ -80,7 +80,7 @@ pub struct Stake<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> Stake<'info> {
+impl<'info> Withdraw<'info> {
     fn transfer_context(&self, side: Side) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         match side {
             Side::Provider => CpiContext::new(
@@ -106,7 +106,12 @@ impl<'info> Stake<'info> {
     }
 }
 
-pub fn handler(ctx: Context<Stake>, token_amount: u64, side: Side, period_id: usize) -> Result<()> {
+pub fn handler(
+    ctx: Context<Withdraw>,
+    token_amount: u64,
+    side: Side,
+    period_id: usize,
+) -> Result<()> {
     let status_registry = &ctx.accounts.status_registry;
     let status = &status_registry.statuses[period_id];
 

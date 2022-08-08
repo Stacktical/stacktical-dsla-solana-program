@@ -32,6 +32,15 @@ pub mod dsla {
         instructions::stake::handler(ctx, token_amount, side)
     }
 
+    pub fn withdraw(
+        ctx: Context<Withdraw>,
+        token_amount: u64,
+        side: Side,
+        period_id: u32,
+    ) -> Result<()> {
+        instructions::withdraw::handler(ctx, token_amount, side, period_id as usize)
+    }
+
     pub fn deploy_sla(
         ctx: Context<DeploySla>,
         ipfs_hash: String,
