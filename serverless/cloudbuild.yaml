@@ -5,10 +5,11 @@ steps:
       - functions
       - deploy
       - stacktical-dsla-solana-uptime
+      - --gen2
+      - --runtime=nodejs16
       - --region=europe-west3
       - --source=.
       - --entry-point=monthlyUptime
       - --trigger-http
       - --allow-unauthenticated
-      - --runtime=nodejs16
       - --timeout=540s

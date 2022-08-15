@@ -19,5 +19,5 @@ pub enum ErrorCode {
     #[msg("all periods should be set as unverified")]
     PeriodAlreadyVerified = 8,
     #[msg("decimals is different")]
-    Differentdecimals = 9,
+    DifferentDecimals = 9,
 }
