@@ -1,5 +1,6 @@
 import got from "got";
 import functions from "@google-cloud/functions-framework";
+
 import moment from "moment";
 const ENDPOINT = "https://status.solana.com/api/v2/incidents.json";
 
