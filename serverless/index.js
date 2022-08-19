@@ -1,10 +1,9 @@
 import got from "got";
-import functions from "@google-cloud/functions-framework";
-
 import moment from "moment";
+
 const ENDPOINT = "https://status.solana.com/api/v2/incidents.json";
 
-functions.http("monthlyUptime", async (req, res) => {
+exports.monthlyUptime = async (req, res) => {
   const json = await got.get(ENDPOINT).json();
 
   const incidents = json.incidents;
@@ -32,6 +31,6 @@ functions.http("monthlyUptime", async (req, res) => {
     }
   }
 
-  res.send((monthlyDowntime / monthlyUptime) * 100);
+  res.status(200).send((monthlyDowntime / monthlyUptime) * 100);
   res.end();
-});
+};
