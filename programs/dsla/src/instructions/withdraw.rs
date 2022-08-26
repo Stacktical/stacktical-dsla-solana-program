@@ -102,6 +102,7 @@ impl<'info> Withdraw<'info> {
         }
     }
     fn check_available_withdrawal_funds(&self, _side: Side) -> bool {
+        // FIXME: how to deal with withdrawals
         unimplemented!();
     }
 }

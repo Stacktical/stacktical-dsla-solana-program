@@ -6,7 +6,7 @@ pub struct StatusRegistry {
     pub bump: u8,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Clone)]
 pub enum Status {
     NotVerified,
     Respected { value: Decimal },

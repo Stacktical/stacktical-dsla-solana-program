@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use std::cmp::Ordering;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Side {
     Provider,
     User,
@@ -9,7 +9,7 @@ pub enum Side {
 
 // FIXME: Handle overflow in decimals
 #[zero_copy]
-#[derive(PartialEq, Default, Debug, AnchorDeserialize, AnchorSerialize)]
+#[derive(PartialEq, Eq, Default, Debug, AnchorDeserialize, AnchorSerialize)]
 pub struct Decimal {
     pub val: u128,
     pub decimals: u8,

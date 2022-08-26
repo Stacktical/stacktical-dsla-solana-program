@@ -18,7 +18,7 @@ pub struct PeriodGenerator {
     pub bump: u8,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Clone)]
 pub enum PeriodLength {
     Custom { length: u128 },
     Monthly,
