@@ -21,3 +21,4 @@ overflow-checks = true
 [dependencies]
 anchor-lang = { version = "0.25.0" }
 anchor-spl = { version = "0.25.0" }
+switchboard-v2 = { version = "^0.1.14" }

@@ -2,13 +2,12 @@
 
 
 ## prerequisites
-    - node 
-    - npm 
+    - npm && node 
     - yarn https://yarnpkg.com/getting-started/install
-    - rustup && rustup https://rustup.rs/
+    - rustup && rust https://rustup.rs/
     - Solana https://docs.solana.com/cli/install-solana-cli-tools
-    - anchorlang https://www.anchor-lang.com/docs/installation
-    - avm https://www.anchor-lang.com/docs/installation
+    - anchorlang && avm https://www.anchor-lang.com/docs/installation
+    - Key pair located in `"~/.config/solana/id.json"` can be generated using `solana-keygen new`
 ## Build
 
 - `yarn install`
