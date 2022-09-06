@@ -58,24 +58,44 @@ impl Slo {
         if (precision % 100 != 0) || (precision == 0) {
             return err!(ErrorCode::InvalidPrecision);
         }
-        let precision = Decimal::from_u128(precision).unwrap(); // FIXME: remove unwrap
+        let precision = Decimal::from_u128(precision).ok_or(ErrorCode::DecimalConversionError)?;
         let slo_type = self.slo_type;
         let slo_value = self.slo_value;
 
         let mut deviation: Decimal = (if sli >= slo_value {
-            sli - slo_value
+            sli.checked_sub(slo_value)
+                .ok_or(ErrorCode::CheckedOperationOverflow)?
         } else {
             slo_value
-        }) * precision
-            / (sli + slo_value)
-            / (Decimal::new(2, 0));
+        })
+        .checked_mul(precision)
+        .ok_or(ErrorCode::CheckedOperationOverflow)?
+        .checked_div(
+            sli.checked_add(slo_value)
+                .ok_or(ErrorCode::CheckedOperationOverflow)?,
+        )
+        .ok_or(ErrorCode::CheckedOperationOverflow)?
+        .checked_div(Decimal::new(2, 0))
+        .ok_or(ErrorCode::CheckedOperationOverflow)?;
 
-        if deviation > (precision * (Decimal::new(25, 0)) / (Decimal::new(100, 0))) {
-            deviation = precision * (Decimal::new(25, 0)) / (Decimal::new(100, 0));
+        if deviation
+            > (precision
+                .checked_mul(Decimal::new(25, 0))
+                .ok_or(ErrorCode::CheckedOperationOverflow)?
+                .checked_div(Decimal::new(100, 0)))
+            .ok_or(ErrorCode::CheckedOperationOverflow)?
+        {
+            deviation = precision
+                .checked_mul(Decimal::new(25, 0))
+                .ok_or(ErrorCode::CheckedOperationOverflow)?
+                .checked_div(Decimal::new(100, 0))
+                .ok_or(ErrorCode::CheckedOperationOverflow)?;
         }
         match slo_type {
             // Deviation of 1%
-            SloType::EqualTo | SloType::NotEqualTo => Ok(precision / (Decimal::new(100, 0))),
+            SloType::EqualTo | SloType::NotEqualTo => Ok(precision
+                .checked_div(Decimal::new(100, 0))
+                .ok_or(ErrorCode::CheckedOperationOverflow)?),
             _ => Ok(deviation),
         }
     }

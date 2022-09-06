@@ -23,6 +23,10 @@ pub enum ErrorCode {
     DifferentDecimals = 1009,
     #[msg("trying to verify an already verified period")]
     AlreadyVerifiedPeriod = 1010,
+    #[msg("Failed to convert to a decimal")]
+    DecimalConversionError = 1011,
+    #[msg("operation failed with an overflow")]
+    CheckedOperationOverflow = 1012,
 }
 
 #[error_code]

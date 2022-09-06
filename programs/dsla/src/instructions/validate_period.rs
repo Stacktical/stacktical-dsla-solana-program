@@ -32,7 +32,7 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
 
     match status_registry[period] {
         Status::NotVerified => {
-            let max_confidence_interval = Some(10.0); // FIXME: change this to a protocol governance const or sla level const
+            let max_confidence_interval = Some(100.0); // FIXME: change this to a protocol governance const or sla level const
             let max_staleness = 300; // FIXME: change this to a protocol governance variable or sla level variable
             let _slo = &ctx.accounts.sla.slo;
 
@@ -45,7 +45,7 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
 
             // get result
             let data: f64 = feed.get_result()?.try_into()?;
-            let sli = Decimal::from_f64(data).unwrap(); // FIXME: remove unwrap
+            let sli = Decimal::from_f64(data).ok_or(ErrorCode::DecimalConversionError)?;
 
             // check whether the feed has been updated in the last max_staleness seconds
             feed.check_staleness(clock::Clock::get().unwrap().unix_timestamp, max_staleness)
