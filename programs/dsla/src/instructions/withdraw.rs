@@ -114,7 +114,7 @@ pub fn handler(
     period_id: usize,
 ) -> Result<()> {
     let status_registry = &ctx.accounts.status_registry;
-    let status = &status_registry.statuses[period_id];
+    let status = &status_registry.status_registry[period_id];
 
     if let Status::Respected { value: _ } = status {
         // CHECK AVAILABLE
