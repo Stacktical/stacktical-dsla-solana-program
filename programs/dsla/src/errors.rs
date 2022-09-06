@@ -1,25 +1,37 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
+#[derive(Eq, PartialEq)]
 pub enum ErrorCode {
     #[msg("Could not find a bump for this key.")]
-    BumpNotFound = 1,
+    BumpNotFound = 1001,
     #[msg("precision is not divisible by 100")]
-    InvalidPrecision = 2,
+    InvalidPrecision = 1002,
     #[msg("period ID entered is not valid")]
-    InvalidPeriodId = 3,
+    InvalidPeriodId = 1003,
     #[msg("the start is too close")]
-    InvalidPeriodStart = 4,
+    InvalidPeriodStart = 1004,
     #[msg("the period lenght is too short")]
-    InvalidPeriodLength = 5,
+    InvalidPeriodLength = 1005,
     #[msg("Number of periods cannot be 0")]
-    ZeroNumberOfPeriods = 6,
+    ZeroNumberOfPeriods = 1006,
     #[msg("Number of periods is capped based on account storage requirment")]
-    MaxNumberOfPeriods = 7,
+    MaxNumberOfPeriods = 1007,
     #[msg("all periods should be set as unverified")]
-    PeriodAlreadyVerified = 8,
+    PeriodAlreadyVerified = 1008,
     #[msg("decimals is different")]
-    DifferentDecimals = 9,
+    DifferentDecimals = 1009,
     #[msg("trying to verify an already verified period")]
-    AlreadyVerifiedPeriod = 10,
+    AlreadyVerifiedPeriod = 1010,
+}
+
+#[error_code]
+#[derive(Eq, PartialEq)]
+pub enum FeedErrorCode {
+    #[msg("Not a valid Switchboard account")]
+    InvalidSwitchboardAccount = 2001,
+    #[msg("Switchboard feed has not been updated in 5 minutes")]
+    StaleFeed = 2002,
+    #[msg("Switchboard feed exceeded provided confidence interval")]
+    ConfidenceIntervalExceeded = 2003,
 }

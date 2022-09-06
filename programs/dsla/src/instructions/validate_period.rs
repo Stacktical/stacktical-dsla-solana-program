@@ -4,10 +4,10 @@ use rust_decimal::prelude::*;
 pub use switchboard_v2::{AggregatorAccountData, SwitchboardDecimal, SWITCHBOARD_PROGRAM_ID};
 
 use crate::constants::*;
-use crate::errors::ErrorCode;
+use crate::errors::{ErrorCode, FeedErrorCode};
 use crate::state::sla::Sla;
-use crate::state::sla::Slo;
 use crate::state::status_registry::{Status, StatusRegistry};
+
 #[derive(Accounts)]
 pub struct ValidatePeriod<'info> {
     #[account(mut)]
@@ -23,10 +23,12 @@ pub struct ValidatePeriod<'info> {
     )]
     pub aggregator: AccountLoader<'info, AggregatorAccountData>,
     pub sla: Account<'info, Sla>,
+    pub validator: Signer<'info>,
 }
 
-pub fn handler(ctx: Context<ValidatePeriod>, period: usize, slo: Slo) -> Result<()> {
+pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
     let status_registry = &mut ctx.accounts.status_registry.status_registry;
+    let slo = &ctx.accounts.sla.slo;
 
     match status_registry[period] {
         Status::NotVerified => {
@@ -36,7 +38,6 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize, slo: Slo) -> Result<
 
             // TODO: once the period is expired allow the validation using a stream with unlimited time horizon 0.5% get_sli somehow;
             // TODO: add checks for correct datafeed account based on SLA governance variable
-            // TODO: add check that status isn't already verified
 
             // 1. GET THE DATA
 
@@ -74,15 +75,4 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize, slo: Slo) -> Result<
         }
         _ => err!(ErrorCode::AlreadyVerifiedPeriod),
     }
-}
-
-#[error_code]
-#[derive(Eq, PartialEq)]
-pub enum FeedErrorCode {
-    #[msg("Not a valid Switchboard account")]
-    InvalidSwitchboardAccount,
-    #[msg("Switchboard feed has not been updated in 5 minutes")]
-    StaleFeed,
-    #[msg("Switchboard feed exceeded provided confidence interval")]
-    ConfidenceIntervalExceeded,
 }
