@@ -36,9 +36,9 @@ pub mod dsla {
         ctx: Context<Withdraw>,
         token_amount: u64,
         side: Side,
-        period_id: u32,
+        period_id: usize,
     ) -> Result<()> {
-        instructions::withdraw::handler(ctx, token_amount, side, period_id as usize)
+        instructions::withdraw::handler(ctx, token_amount, side, period_id)
     }
 
     pub fn deploy_sla(

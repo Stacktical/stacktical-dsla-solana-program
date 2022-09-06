@@ -20,4 +20,6 @@ pub enum ErrorCode {
     PeriodAlreadyVerified = 8,
     #[msg("decimals is different")]
     DifferentDecimals = 9,
+    #[msg("trying to verify an already verified period")]
+    AlreadyVerifiedPeriod = 10,
 }

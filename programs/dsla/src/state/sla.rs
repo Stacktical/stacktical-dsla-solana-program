@@ -1,6 +1,7 @@
 use crate::errors::ErrorCode;
-use crate::state::utils::{Add, Compare, Decimal, Div, Mul, Sub};
 use anchor_lang::prelude::*;
+use rust_decimal::{prelude::FromPrimitive, Decimal};
+
 #[account]
 pub struct SlaAuthority {}
 #[account]
@@ -39,17 +40,17 @@ impl Slo {
     /// slo_value + slo_type
     pub const LEN: usize = 16 + 1;
 
-    pub fn is_respected(&self, value: Decimal) -> Result<bool> {
+    pub fn is_respected(&self, sli: Decimal) -> Result<bool> {
         let slo_type = self.slo_type;
         let slo_value = self.slo_value;
 
         match slo_type {
-            SloType::EqualTo => Ok(value.eq(slo_value)),
-            SloType::NotEqualTo => Ok(value.ne(&slo_value)),
-            SloType::SmallerThan => Ok(value.lt(slo_value)),
-            SloType::SmallerOrEqualTo => Ok(value.lte(slo_value)),
-            SloType::GreaterThan => Ok(value.gt(slo_value)),
-            SloType::GreaterOrEqualTo => Ok(value.gte(slo_value)),
+            SloType::EqualTo => Ok(sli == slo_value),
+            SloType::NotEqualTo => Ok(sli != slo_value),
+            SloType::SmallerThan => Ok(sli < slo_value),
+            SloType::SmallerOrEqualTo => Ok(sli <= slo_value),
+            SloType::GreaterThan => Ok(sli > slo_value),
+            SloType::GreaterOrEqualTo => Ok(sli >= slo_value),
         }
     }
 
@@ -57,31 +58,24 @@ impl Slo {
         if (precision % 100 != 0) || (precision == 0) {
             return err!(ErrorCode::InvalidPrecision);
         }
-        let precision = Decimal::new(precision, 0);
+        let precision = Decimal::from_u128(precision).unwrap(); // FIXME: remove unwrap
         let slo_type = self.slo_type;
         let slo_value = self.slo_value;
 
-        let mut deviation: Decimal = (if sli.gte(slo_value) {
-            sli.sub(slo_value)
+        let mut deviation: Decimal = (if sli >= slo_value {
+            sli - slo_value
         } else {
             slo_value
-        })
-        .mul(precision)
-        .div((sli.add(slo_value)).div(Decimal::new(2, 0)));
+        }) * precision
+            / (sli + slo_value)
+            / (Decimal::new(2, 0));
 
-        if deviation.gt(precision
-            .mul(Decimal::new(25, 0))
-            .div(Decimal::new(100, 0))
-            .to_decimals(deviation.decimals))
-        {
-            deviation = precision
-                .mul(Decimal::new(25, 0))
-                .div(Decimal::new(100, 0))
-                .to_decimals(deviation.decimals);
+        if deviation > (precision * (Decimal::new(25, 0)) / (Decimal::new(100, 0))) {
+            deviation = precision * (Decimal::new(25, 0)) / (Decimal::new(100, 0));
         }
         match slo_type {
             // Deviation of 1%
-            SloType::EqualTo | SloType::NotEqualTo => Ok(precision.div(Decimal::new(100, 0))),
+            SloType::EqualTo | SloType::NotEqualTo => Ok(precision / (Decimal::new(100, 0))),
             _ => Ok(deviation),
         }
     }

@@ -1,8 +1,8 @@
-use crate::state::utils::Decimal;
 use anchor_lang::prelude::*;
+use rust_decimal::Decimal;
 #[account]
 pub struct StatusRegistry {
-    pub statuses: Vec<Status>,
+    pub status_registry: Vec<Status>,
     pub bump: u8,
 }
 
