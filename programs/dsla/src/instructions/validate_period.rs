@@ -5,7 +5,7 @@ pub use switchboard_v2::{AggregatorAccountData, SwitchboardDecimal, SWITCHBOARD_
 
 use crate::constants::*;
 use crate::errors::{ErrorCode, FeedErrorCode};
-use crate::state::sla::Sla;
+use crate::state::sla::{DslaDecimal, Sla};
 use crate::state::status_registry::{Status, StatusRegistry};
 
 #[derive(Accounts)]
@@ -44,7 +44,8 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
 
             // get result
             let data: f64 = feed.get_result()?.try_into()?;
-            let sli = Decimal::from_f64(data).ok_or(ErrorCode::DecimalConversionError)?;
+            let sli_decimal = Decimal::from_f64(data).ok_or(ErrorCode::DecimalConversionError)?;
+            let sli_dsla_decimal = DslaDecimal::from_decimal(sli_decimal);
 
             // check whether the feed has been updated in the last max_staleness seconds
             feed.check_staleness(clock::Clock::get().unwrap().unix_timestamp, max_staleness)
@@ -59,13 +60,17 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
             }
 
             // 2. COMPARE SLO TO SLI
-            let respected = slo.is_respected(sli)?;
+            let respected = slo.is_respected(sli_dsla_decimal)?;
 
             // 3. UPDATE STATUS
             if respected {
-                status_registry[period] = Status::Respected { value: sli };
+                status_registry[period] = Status::Respected {
+                    value: sli_dsla_decimal,
+                };
             } else {
-                status_registry[period] = Status::NotRespected { value: sli };
+                status_registry[period] = Status::NotRespected {
+                    value: sli_dsla_decimal,
+                };
             }
 
             // TODO: 4. REWARD VALIDATOR

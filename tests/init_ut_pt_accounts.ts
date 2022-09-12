@@ -50,9 +50,15 @@ describe("Initialize UT, PT accounts", () => {
 
   it("initializes the UT and PT accounts", async () => {
     const ipfsHash = "t";
-    const sloValue = new anchor.BN("100");
-    const sloScale = new anchor.BN("0");
-    const sloType = { greaterThan: {} };
+    let sloType = { greaterThan: {} };
+    let sloValue = {
+      mantissa: new anchor.BN("100"),
+      scale: new anchor.BN("0"),
+    };
+    const slo = {
+      sloValue,
+      sloType,
+    };
     const messengerAddress = anchor.web3.Keypair.generate().publicKey;
     const periods = [
       {
@@ -131,14 +137,7 @@ describe("Initialize UT, PT accounts", () => {
 
     try {
       await program.methods
-        .deploySla(
-          ipfsHash,
-          sloValue,
-          sloScale,
-          sloType,
-          messengerAddress,
-          leverage
-        )
+        .deploySla(ipfsHash, slo, messengerAddress, leverage)
         .accounts({
           deployer: deployer.publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,

@@ -1,6 +1,5 @@
 use anchor_lang::prelude::Result;
 use anchor_lang::prelude::*;
-use rust_decimal::prelude::*;
 
 pub mod constants;
 pub mod errors;
@@ -13,12 +12,10 @@ use instructions::*;
 use crate::state::governance::Governance;
 use crate::state::sla::Slo;
 use crate::state::utils::Side;
-use crate::state::SloType;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
 pub mod dsla {
-    use state::SloType;
 
     use super::*;
 
@@ -53,16 +50,10 @@ pub mod dsla {
     pub fn deploy_sla(
         ctx: Context<DeploySla>,
         ipfs_hash: String,
-        slo_num: i64,
-        slo_scale: u32,
-        slo_type: SloType,
+        slo: Slo,
         messenger_address: Pubkey,
         leverage: u64,
     ) -> Result<()> {
-        let slo = Slo {
-            slo_value: Decimal::new(slo_num, slo_scale),
-            slo_type,
-        };
         instructions::deploy_sla::handler(ctx, ipfs_hash, slo, messenger_address, leverage)
     }
 }

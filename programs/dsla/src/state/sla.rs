@@ -32,7 +32,7 @@ impl Sla {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Slo {
-    pub slo_value: Decimal,
+    pub slo_value: DslaDecimal,
     pub slo_type: SloType,
 }
 
@@ -40,9 +40,10 @@ impl Slo {
     /// slo_value + slo_type
     pub const LEN: usize = 64 + 1; // FIXME: found out and fix for size of Decimal
 
-    pub fn is_respected(&self, sli: Decimal) -> Result<bool> {
+    pub fn is_respected(&self, sli: DslaDecimal) -> Result<bool> {
         let slo_type = self.slo_type;
-        let slo_value = self.slo_value;
+        let slo_value = self.slo_value.to_decimal();
+        let sli = sli.to_decimal();
 
         match slo_type {
             SloType::EqualTo => Ok(sli == slo_value),
@@ -54,13 +55,15 @@ impl Slo {
         }
     }
 
-    pub fn get_deviation(&self, sli: Decimal, precision: u128) -> Result<Decimal> {
+    pub fn get_deviation(&self, sli: DslaDecimal, precision: u128) -> Result<Decimal> {
         if (precision % 100 != 0) || (precision == 0) {
             return err!(ErrorCode::InvalidPrecision);
         }
+        let sli = sli.to_decimal();
+
         let precision = Decimal::from_u128(precision).ok_or(ErrorCode::DecimalConversionError)?;
         let slo_type = self.slo_type;
-        let slo_value = self.slo_value;
+        let slo_value = self.slo_value.to_decimal();
 
         let mut deviation: Decimal = (if sli >= slo_value {
             sli.checked_sub(slo_value)
@@ -109,4 +112,23 @@ pub enum SloType {
     SmallerOrEqualTo,
     GreaterThan,
     GreaterOrEqualTo,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Copy, Clone)]
+pub struct DslaDecimal {
+    mantissa: i64,
+    scale: u32,
+}
+
+impl DslaDecimal {
+    pub fn to_decimal(&self) -> Decimal {
+        Decimal::new(self.mantissa, self.scale)
+    }
+
+    pub fn from_decimal(decimal: Decimal) -> Self {
+        Self {
+            mantissa: decimal.mantissa() as i64,
+            scale: decimal.scale(),
+        }
+    }
 }
