@@ -38,7 +38,7 @@ pub struct Slo {
 
 impl Slo {
     /// slo_value + slo_type
-    pub const LEN: usize = 16 + 1;
+    pub const LEN: usize = 64 + 1; // FIXME: found out and fix for size of Decimal
 
     pub fn is_respected(&self, sli: Decimal) -> Result<bool> {
         let slo_type = self.slo_type;

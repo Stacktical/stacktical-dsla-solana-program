@@ -34,7 +34,6 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
         Status::NotVerified => {
             let max_confidence_interval = Some(100.0); // FIXME: change this to a protocol governance const or sla level const
             let max_staleness = 300; // FIXME: change this to a protocol governance variable or sla level variable
-            let _slo = &ctx.accounts.sla.slo;
 
             // TODO: once the period is expired allow the validation using a stream with unlimited time horizon 0.5% get_sli somehow;
             // TODO: add checks for correct datafeed account based on SLA governance variable

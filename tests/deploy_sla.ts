@@ -28,8 +28,9 @@ describe("Deploy SLA", () => {
 
   it("Deploys an SLA 1", async () => {
     const ipfsHash = "t";
-    let sloType = { greaterThan: {} };
-    const slo = { sloValue: new anchor.BN("100"), sloType };
+    const sloValue = new anchor.BN("100");
+    const sloScale = new anchor.BN("0");
+    const sloType = { greaterThan: {} };
     const messengerAddress = anchor.web3.Keypair.generate().publicKey;
     const periods = [
       {
@@ -90,7 +91,14 @@ describe("Deploy SLA", () => {
 
     try {
       await program.methods
-        .deploySla(ipfsHash, slo, messengerAddress, leverage)
+        .deploySla(
+          ipfsHash,
+          sloValue,
+          sloScale,
+          sloType,
+          messengerAddress,
+          leverage
+        )
         .accounts({
           deployer: DEPLOYER.publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
@@ -133,8 +141,9 @@ describe("Deploy SLA", () => {
 
   it("Deploys an SLA 2", async () => {
     const ipfsHash = "tt";
-    let sloType = { smallerThan: {} };
-    const slo = { sloValue: new anchor.BN("999"), sloType };
+    const sloValue = new anchor.BN("999");
+    const sloScale = new anchor.BN("0");
+    const sloType = { smallerThan: {} };
     const messengerAddress = anchor.web3.Keypair.generate().publicKey;
     const periods = [
       {
@@ -195,7 +204,14 @@ describe("Deploy SLA", () => {
 
     try {
       await program.methods
-        .deploySla(ipfsHash, slo, messengerAddress, leverage)
+        .deploySla(
+          ipfsHash,
+          sloValue,
+          sloScale,
+          sloType,
+          messengerAddress,
+          leverage
+        )
         .accounts({
           deployer: DEPLOYER.publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,

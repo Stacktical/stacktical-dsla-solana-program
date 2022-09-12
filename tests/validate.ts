@@ -4,31 +4,25 @@ import { expect } from "chai";
 import { Dsla } from "../target/types/dsla";
 import {
   SystemProgram,
-  Transaction,
-  sendAndConfirmTransaction,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
 } from "@solana/web3.js";
-import {
-  TOKEN_PROGRAM_ID,
-  createMint,
-  createAssociatedTokenAccount,
-  mintToChecked,
-  NATIVE_MINT,
-} from "@solana/spl-token";
+import * as splToken from "@solana/spl-token";
+
 import {
   SLA_REGISTRY_KEYPAIR,
   STATUS_REGISTRY_SEED,
   PROVIDER_POOL_SEED,
-  PT_ACCOUNT_SEED,
   PT_MINT_SEED,
   USER_POOL_SEED,
-  UT_ACCOUNT_SEED,
   UT_MINT_SEED,
 } from "./constants";
 
-describe("Stake", () => {
+import { SwitchboardTestContext } from "@switchboard-xyz/sbv2-utils";
+import { AggregatorAccount } from "@switchboard-xyz/switchboard-v2";
+
+describe("Validate", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.local();
   // Configure the client to use the local cluster.
@@ -61,7 +55,7 @@ describe("Stake", () => {
     );
     await connection.confirmTransaction(airdropSignature2);
 
-    mint = await createMint(
+    mint = await splToken.createMint(
       provider.connection,
       deployer,
       deployer.publicKey,
@@ -69,17 +63,17 @@ describe("Stake", () => {
       0,
       Keypair.generate(),
       {},
-      TOKEN_PROGRAM_ID
+      splToken.TOKEN_PROGRAM_ID
     );
 
-    stakerTokenAccount = await createAssociatedTokenAccount(
+    stakerTokenAccount = await splToken.createAssociatedTokenAccount(
       provider.connection, // connection
       staker, // fee payer
       mint, // mint
       staker.publicKey // owner,
     );
 
-    await mintToChecked(
+    await splToken.mintToChecked(
       provider.connection, // connection
       deployer, // fee payer
       mint, // Mint for the account
@@ -105,8 +99,6 @@ describe("Stake", () => {
       },
     ];
     const leverage = new anchor.BN("1");
-
-    const token_amount = new anchor.BN(LAMPORTS_PER_SOL * 10);
 
     const [statusRegistryPda, _statusRegistryBump] =
       await PublicKey.findProgramAddress(
@@ -150,23 +142,6 @@ describe("Stake", () => {
       program.programId
     );
 
-    const [utAccountPda, _utAccountBump] = await PublicKey.findProgramAddress(
-      [
-        staker.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode(UT_ACCOUNT_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [ptAccountPda, _ptAccountBump] = await PublicKey.findProgramAddress(
-      [
-        staker.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode(PT_ACCOUNT_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
     const [slaAuthorityPda, _slaAuthorityBump] =
       await PublicKey.findProgramAddress(
         [slaKeypairs[0].publicKey.toBuffer()],
@@ -202,44 +177,21 @@ describe("Stake", () => {
       console.log(err);
     }
 
-    try {
-      await program.methods
-        .initUtPtAccounts()
-        .accounts({
-          signer: staker.publicKey,
-          sla: slaKeypairs[0].publicKey,
-          stakerUtAccount: utAccountPda,
-          stakerPtAccount: ptAccountPda,
-          utMint: utMintPda,
-          ptMint: ptMintPda,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([staker])
-        .rpc();
-    } catch (err) {
-      console.log(err);
-    }
+    // load the Switchboard env to dictate which queue to create feed for
+    const switchboard = await SwitchboardTestContext.loadFromEnv(
+      anchor.AnchorProvider.env()
+    );
 
-    try {
-      await program.methods
-        .stake(token_amount, { provider: {} })
-        .accounts({
-          staker: staker.publicKey,
-          sla: slaKeypairs[0].publicKey,
-          slaAuthority: slaAuthorityPda,
-          stakerTokenAccount,
-          stakerUtAccount: utAccountPda,
-          stakerPtAccount: ptAccountPda,
-          userPool: userPoolPda,
-          providerPool: providerPoolPda,
-          utMint: utMintPda,
-          ptMint: ptMintPda,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([staker])
-        .rpc();
-    } catch (err) {
-      console.log(err);
-    }
+    // create a static feed that will always resolve to 100
+    // then call openRound and wait for the oracle to process the update
+    const aggregatorAccount: AggregatorAccount =
+      await switchboard.createStaticFeed(100);
+
+    await program.methods.validatePeriod(new anchor.BN("0")).accounts({
+      validator: deployer.publicKey,
+      sla: slaKeypairs[0].publicKey,
+      statusRegistry: statusRegistryPda,
+      aggregator: aggregatorAccount.publicKey,
+    });
   });
 });

@@ -1,4 +1,6 @@
+use anchor_lang::prelude::Result;
 use anchor_lang::prelude::*;
+use rust_decimal::prelude::*;
 
 pub mod constants;
 pub mod errors;
@@ -11,10 +13,13 @@ use instructions::*;
 use crate::state::governance::Governance;
 use crate::state::sla::Slo;
 use crate::state::utils::Side;
+use crate::state::SloType;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
 pub mod dsla {
+    use state::SloType;
+
     use super::*;
 
     pub fn init_sla_registry(
@@ -32,22 +37,32 @@ pub mod dsla {
         instructions::stake::handler(ctx, token_amount, side)
     }
 
+    pub fn validate_period(ctx: Context<ValidatePeriod>, period: u64) -> Result<()> {
+        instructions::validate_period::handler(ctx, period as usize)
+    }
+
     pub fn withdraw(
         ctx: Context<Withdraw>,
         token_amount: u64,
         side: Side,
-        period_id: usize,
+        period_id: u64,
     ) -> Result<()> {
-        instructions::withdraw::handler(ctx, token_amount, side, period_id)
+        instructions::withdraw::handler(ctx, token_amount, side, period_id as usize)
     }
 
     pub fn deploy_sla(
         ctx: Context<DeploySla>,
         ipfs_hash: String,
-        slo: Slo,
+        slo_num: i64,
+        slo_scale: u32,
+        slo_type: SloType,
         messenger_address: Pubkey,
         leverage: u64,
     ) -> Result<()> {
+        let slo = Slo {
+            slo_value: Decimal::new(slo_num, slo_scale),
+            slo_type,
+        };
         instructions::deploy_sla::handler(ctx, ipfs_hash, slo, messenger_address, leverage)
     }
 }
