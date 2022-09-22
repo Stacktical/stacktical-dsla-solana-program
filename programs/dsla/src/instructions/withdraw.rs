@@ -101,8 +101,10 @@ impl<'info> Withdraw<'info> {
             ),
         }
     }
-    fn check_available_withdrawal_funds(&self, _side: Side) -> bool {
+    fn check_available_withdrawal_funds(&self, side: Side) -> bool {
         // FIXME: how to deal with withdrawals
+        let leverage = self.sla.leverage.to_decimal();
+        let pool_size = self.user_pool.amount;
         unimplemented!();
     }
 }
@@ -115,7 +117,6 @@ pub fn handler(
 ) -> Result<()> {
     let status_registry = &ctx.accounts.status_registry;
     let status = &status_registry.status_registry[period_id];
-
     if let Status::Respected { value: _ } = status {
         // CHECK AVAILABLE
         ctx.accounts.check_available_withdrawal_funds(side);

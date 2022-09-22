@@ -10,6 +10,7 @@ pub mod state;
 use instructions::*;
 
 use crate::state::governance::Governance;
+use crate::state::sla::DslaDecimal;
 use crate::state::sla::Slo;
 use crate::state::utils::Side;
 
@@ -52,7 +53,7 @@ pub mod dsla {
         ipfs_hash: String,
         slo: Slo,
         messenger_address: Pubkey,
-        leverage: u64,
+        leverage: DslaDecimal,
     ) -> Result<()> {
         instructions::deploy_sla::handler(ctx, ipfs_hash, slo, messenger_address, leverage)
     }

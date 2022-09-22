@@ -11,7 +11,7 @@ pub struct Sla {
     /// service level objective, the objective to achieve for the provider to be rewarded
     pub slo: Slo,
     ///  leverage for the SLA between provider and user pool
-    pub leverage: u64,
+    pub leverage: DslaDecimal,
     pub ipfs_hash: String,
     /// address of the coin to be used as SLA reward for users and providers
     pub mint_address: Pubkey,

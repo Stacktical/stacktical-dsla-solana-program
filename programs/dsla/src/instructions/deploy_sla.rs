@@ -5,6 +5,7 @@ use crate::events::*;
 use crate::state::sla::{Sla, SlaAuthority, Slo};
 use crate::state::sla_registry::SlaRegistry;
 use crate::state::status_registry::StatusRegistry;
+use crate::state::DslaDecimal;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]
@@ -100,7 +101,7 @@ pub fn handler(
     ipfs_hash: String,
     slo: Slo,
     messenger_address: Pubkey,
-    leverage: u64,
+    leverage: DslaDecimal,
 ) -> Result<()> {
     let sla = &mut ctx.accounts.sla;
 
