@@ -40,8 +40,7 @@ impl PeriodGenerator {
     ///
     /// * `period_id` - the period id of which to get the start timestamp of
     pub fn get_start(&self, period_id: u128) -> Result<u128> {
-        require!(period_id < self.n_periods, ErrorCode::InvalidPeriodId);
-
+        require_gt!(self.n_periods, period_id, ErrorCode::InvalidPeriodId);
         match self.period_length {
             PeriodLength::Custom {
                 length: period_length,
@@ -71,14 +70,29 @@ impl PeriodGenerator {
     ///
     /// * `period_id` - the period id of which to check if it has started
     pub fn has_started(&self, period_id: u128) -> Result<bool> {
-        // TODO: to be test using the client needs the underlying blockchain for time
+        // TODO: to be tested using the client needs the underlying blockchain for time
         let timestamp = Clock::get()?.unix_timestamp as u128;
         Ok(timestamp >= self.get_start(period_id)?)
     }
     pub fn has_finished(&self, period_id: u128) -> Result<bool> {
-        // TODO: to be test using the client needs the underlying blockchain for time
+        // TODO: to be tested using the client needs the underlying blockchain for time
         let timestamp = Clock::get()?.unix_timestamp as u128;
         Ok(timestamp > self.get_end(period_id)?)
+    }
+
+    pub fn get_current_period_id(&self) -> Result<u128> {
+        // TODO: to be tested using the client needs the underlying blockchain for time
+        let current_timestamp = Clock::get()?.unix_timestamp as u128;
+
+        // require SLA is currently active
+        require_gte!(self.start, current_timestamp, ErrorCode::SlaNotStarted);
+        require_gt!(
+            current_timestamp,
+            self.get_end(self.n_periods - 1)?,
+            ErrorCode::SlaAlreadyEnded
+        );
+
+        unimplemented!()
     }
 }
 

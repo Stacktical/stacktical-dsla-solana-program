@@ -3,7 +3,9 @@ use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
 
 use crate::constants::*;
 use crate::events::StakedUserSideEvent;
+use crate::state::reward::Reward;
 use crate::state::sla::{Sla, SlaAuthority};
+
 use crate::state::utils::Side;
 #[derive(Accounts)]
 pub struct Stake<'info> {
@@ -50,6 +52,17 @@ pub struct Stake<'info> {
         bump,
     )]
     pub pt_mint: Box<Account<'info, Mint>>,
+
+    /// PDA with the reward
+    #[account(
+        seeds = [
+            REWARD_SEED.as_bytes(),
+            sla.key().as_ref(),
+            staker.key().as_ref()
+        ],
+        bump,
+    )]
+    pub reward: Box<Account<'info, Reward>>,
 
     /// The account to withdraw the money from
     pub staker_token_account: Box<Account<'info, TokenAccount>>,
@@ -112,6 +125,19 @@ pub fn handler(ctx: Context<Stake>, token_amount: u64, side: Side) -> Result<()>
     if let Side::User = side {
         require_gte!(provider_pool_amount, user_pool_amount + token_amount);
     }
+
+    // GET CURRENT PERIOD ID
+
+    // {
+    //  REWARD: 320
+    //  LAST_CLAIM check all expired periods are claimed
+    //
+    //
+    //
+    // }
+    // GET PREVIOUS REWARD
+
+    // CALCULATE NEW REWARD FOR REMAINING PERIODS
 
     token::transfer(ctx.accounts.transfer_context(side), token_amount)?;
     let auth_seed = ctx.accounts.sla.authority_seed;

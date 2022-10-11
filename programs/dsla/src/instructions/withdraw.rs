@@ -69,6 +69,30 @@ pub struct Withdraw<'info> {
 
     pub dsla_mint: Box<Account<'info, Mint>>,
 
+    /// PDA with pt tokens
+    #[account(
+            mut,
+            seeds = [
+                withdrawer.key().as_ref(),
+                PT_ACCOUNT_SEED.as_bytes(),
+                sla.key().as_ref()
+            ],
+            bump
+            )]
+    pub staker_pt_account: Box<Account<'info, TokenAccount>>,
+
+    /// PDA with ut tokens
+    #[account(
+                mut,
+                seeds = [
+                    withdrawer.key().as_ref(),
+                    UT_ACCOUNT_SEED.as_bytes(),
+                    sla.key().as_ref()
+                ],
+                bump
+                )]
+    pub staker_ut_account: Box<Account<'info, TokenAccount>>,
+
     #[account(
         seeds = [STATUS_REGISTRY_SEED.as_bytes(), sla.key().as_ref()],
         bump
@@ -101,7 +125,15 @@ impl<'info> Withdraw<'info> {
             ),
         }
     }
-    fn check_available_withdrawal_funds(&self, side: Side) -> bool {
+
+    fn check_available_withdrawal_pt(&self) -> bool {
+        // FIXME: how to deal with withdrawals
+        let leverage = self.sla.leverage.to_decimal();
+        let pool_size = self.user_pool.amount;
+        unimplemented!();
+    }
+
+    fn check_available_withdrawal_ut(&self) -> bool {
         // FIXME: how to deal with withdrawals
         let leverage = self.sla.leverage.to_decimal();
         let pool_size = self.user_pool.amount;
@@ -117,9 +149,16 @@ pub fn handler(
 ) -> Result<()> {
     let status_registry = &ctx.accounts.status_registry;
     let status = &status_registry.status_registry[period_id];
-    if let Status::Respected { value: _ } = status {
-        // CHECK AVAILABLE
-        ctx.accounts.check_available_withdrawal_funds(side);
+
+
+
+    match status {
+        Side::respected => {
+            // CHECK AVAILABLE
+            ctx.accounts.check_available_withdrawal_funds(side);
+        }
+    }
+
         // BURN TOKENS
         let burn_cpi_context = CpiContext::new(
             ctx.accounts.token_program.to_account_info(),

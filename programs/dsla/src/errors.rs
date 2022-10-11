@@ -27,6 +27,10 @@ pub enum ErrorCode {
     DecimalConversionError = 1011,
     #[msg("operation failed with an overflow")]
     CheckedOperationOverflow = 1012,
+    #[msg("SLA has not started yet")]
+    SlaNotStarted = 1013,
+    #[msg("SLA has already ended")]
+    SlaAlreadyEnded = 1014,
 }
 
 #[error_code]
