@@ -10,8 +10,7 @@ pub mod state;
 use instructions::*;
 
 use crate::state::governance::Governance;
-use crate::state::sla::DslaDecimal;
-use crate::state::sla::Slo;
+use crate::state::sla::{DslaDecimal, PeriodLength, Slo};
 use crate::state::utils::Side;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
@@ -54,7 +53,19 @@ pub mod dsla {
         slo: Slo,
         messenger_address: Pubkey,
         leverage: DslaDecimal,
+        start: u128,
+        n_periods: u128,
+        period_length: PeriodLength,
     ) -> Result<()> {
-        instructions::deploy_sla::handler(ctx, ipfs_hash, slo, messenger_address, leverage)
+        instructions::deploy_sla::handler(
+            ctx,
+            ipfs_hash,
+            slo,
+            messenger_address,
+            leverage,
+            start,
+            n_periods,
+            period_length,
+        )
     }
 }

@@ -31,6 +31,8 @@ pub enum ErrorCode {
     SlaNotStarted = 1013,
     #[msg("SLA has already ended")]
     SlaAlreadyEnded = 1014,
+    #[msg("SLA was not respected cannot withdraw")]
+    SlaNotRespected = 1015,
 }
 
 #[error_code]

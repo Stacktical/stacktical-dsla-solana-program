@@ -18,6 +18,10 @@ pub struct Sla {
     /// The account derived by the program, which has authority over all
     /// assets in the SLA.
     pub sla_authority: Pubkey,
+    /// all the data regarding periods.
+    pub period_data: PeriodGenerator,
+    /// all the reward availaible for future stakes.
+    pub total_liquidity_available: u128,
     /// The address used as the seed for generating the SLA authority
     /// address. Typically this is the SLA account's own address.
     pub authority_seed: Pubkey,
@@ -130,5 +134,174 @@ impl DslaDecimal {
             mantissa: decimal.mantissa() as i64,
             scale: decimal.scale(),
         }
+    }
+}
+
+/// struct used to generate the periods for an SLA
+///
+///
+/// # Fields
+///
+///  * `start` - the start of the first period in unix time (must be positive we are in 2022)
+///  * `period_length` - the length of each period
+///  * `n_periods` - number of periods
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Clone)]
+pub struct PeriodGenerator {
+    pub start: u128,
+    pub period_length: PeriodLength,
+    pub n_periods: u128,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Clone)]
+pub enum PeriodLength {
+    Custom { length: u128 },
+    Monthly,
+    Yearly,
+}
+
+impl PeriodGenerator {
+    /// start + period_length + n_periods + bump
+    pub const MAX_SIZE: usize = 16 + 16 + 16 + 1;
+
+    /// minumum delay from now for the creation of a new period generator
+    pub const MIN_DELAY: u128 = 600000;
+    /// minumum delay from now for the creation of a new period generator
+    pub const MIN_PERIOD_LENGTH: u128 = 60000;
+
+    pub fn new(start: u128, period_length: PeriodLength, n_periods: u128) -> Self {
+        Self {
+            start,
+            period_length,
+            n_periods,
+        }
+    }
+
+    /// Returns the start timestamp of a given period id
+    ///
+    /// # Arguments
+    ///
+    /// * `period_id` - the period id of which to get the start timestamp of
+    pub fn get_start(&self, period_id: u128) -> Result<u128> {
+        require_gt!(self.n_periods, period_id, ErrorCode::InvalidPeriodId);
+        match self.period_length {
+            PeriodLength::Custom {
+                length: period_length,
+            } => Ok(self.start + (period_length * period_id)),
+            PeriodLength::Monthly => unimplemented!(),
+            PeriodLength::Yearly => unimplemented!(),
+        }
+    }
+    /// Returns the end timestamp of a given period id
+    ///
+    /// # Arguments
+    ///
+    /// * `period_id` - the period id of which to get the end timestamp of
+    pub fn get_end(&self, period_id: u128) -> Result<u128> {
+        match self.period_length {
+            PeriodLength::Custom {
+                length: period_length,
+            } => Ok(self.get_start(period_id)? + (period_length - 1)),
+            PeriodLength::Monthly => unimplemented!(),
+            PeriodLength::Yearly => unimplemented!(),
+        }
+    }
+
+    /// Returns the if a given period id has started
+    ///
+    /// # Arguments
+    ///
+    /// * `period_id` - the period id of which to check if it has started
+    pub fn has_started(&self, period_id: u128) -> Result<bool> {
+        // TODO: to be tested using the client needs the underlying blockchain for time
+        let timestamp = Clock::get()?.unix_timestamp as u128;
+        Ok(timestamp >= self.get_start(period_id)?)
+    }
+    pub fn has_finished(&self, period_id: u128) -> Result<bool> {
+        // TODO: to be tested using the client needs the underlying blockchain for time
+        let timestamp = Clock::get()?.unix_timestamp as u128;
+        Ok(timestamp > self.get_end(period_id)?)
+    }
+
+    pub fn get_current_period_id(&self) -> Result<u128> {
+        // TODO: to be tested using the client needs the underlying blockchain for time
+        let current_timestamp = Clock::get()?.unix_timestamp as u128;
+
+        // require SLA is currently active
+        require_gte!(self.start, current_timestamp, ErrorCode::SlaNotStarted);
+        require_gt!(
+            current_timestamp,
+            self.get_end(self.n_periods - 1)?,
+            ErrorCode::SlaAlreadyEnded
+        );
+
+        match self.period_length {
+            PeriodLength::Custom {
+                length: period_length,
+            } => Ok((current_timestamp - self.start) / period_length),
+            PeriodLength::Monthly => unimplemented!(),
+            PeriodLength::Yearly => unimplemented!(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_start_valid_id_1() {
+        let period = PeriodGenerator {
+            start: 100,
+            period_length: PeriodLength::Custom { length: 50 },
+            n_periods: 2,
+        };
+        assert_eq!(period.get_start(1).unwrap(), 150);
+    }
+    #[test]
+    #[should_panic]
+    fn get_start_id_too_large() {
+        let period = PeriodGenerator {
+            start: 100,
+            period_length: PeriodLength::Custom { length: 50 },
+            n_periods: 10,
+        };
+        period.get_start(10).unwrap();
+    }
+    #[test]
+    fn get_start_valid_last() {
+        let period = PeriodGenerator {
+            start: 100,
+            period_length: PeriodLength::Custom { length: 50 },
+            n_periods: 10,
+        };
+        assert_eq!(period.get_start(9).unwrap(), 550);
+    }
+    #[test]
+    fn get_end_valid_id_1() {
+        let period = PeriodGenerator {
+            start: 100,
+            period_length: PeriodLength::Custom { length: 50 },
+            n_periods: 10,
+        };
+        assert_eq!(period.get_end(1).unwrap(), 199);
+    }
+    #[test]
+    #[should_panic]
+    fn get_end_id_too_large() {
+        let period = PeriodGenerator {
+            start: 100,
+            period_length: PeriodLength::Custom { length: 50 },
+            n_periods: 10,
+        };
+        period.get_end(10).unwrap();
+    }
+    #[test]
+    fn get_end_valid_last() {
+        let period = PeriodGenerator {
+            start: 100,
+            period_length: PeriodLength::Custom { length: 50 },
+            n_periods: 10,
+        };
+        assert_eq!(period.get_end(9).unwrap(), 599);
     }
 }

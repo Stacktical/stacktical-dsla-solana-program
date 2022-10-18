@@ -1,12 +1,12 @@
 pub mod governance;
-pub mod period_generator;
+pub mod reward;
 pub mod sla;
 pub mod sla_registry;
 pub mod status_registry;
 pub mod utils;
 
 pub use governance::*;
-pub use period_generator::*;
+pub use reward::*;
 pub use sla::*;
 pub use sla_registry::*;
 pub use status_registry::*;

@@ -9,3 +9,4 @@ pub const UT_ACCOUNT_SEED: &str = "ut-account";
 pub const PT_ACCOUNT_SEED: &str = "pt-account";
 pub const GOVERNANCE_SEED: &str = "governance";
 pub const REWARD_SEED: &str = "reward";
+pub const PERIOD_GENERATOR_SEED: &str = "period-generator";

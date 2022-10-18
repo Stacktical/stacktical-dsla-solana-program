@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
+use rust_decimal::prelude::*;
 
 use crate::constants::*;
 use crate::events::StakedUserSideEvent;
@@ -120,26 +121,33 @@ impl<'info> Stake<'info> {
 }
 
 pub fn handler(ctx: Context<Stake>, token_amount: u64, side: Side) -> Result<()> {
-    let user_pool_amount = ctx.accounts.user_pool.amount;
-    let provider_pool_amount = ctx.accounts.provider_pool.amount;
+    let max_reward = ctx
+        .accounts
+        .sla
+        .leverage
+        .to_decimal()
+        .checked_mul(Decimal::from_u64(token_amount).unwrap())
+        .unwrap()
+        .to_u128()
+        .unwrap();
+
     if let Side::User = side {
-        require_gte!(provider_pool_amount, user_pool_amount + token_amount);
-    }
+        require_gte!(ctx.accounts.sla.total_liquidity_available, max_reward);
+    };
 
     // GET CURRENT PERIOD ID
-
-    // {
-    //  REWARD: 320
-    //  LAST_CLAIM check all expired periods are claimed
-    //
-    //
-    //
-    // }
-    // GET PREVIOUS REWARD
+    let current_period_id = ctx.accounts.sla.period_data.get_current_period_id()?;
+    // CHECK THAT THIS ISN'T THE LAST PERIOD
+    require_neq!(
+        current_period_id,
+        ctx.accounts.sla.period_data.n_periods - 1
+    );
 
     // CALCULATE NEW REWARD FOR REMAINING PERIODS
 
     token::transfer(ctx.accounts.transfer_context(side), token_amount)?;
+    ctx.accounts.sla.total_liquidity_available =
+        ctx.accounts.sla.total_liquidity_available - max_reward;
     let auth_seed = ctx.accounts.sla.authority_seed;
     let seeds = &[auth_seed.as_ref(), &ctx.accounts.sla.authority_bump_seed];
     let signer = &[&seeds[..]];

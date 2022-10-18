@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 
 use crate::constants::*;
+use crate::errors::ErrorCode;
 use crate::state::sla::{Sla, SlaAuthority};
 use crate::state::status_registry::{Status, StatusRegistry};
 use crate::state::utils::Side;
@@ -150,28 +151,27 @@ pub fn handler(
     let status_registry = &ctx.accounts.status_registry;
     let status = &status_registry.status_registry[period_id];
 
-
-
     match status {
-        Side::respected => {
+        Status::Respected { value } => {
             // CHECK AVAILABLE
-            ctx.accounts.check_available_withdrawal_funds(side);
+            ctx.accounts.check_available_withdrawal_pt();
         }
-    }
+        _ => return err!(ErrorCode::SlaNotRespected),
+    };
 
-        // BURN TOKENS
-        let burn_cpi_context = CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            Burn {
-                mint: ctx.accounts.dsla_mint.to_account_info(),
-                from: ctx.accounts.withdrawer_dsla_account.to_account_info(),
-                authority: ctx.accounts.withdrawer.to_account_info(),
-            },
-        );
-        token::burn(burn_cpi_context, token_amount)?;
-        // TRANSFER TOKENS
-        let transfer_cpi_context = ctx.accounts.transfer_context(side);
-        token::transfer(transfer_cpi_context, token_amount)?;
-    }
+    // BURN TOKENS
+    let burn_cpi_context = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        Burn {
+            mint: ctx.accounts.dsla_mint.to_account_info(),
+            from: ctx.accounts.withdrawer_dsla_account.to_account_info(),
+            authority: ctx.accounts.withdrawer.to_account_info(),
+        },
+    );
+    token::burn(burn_cpi_context, token_amount)?;
+    // TRANSFER TOKENS
+    let transfer_cpi_context = ctx.accounts.transfer_context(side);
+    token::transfer(transfer_cpi_context, token_amount)?;
+
     Ok(())
 }

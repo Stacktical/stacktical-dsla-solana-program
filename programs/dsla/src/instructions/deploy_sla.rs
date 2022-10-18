@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::constants::*;
 use crate::events::*;
+use crate::state::sla::{PeriodGenerator, PeriodLength};
 use crate::state::sla::{Sla, SlaAuthority, Slo};
 use crate::state::sla_registry::SlaRegistry;
 use crate::state::status_registry::StatusRegistry;
@@ -102,6 +103,9 @@ pub fn handler(
     slo: Slo,
     messenger_address: Pubkey,
     leverage: DslaDecimal,
+    start: u128,
+    n_periods: u128,
+    period_length: PeriodLength,
 ) -> Result<()> {
     let sla = &mut ctx.accounts.sla;
 
@@ -124,6 +128,7 @@ pub fn handler(
     sla.messenger_address = messenger_address;
     sla.ipfs_hash = ipfs_hash;
     sla.slo = slo;
+    sla.period_data = PeriodGenerator::new(start, period_length, n_periods);
 
     sla.mint_address = ctx.accounts.mint.key();
 
