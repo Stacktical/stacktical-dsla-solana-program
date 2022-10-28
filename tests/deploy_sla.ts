@@ -29,7 +29,14 @@ describe("Deploy SLA", () => {
   it("Deploys an SLA 1", async () => {
     const ipfsHash = "t";
     let sloType = { greaterThan: {} };
-    const slo = { sloValue: new anchor.BN("100"), sloType };
+    let sloValue = {
+      mantissa: new anchor.BN("100"),
+      scale: new anchor.BN("0"),
+    };
+    const slo = {
+      sloValue,
+      sloType,
+    };
     const messengerAddress = anchor.web3.Keypair.generate().publicKey;
     const periods = [
       {
@@ -134,7 +141,14 @@ describe("Deploy SLA", () => {
   it("Deploys an SLA 2", async () => {
     const ipfsHash = "tt";
     let sloType = { smallerThan: {} };
-    const slo = { sloValue: new anchor.BN("999"), sloType };
+    let sloValue = {
+      mantissa: new anchor.BN("100"),
+      scale: new anchor.BN("0"),
+    };
+    const slo = {
+      sloValue,
+      sloType,
+    };
     const messengerAddress = anchor.web3.Keypair.generate().publicKey;
     const periods = [
       {

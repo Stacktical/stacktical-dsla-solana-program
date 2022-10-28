@@ -7,7 +7,7 @@ on:
     branches: [master, develop]
 
 env:
-  SOLANA_CLI_VERSION: 1.10.8
+  SOLANA_CLI_VERSION: 1.11.10
   NODE_VERSION: 16.14.2
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             ./target/
-          key: cargo-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          key: cargo-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-0-0-1
       - run: yarn install
       - run: yarn lint
       - run: cargo fmt -- --check

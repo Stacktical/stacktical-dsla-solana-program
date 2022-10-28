@@ -2,9 +2,11 @@ use anchor_lang::prelude::*;
 
 use crate::constants::*;
 use crate::events::*;
+use crate::state::sla::{PeriodGenerator, PeriodLength};
 use crate::state::sla::{Sla, SlaAuthority, Slo};
 use crate::state::sla_registry::SlaRegistry;
 use crate::state::status_registry::StatusRegistry;
+use crate::state::DslaDecimal;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]
@@ -97,17 +99,19 @@ pub struct DeploySla<'info> {
 
 pub fn handler(
     ctx: Context<DeploySla>,
-    ipfs_hash: String,
     slo: Slo,
     messenger_address: Pubkey,
-    leverage: u64,
+    leverage: DslaDecimal,
+    start: u128,
+    n_periods: usize,
+    period_length: PeriodLength,
 ) -> Result<()> {
     let sla = &mut ctx.accounts.sla;
 
     // SLA REGISTRY
     let sla_registry = &mut ctx.accounts.sla_registry;
 
-    // check that SLA registry still has space
+    // check that the SLA registry still has space
     require_gt!(312499, sla_registry.sla_account_addresses.len());
     sla_registry.sla_account_addresses.push(sla.key());
     msg!("{}", sla_registry.sla_account_addresses[0]);
@@ -121,8 +125,8 @@ pub fn handler(
     sla.authority_bump_seed = [authority_seed];
     sla.leverage = leverage;
     sla.messenger_address = messenger_address;
-    sla.ipfs_hash = ipfs_hash;
     sla.slo = slo;
+    sla.period_data = PeriodGenerator::new(start, period_length, n_periods);
 
     sla.mint_address = ctx.accounts.mint.key();
 

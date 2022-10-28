@@ -92,8 +92,15 @@ describe("Stake", () => {
 
   it("stakes provider side", async () => {
     const ipfsHash = "t";
-    let sloType = { greaterThan: {} };
-    const slo = { sloValue: new anchor.BN("100"), sloType };
+    const sloType = { greaterThan: {} };
+    let sloValue = {
+      mantissa: new anchor.BN("100"),
+      scale: new anchor.BN("0"),
+    };
+    const slo = {
+      sloValue,
+      sloType,
+    };
     const messengerAddress = anchor.web3.Keypair.generate().publicKey;
     const periods = [
       {

@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use super::DslaDecimal;
+
 #[account]
 pub struct Governance {
     pub dsla_burn_rate: u128,
@@ -10,7 +12,7 @@ pub struct Governance {
     pub dsla_burned_by_verification: u128,
     pub max_token_length: u128,
     /// max leverage allowed in a DSLA
-    pub max_leverage: u64,
+    pub max_leverage: DslaDecimal,
     /// boolean defining if burning of DSLA is on or off
     pub burn_dsla: bool,
 }

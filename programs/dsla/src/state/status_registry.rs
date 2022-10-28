@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
-use rust_decimal::Decimal;
+
+use super::DslaDecimal;
 #[account]
 pub struct StatusRegistry {
     pub status_registry: Vec<Status>,
@@ -9,6 +10,6 @@ pub struct StatusRegistry {
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Clone)]
 pub enum Status {
     NotVerified,
-    Respected { value: Decimal },
-    NotRespected { value: Decimal },
+    Respected { value: DslaDecimal },
+    NotRespected { value: DslaDecimal },
 }

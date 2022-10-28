@@ -5,7 +5,7 @@ pub use switchboard_v2::{AggregatorAccountData, SwitchboardDecimal, SWITCHBOARD_
 
 use crate::constants::*;
 use crate::errors::{ErrorCode, FeedErrorCode};
-use crate::state::sla::Sla;
+use crate::state::sla::{DslaDecimal, Sla};
 use crate::state::status_registry::{Status, StatusRegistry};
 
 #[derive(Accounts)]
@@ -32,12 +32,11 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
 
     match status_registry[period] {
         Status::NotVerified => {
-            let max_confidence_interval = Some(100.0); // FIXME: change this to a protocol governance const or sla level const
-            let max_staleness = 300; // FIXME: change this to a protocol governance variable or sla level variable
-            let _slo = &ctx.accounts.sla.slo;
+            let max_confidence_interval = Some(100.0); // @remind change this to a protocol governance const or sla level const
+            let max_staleness = 300; // @remind change this to a protocol governance variable or sla level variable
 
-            // TODO: once the period is expired allow the validation using a stream with unlimited time horizon 0.5% get_sli somehow;
-            // TODO: add checks for correct datafeed account based on SLA governance variable
+            // @todo once the period is expired allow the validation using a stream with unlimited time horizon 0.5% get_sli somehow;
+            // @todo add checks for correct datafeed account based on SLA governance variable
 
             // 1. GET THE DATA
 
@@ -45,7 +44,8 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
 
             // get result
             let data: f64 = feed.get_result()?.try_into()?;
-            let sli = Decimal::from_f64(data).ok_or(ErrorCode::DecimalConversionError)?;
+            let sli_decimal = Decimal::from_f64(data).ok_or(ErrorCode::DecimalConversionError)?;
+            let sli_dsla_decimal = DslaDecimal::from_decimal(sli_decimal);
 
             // check whether the feed has been updated in the last max_staleness seconds
             feed.check_staleness(clock::Clock::get().unwrap().unix_timestamp, max_staleness)
@@ -60,16 +60,20 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
             }
 
             // 2. COMPARE SLO TO SLI
-            let respected = slo.is_respected(sli)?;
+            let respected = slo.is_respected(sli_dsla_decimal)?;
 
             // 3. UPDATE STATUS
             if respected {
-                status_registry[period] = Status::Respected { value: sli };
+                status_registry[period] = Status::Respected {
+                    value: sli_dsla_decimal,
+                };
             } else {
-                status_registry[period] = Status::NotRespected { value: sli };
+                status_registry[period] = Status::NotRespected {
+                    value: sli_dsla_decimal,
+                };
             }
 
-            // TODO: 4. REWARD VALIDATOR
+            // @todo 4. REWARD VALIDATOR
 
             Ok(())
         }
