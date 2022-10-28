@@ -104,7 +104,7 @@ pub fn handler(
     messenger_address: Pubkey,
     leverage: DslaDecimal,
     start: u128,
-    n_periods: u128,
+    n_periods: usize,
     period_length: PeriodLength,
 ) -> Result<()> {
     let sla = &mut ctx.accounts.sla;
@@ -112,7 +112,7 @@ pub fn handler(
     // SLA REGISTRY
     let sla_registry = &mut ctx.accounts.sla_registry;
 
-    // check that SLA registry still has space
+    // check that the SLA registry still has space
     require_gt!(312499, sla_registry.sla_account_addresses.len());
     sla_registry.sla_account_addresses.push(sla.key());
     msg!("{}", sla_registry.sla_account_addresses[0]);

@@ -27,12 +27,10 @@ pub enum ErrorCode {
     DecimalConversionError = 1011,
     #[msg("operation failed with an overflow")]
     CheckedOperationOverflow = 1012,
-    #[msg("SLA has not started yet")]
-    SlaNotStarted = 1013,
-    #[msg("SLA has already ended")]
-    SlaAlreadyEnded = 1014,
-    #[msg("SLA was not respected cannot withdraw")]
-    SlaNotRespected = 1015,
+    #[msg("The staking windows has closed")]
+    StakingWindowClosed = 1013,
+    #[msg("The claiming window is closed")]
+    ClaimingWindowClosed = 1014,
 }
 
 #[error_code]

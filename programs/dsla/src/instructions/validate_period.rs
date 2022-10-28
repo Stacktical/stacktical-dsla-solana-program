@@ -32,11 +32,11 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
 
     match status_registry[period] {
         Status::NotVerified => {
-            let max_confidence_interval = Some(100.0); // FIXME: change this to a protocol governance const or sla level const
-            let max_staleness = 300; // FIXME: change this to a protocol governance variable or sla level variable
+            let max_confidence_interval = Some(100.0); // @remind change this to a protocol governance const or sla level const
+            let max_staleness = 300; // @remind change this to a protocol governance variable or sla level variable
 
-            // TODO: once the period is expired allow the validation using a stream with unlimited time horizon 0.5% get_sli somehow;
-            // TODO: add checks for correct datafeed account based on SLA governance variable
+            // @todo once the period is expired allow the validation using a stream with unlimited time horizon 0.5% get_sli somehow;
+            // @todo add checks for correct datafeed account based on SLA governance variable
 
             // 1. GET THE DATA
 
@@ -73,7 +73,7 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
                 };
             }
 
-            // TODO: 4. REWARD VALIDATOR
+            // @todo 4. REWARD VALIDATOR
 
             Ok(())
         }

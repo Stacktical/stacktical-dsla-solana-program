@@ -11,12 +11,10 @@ use instructions::*;
 
 use crate::state::governance::Governance;
 use crate::state::sla::{DslaDecimal, PeriodLength, Slo};
-use crate::state::utils::Side;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
 pub mod dsla {
-
     use super::*;
 
     pub fn init_sla_registry(
@@ -26,25 +24,23 @@ pub mod dsla {
         instructions::init_sla_registry::handler(ctx, governance_parameters)
     }
 
-    pub fn init_ut_pt_accounts(ctx: Context<InitUtPtAccounts>) -> Result<()> {
-        instructions::init_ut_pt_accounts::handler(ctx)
+    pub fn init_user_accounts(ctx: Context<InitUserAccounts>) -> Result<()> {
+        instructions::init_user_accounts::handler(ctx)
+    }
+    pub fn init_provider_accounts(ctx: Context<InitProviderAccounts>) -> Result<()> {
+        instructions::init_provider_accounts::handler(ctx)
     }
 
-    pub fn stake(ctx: Context<Stake>, token_amount: u64, side: Side) -> Result<()> {
-        instructions::stake::handler(ctx, token_amount, side)
+    pub fn stake(ctx: Context<Stake>, token_amount: u64) -> Result<()> {
+        instructions::stake::handler(ctx, token_amount)
     }
 
     pub fn validate_period(ctx: Context<ValidatePeriod>, period: u64) -> Result<()> {
         instructions::validate_period::handler(ctx, period as usize)
     }
 
-    pub fn withdraw(
-        ctx: Context<Withdraw>,
-        token_amount: u64,
-        side: Side,
-        period_id: u64,
-    ) -> Result<()> {
-        instructions::withdraw::handler(ctx, token_amount, side, period_id as usize)
+    pub fn claim(ctx: Context<Claim>) -> Result<()> {
+        instructions::claim::handler(ctx)
     }
 
     pub fn deploy_sla(
@@ -54,7 +50,7 @@ pub mod dsla {
         messenger_address: Pubkey,
         leverage: DslaDecimal,
         start: u128,
-        n_periods: u128,
+        n_periods: usize,
         period_length: PeriodLength,
     ) -> Result<()> {
         instructions::deploy_sla::handler(
