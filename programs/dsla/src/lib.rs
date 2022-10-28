@@ -45,7 +45,6 @@ pub mod dsla {
 
     pub fn deploy_sla(
         ctx: Context<DeploySla>,
-        ipfs_hash: String,
         slo: Slo,
         messenger_address: Pubkey,
         leverage: DslaDecimal,
@@ -55,7 +54,6 @@ pub mod dsla {
     ) -> Result<()> {
         instructions::deploy_sla::handler(
             ctx,
-            ipfs_hash,
             slo,
             messenger_address,
             leverage,

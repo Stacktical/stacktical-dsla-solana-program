@@ -234,9 +234,9 @@ impl PeriodGenerator {
         let current_timestamp = Clock::get()?.unix_timestamp as u128;
 
         if current_timestamp > self.get_end(self.n_periods - 1)? {
-            return Ok(SlaStatus::Ended);
+            Ok(SlaStatus::Ended)
         } else if self.start >= current_timestamp {
-            return Ok(SlaStatus::NotStarted);
+            Ok(SlaStatus::NotStarted)
         } else {
             match self.period_length {
                 PeriodLength::Custom {
@@ -244,7 +244,7 @@ impl PeriodGenerator {
                 } => {
                     // @remind look into this division might cause problems
                     let period_id = ((current_timestamp - self.start) / period_length) as usize;
-                    return Ok(SlaStatus::Active { period_id });
+                    Ok(SlaStatus::Active { period_id })
                 }
                 PeriodLength::Monthly => unimplemented!(),
                 PeriodLength::Yearly => unimplemented!(),

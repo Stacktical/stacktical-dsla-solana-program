@@ -99,7 +99,6 @@ pub struct DeploySla<'info> {
 
 pub fn handler(
     ctx: Context<DeploySla>,
-    ipfs_hash: String,
     slo: Slo,
     messenger_address: Pubkey,
     leverage: DslaDecimal,
@@ -126,7 +125,6 @@ pub fn handler(
     sla.authority_bump_seed = [authority_seed];
     sla.leverage = leverage;
     sla.messenger_address = messenger_address;
-    sla.ipfs_hash = ipfs_hash;
     sla.slo = slo;
     sla.period_data = PeriodGenerator::new(start, period_length, n_periods);
 

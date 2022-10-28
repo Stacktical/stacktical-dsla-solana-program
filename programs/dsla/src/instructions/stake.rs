@@ -149,8 +149,8 @@ pub fn handler(ctx: Context<Stake>, token_amount: u64) -> Result<()> {
                 .floor()
                 .to_u64()
                 .unwrap();
-            reward.current_period_reward = reward.current_period_reward + added_reward;
-            reward.future_periods_reward = reward.current_period_reward + added_reward;
+            reward.current_period_reward += added_reward;
+            reward.future_periods_reward += added_reward;
         }
         SlaStatus::Ended => return err!(ErrorCode::StakingWindowClosed),
         SlaStatus::Active { period_id } => {
@@ -177,8 +177,7 @@ pub fn handler(ctx: Context<Stake>, token_amount: u64) -> Result<()> {
         ctx.accounts.transfer_context(ctx.accounts.reward.side),
         token_amount,
     )?;
-    ctx.accounts.sla.total_liquidity_available =
-        ctx.accounts.sla.total_liquidity_available - max_reward;
+    ctx.accounts.sla.total_liquidity_available -= max_reward;
     let auth_seed = ctx.accounts.sla.authority_seed;
     let seeds = &[auth_seed.as_ref(), &ctx.accounts.sla.authority_bump_seed];
     let signer = &[&seeds[..]];
