@@ -6,6 +6,7 @@ use crate::state::reward::{LastClaimedPeriod, Reward};
 use crate::state::sla::Sla;
 use crate::state::Side;
 
+/// Instruction to initialize all the accounts from provider side for an SLA
 #[derive(Accounts)]
 pub struct InitProviderAccounts<'info> {
     #[account(mut)]

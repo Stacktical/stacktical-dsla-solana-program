@@ -9,6 +9,7 @@ use crate::state::status_registry::StatusRegistry;
 use crate::state::DslaDecimal;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
+/// Instruction to deploy a new SLA
 #[derive(Accounts)]
 pub struct DeploySla<'info> {
     #[account(mut)]

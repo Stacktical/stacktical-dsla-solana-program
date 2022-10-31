@@ -1,8 +1,11 @@
 use anchor_lang::prelude::Result;
 use anchor_lang::prelude::*;
 
+/// storage for all the constants in the protocol
 pub mod constants;
+/// all the DSLA specific errors
 pub mod errors;
+/// all the DSLA specific events
 pub mod events;
 pub mod instructions;
 pub mod state;
@@ -13,6 +16,7 @@ use crate::state::governance::Governance;
 use crate::state::sla::{DslaDecimal, PeriodLength, Slo};
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+/// the main program
 #[program]
 pub mod dsla {
     use super::*;

@@ -8,6 +8,7 @@ use crate::errors::{ErrorCode, FeedErrorCode};
 use crate::state::sla::{DslaDecimal, Sla};
 use crate::state::status_registry::{Status, StatusRegistry};
 
+/// Instruction to validate a period x, anyone can validate
 #[derive(Accounts)]
 pub struct ValidatePeriod<'info> {
     #[account(mut)]

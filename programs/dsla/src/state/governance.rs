@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 use super::DslaDecimal;
 
+/// collection fo all the parametric Governances one account for all SLAs
 #[account]
 pub struct Governance {
     pub dsla_burn_rate: u128,

@@ -137,18 +137,17 @@ impl DslaDecimal {
     }
 }
 
-/// struct used to generate the periods for an SLA
+/// struct used to generate the periods for an SLA with helper function to retrieve any period
 ///
 ///
-/// # Fields
-///
-///  * `start` - the start of the first period in unix time (must be positive we are in 2022)
-///  * `period_length` - the length of each period
-///  * `n_periods` - number of periods
+
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Clone)]
 pub struct PeriodGenerator {
+    /// the first timestamp indicating the beginning of the SLA and of the first period
     pub start: u128,
+    /// the length of each period
     pub period_length: PeriodLength,
+    /// number of periods
     pub n_periods: usize,
 }
 
@@ -175,6 +174,7 @@ impl PeriodGenerator {
     /// minumum delay from now for the creation of a new period generator
     pub const MIN_PERIOD_LENGTH: u128 = 60000;
 
+    /// return a new period generator object
     pub fn new(start: u128, period_length: PeriodLength, n_periods: usize) -> Self {
         Self {
             start,
@@ -229,6 +229,7 @@ impl PeriodGenerator {
         Ok(timestamp > self.get_end(period_id)?)
     }
 
+    /// returns an enum `SlaStatus` with the current period id if the sla is active
     pub fn get_current_period_id(&self) -> Result<SlaStatus> {
         // @remind to be tested using the client needs the underlying blockchain for time
         let current_timestamp = Clock::get()?.unix_timestamp as u128;

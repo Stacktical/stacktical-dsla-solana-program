@@ -9,6 +9,8 @@ use crate::state::status_registry::{Status, StatusRegistry};
 use crate::state::utils::Side;
 use crate::state::{DslaDecimal, LastClaimedPeriod, SlaStatus, Slo};
 
+/// Instruction to claim all rewards up to the latest available
+/// eg. if current period is 5 and I have never claimed before, I will receive all rewards up to 4th period according to the status, leverage and deviation
 #[derive(Accounts)]
 pub struct Claim<'info> {
     /// provider or user
@@ -162,8 +164,6 @@ impl<'info> Claim<'info> {
         let mut first_claimable_period: usize;
 
         let slo = &self.sla.slo;
-
-        // @todo add deviation calculation
 
         match reward.last_claimed_period {
             LastClaimedPeriod::NeverClaimed => first_claimable_period = 0,
@@ -333,7 +333,7 @@ pub fn handler(ctx: Context<Claim>) -> Result<()> {
     //         authority: ctx.accounts.claimer.to_account_info(),
     //     },
     // );
-    // // @remind DSLA burn rate
+    // // @todo set DSLA burn rate
     // let dsla_burn = 1000;
     // token::burn(burn_cpi_context, dsla_burn)?;
 

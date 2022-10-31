@@ -9,6 +9,8 @@ use crate::state::reward::Reward;
 use crate::state::sla::{Sla, SlaAuthority, SlaStatus};
 
 use crate::state::utils::Side;
+
+/// Instruction to stake on both sides
 #[derive(Accounts)]
 pub struct Stake<'info> {
     // provide or user

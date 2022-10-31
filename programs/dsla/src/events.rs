@@ -2,6 +2,8 @@ use crate::state::status_registry::Status;
 
 use anchor_lang::prelude::*;
 
+// @todo add more events for all the different instructions
+
 #[event]
 pub struct InitializedStatusRegistryEvent {
     pub periods: Vec<Status>,
