@@ -1,18 +1,21 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
+use rust_decimal::prelude::*;
 
 use crate::constants::*;
 use crate::state::reward::Reward;
 use crate::state::sla::{Sla, SlaAuthority};
 use crate::state::status_registry::{Status, StatusRegistry};
 use crate::state::utils::Side;
-use crate::state::{LastClaimedPeriod, SlaStatus};
+use crate::state::{DslaDecimal, LastClaimedPeriod, SlaStatus, Slo};
 
 #[derive(Accounts)]
 pub struct Claim<'info> {
-    // provide or user
+    /// provider or user
     #[account(mut)]
     pub claimer: Signer<'info>,
+
+    /// the SLA
     pub sla: Account<'info, Sla>,
 
     #[account(
@@ -116,6 +119,19 @@ pub struct Claim<'info> {
     pub system_program: Program<'info, System>,
 }
 
+fn apply_deviation_to_reward(slo: &Slo, reward: u64, value: DslaDecimal) -> Result<u64> {
+    // @fixme find a better way to set the precison
+    let precision = 18;
+
+    Ok(Decimal::from_u64(reward)
+        .unwrap()
+        .checked_mul(slo.get_deviation(value, precision)?)
+        .unwrap()
+        .floor()
+        .to_u64()
+        .unwrap())
+}
+
 impl<'info> Claim<'info> {
     fn transfer_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         let side = &self.reward.side;
@@ -145,6 +161,10 @@ impl<'info> Claim<'info> {
         let status_registry = &self.status_registry.status_registry;
         let mut first_claimable_period: usize;
 
+        let slo = &self.sla.slo;
+
+        // @todo add deviation calculation
+
         match reward.last_claimed_period {
             LastClaimedPeriod::NeverClaimed => first_claimable_period = 0,
             LastClaimedPeriod::Claimed {
@@ -169,10 +189,13 @@ impl<'info> Claim<'info> {
 
                 match reward.side {
                     Side::Provider => {
-                        if let Status::Respected { value: _ } =
-                            status_registry[first_claimable_period]
+                        if let Status::Respected { value } = status_registry[first_claimable_period]
                         {
-                            total_reward += reward.current_period_reward;
+                            total_reward += apply_deviation_to_reward(
+                                slo,
+                                reward.current_period_reward,
+                                value,
+                            )?;
                         }
                         reward.current_period_reward = reward.future_periods_reward;
 
@@ -183,16 +206,24 @@ impl<'info> Claim<'info> {
                         first_claimable_period += 1;
 
                         for status in &status_registry[first_claimable_period..period_id] {
-                            if let Status::Respected { value: _ } = status {
-                                total_reward += reward.future_periods_reward;
+                            if let Status::Respected { value } = status {
+                                total_reward += apply_deviation_to_reward(
+                                    slo,
+                                    reward.future_periods_reward,
+                                    *value,
+                                )?;
                             }
                         }
                     }
                     Side::User => {
-                        if let Status::NotRespected { value: _ } =
+                        if let Status::NotRespected { value } =
                             status_registry[first_claimable_period]
                         {
-                            total_reward += reward.current_period_reward;
+                            total_reward += apply_deviation_to_reward(
+                                slo,
+                                reward.current_period_reward,
+                                value,
+                            )?;
                         }
                         reward.current_period_reward = reward.future_periods_reward;
 
@@ -203,13 +234,18 @@ impl<'info> Claim<'info> {
                         first_claimable_period += 1;
 
                         for status in &status_registry[first_claimable_period..period_id] {
-                            if let Status::NotRespected { value: _ } = status {
-                                total_reward += reward.future_periods_reward;
+                            if let Status::NotRespected { value } = status {
+                                total_reward += apply_deviation_to_reward(
+                                    slo,
+                                    reward.future_periods_reward,
+                                    *value,
+                                )?;
                             }
                         }
                     }
                 };
             }
+
             SlaStatus::NotStarted => return Ok(0),
             SlaStatus::Ended => {
                 let last_claimable_period = self.sla.period_data.n_periods - 1;
@@ -219,10 +255,13 @@ impl<'info> Claim<'info> {
 
                 match reward.side {
                     Side::Provider => {
-                        if let Status::Respected { value: _ } =
-                            status_registry[first_claimable_period]
+                        if let Status::Respected { value } = status_registry[first_claimable_period]
                         {
-                            total_reward += reward.current_period_reward;
+                            total_reward += apply_deviation_to_reward(
+                                slo,
+                                reward.current_period_reward,
+                                value,
+                            )?;
                         }
                         reward.current_period_reward = reward.future_periods_reward;
 
@@ -235,16 +274,24 @@ impl<'info> Claim<'info> {
                         for status in
                             &status_registry[first_claimable_period..last_claimable_period]
                         {
-                            if let Status::Respected { value: _ } = status {
-                                total_reward += reward.future_periods_reward;
+                            if let Status::Respected { value } = status {
+                                total_reward += apply_deviation_to_reward(
+                                    slo,
+                                    reward.future_periods_reward,
+                                    *value,
+                                )?;
                             }
                         }
                     }
                     Side::User => {
-                        if let Status::NotRespected { value: _ } =
+                        if let Status::NotRespected { value } =
                             status_registry[first_claimable_period]
                         {
-                            total_reward += reward.current_period_reward;
+                            total_reward += apply_deviation_to_reward(
+                                slo,
+                                reward.current_period_reward,
+                                value,
+                            )?;
                         }
                         reward.current_period_reward = reward.future_periods_reward;
 
@@ -257,8 +304,12 @@ impl<'info> Claim<'info> {
                         for status in
                             &status_registry[first_claimable_period..last_claimable_period]
                         {
-                            if let Status::NotRespected { value: _ } = status {
-                                total_reward += reward.future_periods_reward;
+                            if let Status::NotRespected { value } = status {
+                                total_reward += apply_deviation_to_reward(
+                                    slo,
+                                    reward.future_periods_reward,
+                                    *value,
+                                )?;
                             }
                         }
                     }
@@ -266,6 +317,7 @@ impl<'info> Claim<'info> {
             }
         };
         Ok(total_reward)
+        // @remind think about what happens to all the non utilized funds
     }
 }
 
