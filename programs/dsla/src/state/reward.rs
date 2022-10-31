@@ -7,9 +7,9 @@ use super::Side;
 pub struct Reward {
     /// the id of the last claimed period
     pub last_claimed_period: LastClaimedPeriod,
-    /// the rewards for all the periods except the next one
+    /// the rewards for all the claimable periods except the first one
     pub future_periods_reward: u64,
-    /// the reward the first period
+    /// the reward for the first claimable period
     pub current_period_reward: u64,
     /// the side of where the reward is on
     pub side: Side,

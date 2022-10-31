@@ -138,9 +138,6 @@ impl DslaDecimal {
 }
 
 /// struct used to generate the periods for an SLA with helper function to retrieve any period
-///
-///
-
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Clone)]
 pub struct PeriodGenerator {
     /// the first timestamp indicating the beginning of the SLA and of the first period
