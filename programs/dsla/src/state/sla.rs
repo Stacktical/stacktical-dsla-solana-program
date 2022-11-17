@@ -12,7 +12,6 @@ pub struct Sla {
     pub slo: Slo,
     ///  leverage for the SLA between provider and user pool
     pub leverage: DslaDecimal,
-    pub ipfs_hash: String,
     /// address of the coin to be used as SLA reward for users and providers
     pub mint_address: Pubkey,
     /// The account derived by the program, which has authority over all
@@ -20,8 +19,12 @@ pub struct Sla {
     pub sla_authority: Pubkey,
     /// all the data regarding periods.
     pub period_data: PeriodGenerator,
-    /// all the reward availaible for future stakes.
-    pub total_liquidity_available: u128,
+    /// amount of tokens in Provider pool
+    pub provider_pool_size: u128,
+    /// amount of tokens in User pool
+    pub user_pool_size: u128,
+    pub ut_supply: u128,
+    pub pt_supply: u128,
     /// The address used as the seed for generating the SLA authority
     /// address. Typically this is the SLA account's own address.
     pub authority_seed: Pubkey,

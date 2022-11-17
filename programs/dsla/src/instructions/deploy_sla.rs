@@ -48,22 +48,12 @@ pub struct DeploySla<'info> {
     #[account(
         init,
         payer = deployer,
-        seeds = [PROVIDER_POOL_SEED.as_bytes(), sla.key().as_ref()],
+        seeds = [POOL_SEED.as_bytes(), sla.key().as_ref()],
         token::mint = mint,
         token::authority = sla_authority,
         bump,
     )]
-    pub provider_pool: Box<Account<'info, TokenAccount>>,
-
-    #[account(
-        init,
-        payer = deployer,
-        seeds = [USER_POOL_SEED.as_bytes(), sla.key().as_ref()],
-        token::mint = mint,
-        token::authority = sla_authority,
-        bump,
-    )]
-    pub user_pool: Box<Account<'info, TokenAccount>>,
+    pub pool: Box<Account<'info, TokenAccount>>,
 
     #[account(
         init,
@@ -126,6 +116,8 @@ pub fn handler(
     sla.authority_bump_seed = [authority_seed];
     sla.leverage = leverage;
     sla.messenger_address = messenger_address;
+    sla.provider_pool_size = 0;
+    sla.user_pool_size = 0;
     sla.slo = slo;
     sla.period_data = PeriodGenerator::new(start, period_length, n_periods);
 
