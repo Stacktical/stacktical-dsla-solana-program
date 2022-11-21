@@ -4,6 +4,7 @@ use rust_decimal::prelude::*;
 
 use crate::constants::*;
 use crate::state::sla::{Sla, SlaAuthority};
+use crate::state::Lockup;
 
 /// Instruction to claim all rewards up to the latest available
 /// eg. if current period is 5 and I have never claimed before, I will receive all rewards up to 4th period according to the status, leverage and deviation
@@ -49,6 +50,15 @@ pub struct WithdrawUser<'info> {
         bump,
     )]
     pub ut_mint: Box<Account<'info, Mint>>,
+    #[account(
+        seeds = [
+            withdrawer.key().as_ref(),
+            LOCKUP_USER_SEED.as_bytes(),
+            sla.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub ut_lockup: Box<Account<'info, Lockup>>,
 
     pub dsla_mint: Box<Account<'info, Mint>>,
 
@@ -62,7 +72,14 @@ pub fn handler(ctx: Context<WithdrawUser>, burn_amount: u64) -> Result<()> {
     let burn_amount_dec = Decimal::from_u64(burn_amount).unwrap();
     let user_pool_size_dec = Decimal::from_u128(ctx.accounts.sla.user_pool_size).unwrap();
     let ut_supply_dec = Decimal::from_u128(ctx.accounts.sla.ut_supply).unwrap();
+    let period_id = ctx.accounts.sla.period_data.get_current_period_id()?;
+
     let sla = &mut ctx.accounts.sla;
+
+    // @todo add test for this
+
+    let lockup = &mut ctx.accounts.ut_lockup;
+    lockup.update_available_tokens(period_id);
 
     // @todo ad test
     let tokens_to_withdraw = burn_amount_dec
@@ -84,6 +101,8 @@ pub fn handler(ctx: Context<WithdrawUser>, burn_amount: u64) -> Result<()> {
     );
     token::burn(burn_cpi_context, burn_amount)?;
     sla.ut_supply -= burn_amount as u128;
+
+    lockup.withdraw(burn_amount);
 
     let transfer_context = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),

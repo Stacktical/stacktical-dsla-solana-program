@@ -9,3 +9,5 @@ pub const PT_ACCOUNT_SEED: &str = "pt-account";
 pub const GOVERNANCE_SEED: &str = "governance";
 pub const REWARD_SEED: &str = "reward";
 pub const PERIOD_GENERATOR_SEED: &str = "period-generator";
+pub const LOCKUP_PROVIDER_SEED: &str = "provider-lockup";
+pub const LOCKUP_USER_SEED: &str = "user-lockup";

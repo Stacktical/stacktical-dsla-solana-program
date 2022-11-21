@@ -5,6 +5,7 @@ use rust_decimal::prelude::*;
 use crate::constants::*;
 use crate::events::StakedUserSideEvent;
 use crate::state::sla::{Sla, SlaAuthority};
+use crate::state::Lockup;
 
 /// Instruction to stake on both sides
 #[derive(Accounts)]
@@ -36,20 +37,24 @@ pub struct StakeUser<'info> {
         bump,
     )]
     pub ut_mint: Box<Account<'info, Mint>>,
+    #[account(
+        init_if_needed,
+        space = Lockup::LEN,
+        payer = staker,
+        seeds = [
+            staker.key().as_ref(),
+            LOCKUP_USER_SEED.as_bytes(),
+            sla.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub ut_lockup: Box<Account<'info, Lockup>>,
 
     /// The account to claim the money from
     pub staker_token_account: Box<Account<'info, TokenAccount>>,
 
-    /// PDA with ut tokens
-    #[account(
-            mut,
-            seeds = [
-                staker.key().as_ref(),
-                UT_ACCOUNT_SEED.as_bytes(),
-                sla.key().as_ref()
-            ],
-            bump
-            )]
+    /// ut tokens
+    #[account(mut)]
     pub staker_ut_account: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
@@ -122,6 +127,11 @@ pub fn handler(ctx: Context<StakeUser>, token_amount: u64) -> Result<()> {
     token::mint_to(mint_context, tokens_to_mint)?;
     // @todo add test for this
     sla.ut_supply += tokens_to_mint as u128;
+
+    let lockup = &mut ctx.accounts.ut_lockup;
+    let period_id = ctx.accounts.sla.period_data.get_current_period_id()?;
+    // @todo add test for this
+    lockup.stake_update(tokens_to_mint, period_id);
 
     // @todo improve this event
     emit!(StakedUserSideEvent { token_amount });

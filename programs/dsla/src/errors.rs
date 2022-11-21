@@ -3,34 +3,16 @@ use anchor_lang::prelude::*;
 #[error_code]
 #[derive(Eq, PartialEq)]
 pub enum ErrorCode {
-    #[msg("Could not find a bump for this key.")]
-    BumpNotFound = 1001,
     #[msg("precision is not divisible by 100")]
-    InvalidPrecision = 1002,
+    InvalidPrecision = 1001,
     #[msg("period ID entered is not valid")]
-    InvalidPeriodId = 1003,
-    #[msg("the start is too close")]
-    InvalidPeriodStart = 1004,
-    #[msg("the period lenght is too short")]
-    InvalidPeriodLength = 1005,
-    #[msg("Number of periods cannot be 0")]
-    ZeroNumberOfPeriods = 1006,
-    #[msg("Number of periods is capped based on account storage requirment")]
-    MaxNumberOfPeriods = 1007,
-    #[msg("all periods should be set as unverified")]
-    PeriodAlreadyVerified = 1008,
-    #[msg("decimals is different")]
-    DifferentDecimals = 1009,
+    InvalidPeriodId = 1002,
     #[msg("trying to verify an already verified period")]
-    AlreadyVerifiedPeriod = 1010,
+    AlreadyVerifiedPeriod = 1003,
     #[msg("Failed to convert to a decimal")]
-    DecimalConversionError = 1011,
+    DecimalConversionError = 1004,
     #[msg("operation failed with an overflow")]
-    CheckedOperationOverflow = 1012,
-    #[msg("The staking windows has closed")]
-    StakingWindowClosed = 1013,
-    #[msg("The claiming window is closed")]
-    ClaimingWindowClosed = 1014,
+    CheckedOperationOverflow = 1005,
 }
 
 #[error_code]

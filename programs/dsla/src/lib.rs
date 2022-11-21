@@ -28,13 +28,6 @@ pub mod dsla {
         instructions::init_sla_registry::handler(ctx, governance_parameters)
     }
 
-    pub fn init_user_accounts(ctx: Context<InitUserAccounts>) -> Result<()> {
-        instructions::init_user_accounts::handler(ctx)
-    }
-    pub fn init_provider_accounts(ctx: Context<InitProviderAccounts>) -> Result<()> {
-        instructions::init_provider_accounts::handler(ctx)
-    }
-
     pub fn stake_user(ctx: Context<StakeUser>, token_amount: u64) -> Result<()> {
         instructions::stake_user::handler(ctx, token_amount)
     }
