@@ -13,6 +13,12 @@ pub enum ErrorCode {
     DecimalConversionError = 1004,
     #[msg("operation failed with an overflow")]
     CheckedOperationOverflow = 1005,
+    #[msg("Not enough available tokens for withdrawal")]
+    NoAvailableTokensForWithdrawal = 1006,
+    #[msg("Cannot Stake After SLA has ended")]
+    CannotStakeAfterSlaEnded = 1007,
+    #[msg("Withdrawal should be at least 1")]
+    WithdrawalIsZero = 1008,
 }
 
 #[error_code]

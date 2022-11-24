@@ -76,12 +76,10 @@ pub fn handler(ctx: Context<WithdrawUser>, burn_amount: u64) -> Result<()> {
 
     let sla = &mut ctx.accounts.sla;
 
-    // @todo add test for this
-
     let lockup = &mut ctx.accounts.ut_lockup;
-    lockup.update_available_tokens(period_id);
+    lockup.update_available_tokens(period_id)?;
 
-    // @todo ad test
+    // @todo add test
     let tokens_to_withdraw = burn_amount_dec
         .checked_div(user_pool_size_dec.checked_div(ut_supply_dec).unwrap())
         .unwrap()
@@ -102,7 +100,7 @@ pub fn handler(ctx: Context<WithdrawUser>, burn_amount: u64) -> Result<()> {
     token::burn(burn_cpi_context, burn_amount)?;
     sla.ut_supply -= burn_amount as u128;
 
-    lockup.withdraw(burn_amount);
+    lockup.withdraw(burn_amount)?;
 
     let transfer_context = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),

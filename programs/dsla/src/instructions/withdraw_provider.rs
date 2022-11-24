@@ -76,8 +76,8 @@ pub fn handler(ctx: Context<WithdrawProvider>, burn_amount: u64) -> Result<()> {
 
     let lockup = &mut ctx.accounts.pt_lockup;
     let period_id = ctx.accounts.sla.period_data.get_current_period_id()?;
-    // @todo add test for this
-    lockup.update_available_tokens(period_id);
+
+    lockup.update_available_tokens(period_id)?;
 
     // @todo check withdrawals for provider liquidity
     //
@@ -106,8 +106,7 @@ pub fn handler(ctx: Context<WithdrawProvider>, burn_amount: u64) -> Result<()> {
     // @todo add test
     sla.pt_supply -= burn_amount as u128;
 
-    // @todo add test
-    lockup.withdraw(burn_amount);
+    lockup.withdraw(burn_amount)?;
 
     let transfer_context = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),

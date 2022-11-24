@@ -117,8 +117,8 @@ pub fn handler(ctx: Context<StakeProvider>, token_amount: u64) -> Result<()> {
 
     let lockup = &mut ctx.accounts.pt_lockup;
     let period_id = ctx.accounts.sla.period_data.get_current_period_id()?;
-    // @todo add test for this
-    lockup.stake_update(tokens_to_mint, period_id);
+
+    lockup.stake_update(tokens_to_mint, period_id)?;
 
     // @todo improve this event
     emit!(StakedProviderSideEvent { token_amount });
