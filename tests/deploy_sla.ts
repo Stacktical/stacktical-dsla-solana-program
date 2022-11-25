@@ -3,14 +3,13 @@ import { Program } from "@project-serum/anchor";
 import { expect } from "chai";
 import { Dsla } from "../target/types/dsla";
 import { SystemProgram, Keypair, PublicKey } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, createMint, NATIVE_MINT } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, NATIVE_MINT } from "@solana/spl-token";
 import {
   DEPLOYER,
   STATUS_REGISTRY_SEED,
-  PROVIDER_POOL_SEED,
+  POOL_SEED,
   PT_MINT_SEED,
   SLA_REGISTRY_KEYPAIR,
-  USER_POOL_SEED,
   UT_MINT_SEED,
 } from "./constants";
 describe("Deploy SLA", () => {
@@ -27,7 +26,10 @@ describe("Deploy SLA", () => {
   ];
 
   it("Deploys an SLA 1", async () => {
-    const ipfsHash = "t";
+    let start = new anchor.BN("7000000");
+    let n_periods = new anchor.BN("100");
+    let period_length = { custom: { lenght: 128 } };
+
     let sloType = { greaterThan: {} };
     let sloValue = {
       mantissa: new anchor.BN("100"),
@@ -38,13 +40,7 @@ describe("Deploy SLA", () => {
       sloType,
     };
     const messengerAddress = anchor.web3.Keypair.generate().publicKey;
-    const periods = [
-      {
-        start: new anchor.BN("1000000"),
-        end: new anchor.BN("1900000"),
-        status: { notVerified: {} },
-      },
-    ];
+
     const leverage = new anchor.BN("1");
 
     const [statusRegistryPda, _statusRegistryBump] =
@@ -56,22 +52,13 @@ describe("Deploy SLA", () => {
         program.programId
       );
 
-    const [userPoolPda, _userPoolBump] = await PublicKey.findProgramAddress(
+    const [poolPda, PoolBump] = await PublicKey.findProgramAddress(
       [
-        anchor.utils.bytes.utf8.encode(USER_POOL_SEED),
+        anchor.utils.bytes.utf8.encode(POOL_SEED),
         slaKeypairs[0].publicKey.toBuffer(),
       ],
       program.programId
     );
-
-    const [providerPoolPda, _providerPoolBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(PROVIDER_POOL_SEED),
-          slaKeypairs[0].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
 
     const [utMintPda, _utMintBump] = await PublicKey.findProgramAddress(
       [
@@ -97,16 +84,22 @@ describe("Deploy SLA", () => {
 
     try {
       await program.methods
-        .deploySla(ipfsHash, slo, messengerAddress, leverage)
+        .deploySla(
+          slo,
+          messengerAddress,
+          leverage,
+          start,
+          n_periods,
+          period_length
+        )
         .accounts({
           deployer: DEPLOYER.publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
           sla: slaKeypairs[0].publicKey,
           slaAuthority: slaAuthorityPda,
           mint: NATIVE_MINT,
-          providerPool: providerPoolPda,
           statusRegistry: statusRegistryPda,
-          userPool: userPoolPda,
+          pool: poolPda,
           utMint: utMintPda,
           ptMint: ptMintPda,
           systemProgram: SystemProgram.programId,
@@ -139,7 +132,10 @@ describe("Deploy SLA", () => {
   });
 
   it("Deploys an SLA 2", async () => {
-    const ipfsHash = "tt";
+    let start = new anchor.BN("10000000");
+    let n_periods = new anchor.BN("5");
+    let period_length = { custom: { lenght: 10000 } };
+
     let sloType = { smallerThan: {} };
     let sloValue = {
       mantissa: new anchor.BN("100"),
@@ -168,22 +164,13 @@ describe("Deploy SLA", () => {
         program.programId
       );
 
-    const [userPoolPda, _userPoolBump] = await PublicKey.findProgramAddress(
+    const [poolPda, _PoolBump] = await PublicKey.findProgramAddress(
       [
-        anchor.utils.bytes.utf8.encode(USER_POOL_SEED),
+        anchor.utils.bytes.utf8.encode(POOL_SEED),
         slaKeypairs[1].publicKey.toBuffer(),
       ],
       program.programId
     );
-
-    const [providerPoolPda, _providerPoolBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(PROVIDER_POOL_SEED),
-          slaKeypairs[1].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
 
     const [utMintPda, _utMintBump] = await PublicKey.findProgramAddress(
       [
@@ -209,16 +196,22 @@ describe("Deploy SLA", () => {
 
     try {
       await program.methods
-        .deploySla(ipfsHash, slo, messengerAddress, leverage)
+        .deploySla(
+          slo,
+          messengerAddress,
+          leverage,
+          start,
+          n_periods,
+          period_length
+        )
         .accounts({
           deployer: DEPLOYER.publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
           sla: slaKeypairs[1].publicKey,
           slaAuthority: slaAuthorityPda,
           mint: NATIVE_MINT,
-          providerPool: providerPoolPda,
+          pool: poolPda,
           statusRegistry: statusRegistryPda,
-          userPool: userPoolPda,
           utMint: utMintPda,
           ptMint: ptMintPda,
           systemProgram: SystemProgram.programId,

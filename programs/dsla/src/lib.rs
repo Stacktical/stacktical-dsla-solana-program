@@ -54,7 +54,7 @@ pub mod dsla {
         messenger_address: Pubkey,
         leverage: DslaDecimal,
         start: u128,
-        n_periods: usize,
+        n_periods: u32,
         period_length: PeriodLength,
     ) -> Result<()> {
         instructions::deploy_sla::handler(

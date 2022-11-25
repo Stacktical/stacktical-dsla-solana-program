@@ -46,6 +46,7 @@ pub struct StakeProvider<'info> {
     pub staker_pt_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
+        // @fixme this needs to be removed and used init
         init_if_needed,
         space = Lockup::LEN,
         payer = staker,

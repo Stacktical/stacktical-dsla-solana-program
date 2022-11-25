@@ -38,6 +38,7 @@ pub struct StakeUser<'info> {
     )]
     pub ut_mint: Box<Account<'info, Mint>>,
     #[account(
+        // @fixme this needs to be removed and used init
         init_if_needed,
         space = Lockup::LEN,
         payer = staker,

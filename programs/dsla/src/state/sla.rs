@@ -34,7 +34,7 @@ pub struct Sla {
 
 impl Sla {
     // discriminator + messenger_address + SLO + leverage + ipfs_hash + mint + authority + mint_address
-    pub const LEN: usize = 8 + 32 + Slo::LEN + 8 + 32 + 32 + 32 + 16 + 16 + 32;
+    pub const LEN: usize = 8 + 32 + Slo::LEN + 12 + 32 + 32 + 32 + 16 + 16 + 32;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
@@ -148,7 +148,7 @@ pub struct PeriodGenerator {
     /// the length of each period
     pub period_length: PeriodLength,
     /// number of periods
-    pub n_periods: usize,
+    pub n_periods: u32,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Clone)]
@@ -161,7 +161,7 @@ pub enum PeriodLength {
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy)]
 pub enum SlaStatus {
     NotStarted,
-    Active { period_id: usize },
+    Active { period_id: u32 },
     Ended,
 }
 
@@ -175,7 +175,7 @@ impl PeriodGenerator {
     pub const MIN_PERIOD_LENGTH: u128 = 60000;
 
     /// return a new period generator object
-    pub fn new(start: u128, period_length: PeriodLength, n_periods: usize) -> Self {
+    pub fn new(start: u128, period_length: PeriodLength, n_periods: u32) -> Self {
         Self {
             start,
             period_length,
@@ -189,7 +189,11 @@ impl PeriodGenerator {
     ///
     /// * `period_id` - the period id of which to get the start timestamp of
     pub fn get_start(&self, period_id: usize) -> Result<u128> {
-        require_gt!(self.n_periods, period_id, ErrorCode::InvalidPeriodId);
+        require_gt!(
+            self.n_periods as usize,
+            period_id,
+            ErrorCode::InvalidPeriodId
+        );
         match self.period_length {
             PeriodLength::Custom {
                 length: period_length,
@@ -234,7 +238,7 @@ impl PeriodGenerator {
         // @remind to be tested using the client needs the underlying blockchain for time
         let current_timestamp = Clock::get()?.unix_timestamp as u128;
 
-        if current_timestamp > self.get_end(self.n_periods - 1)? {
+        if current_timestamp > self.get_end((self.n_periods - 1) as usize)? {
             Ok(SlaStatus::Ended)
         } else if self.start >= current_timestamp {
             Ok(SlaStatus::NotStarted)
@@ -245,7 +249,9 @@ impl PeriodGenerator {
                 } => {
                     // @remind look into this division might cause problems
                     let period_id = ((current_timestamp - self.start) / period_length) as usize;
-                    Ok(SlaStatus::Active { period_id })
+                    Ok(SlaStatus::Active {
+                        period_id: period_id as u32,
+                    })
                 }
                 PeriodLength::Monthly => unimplemented!(),
                 PeriodLength::Yearly => unimplemented!(),

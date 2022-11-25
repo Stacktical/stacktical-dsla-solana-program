@@ -20,7 +20,7 @@ jobs:
       - uses: ./.github/actions/setup/
       - uses: ./.github/actions/setup-ts/
       - uses: ./.github/actions/setup-solana/
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         name: Cache Cargo registry + index
         id: cache-cargo-build
         with:
@@ -33,6 +33,7 @@ jobs:
           key: cargo-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-0-0-1
       - run: yarn install
       - run: yarn lint
+      - run: rustup default stable
       - run: cargo fmt -- --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test

@@ -1,8 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 export const STATUS_REGISTRY_SEED: string = "status-registry";
-export const USER_POOL_SEED: string = "user-vault";
-export const PROVIDER_POOL_SEED: string = "provider-vault";
+export const POOL_SEED: string = "vault";
 export const UT_MINT_SEED: string = "ut-mint";
 export const PT_MINT_SEED: string = "pt-mint";
 export const GOVERNANCE_SEED: string = "governance";
