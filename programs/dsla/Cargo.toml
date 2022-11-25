@@ -15,8 +15,6 @@ no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = []
 
-[profile.release]
-overflow-checks = true
 
 [dependencies]
 anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
