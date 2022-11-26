@@ -17,7 +17,7 @@ default = []
 
 
 [dependencies]
-anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
+anchor-lang = { version = "0.25.0" }
 anchor-spl = { version = "0.25.0" }
 switchboard-v2 = { version = "0.1.15" }
 rust_decimal = { version = "^1.26.1", features = ["borsh"] }

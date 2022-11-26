@@ -7,10 +7,9 @@ import {
   Transaction,
   sendAndConfirmTransaction,
   LAMPORTS_PER_SOL,
-  PublicKey,
 } from "@solana/web3.js";
 import {
-  DEPLOYER,
+  SLA_REGISTRY_DEPLOYER,
   SLA_REGISTRY_SPACE,
   GOVERNANCE_PARAMETERS,
   SLA_REGISTRY_KEYPAIR,
@@ -29,7 +28,7 @@ describe("Initialize SLA registry", () => {
       await connection.getMinimumBalanceForRentExemption(SLA_REGISTRY_SPACE);
 
     const createAccountParams = {
-      fromPubkey: DEPLOYER.publicKey,
+      fromPubkey: SLA_REGISTRY_DEPLOYER.publicKey,
       newAccountPubkey: SLA_REGISTRY_KEYPAIR.publicKey,
       lamports: rentExemptionAmount,
       space: SLA_REGISTRY_SPACE,
@@ -37,7 +36,7 @@ describe("Initialize SLA registry", () => {
     };
 
     let airdropSignature = await connection.requestAirdrop(
-      DEPLOYER.publicKey,
+      SLA_REGISTRY_DEPLOYER.publicKey,
       LAMPORTS_PER_SOL * 1000
     );
     await connection.confirmTransaction(airdropSignature);
@@ -47,7 +46,7 @@ describe("Initialize SLA registry", () => {
     );
 
     await sendAndConfirmTransaction(connection, createAccountTransaction, [
-      DEPLOYER,
+      SLA_REGISTRY_DEPLOYER,
       SLA_REGISTRY_KEYPAIR,
     ]);
   });
@@ -56,10 +55,10 @@ describe("Initialize SLA registry", () => {
     await program.methods
       .initSlaRegistry(GOVERNANCE_PARAMETERS)
       .accounts({
-        deployer: DEPLOYER.publicKey,
+        deployer: SLA_REGISTRY_DEPLOYER.publicKey,
         slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
       })
-      .signers([DEPLOYER])
+      .signers([SLA_REGISTRY_DEPLOYER])
       .rpc();
 
     const expectedSlaAccountAddresses = [];

@@ -1,4 +1,5 @@
 pub mod deploy_sla;
+pub mod init_lockup_accounts;
 pub mod init_sla_registry;
 pub mod stake_provider;
 pub mod stake_user;
@@ -7,6 +8,7 @@ pub mod withdraw_provider;
 pub mod withdraw_user;
 
 pub use deploy_sla::*;
+pub use init_lockup_accounts::*;
 pub use init_sla_registry::*;
 pub use stake_provider::*;
 pub use stake_user::*;

@@ -4,8 +4,8 @@ use rust_decimal::prelude::*;
 
 use crate::constants::*;
 use crate::events::StakedUserSideEvent;
-use crate::state::sla::{Sla};
-use crate::state::{Lockup, SlaStatus};
+use crate::state::sla::Sla;
+use crate::state::Lockup;
 
 /// Instruction to stake on both sides
 #[derive(Accounts)]
@@ -13,34 +13,31 @@ pub struct StakeUser<'info> {
     // provide or user
     #[account(mut)]
     pub staker: Signer<'info>,
-    #[account(mut, 
-        constraint = sla.period_data.get_current_period_id()? != SlaStatus::Ended)
-    ]
+    #[account(mut)]
     pub sla: Account<'info, Sla>,
 
     #[account(
         mut,
         seeds = [SLA_AUTHORITY_SEED.as_bytes(),sla.key().as_ref()],
-        bump = sla.authority_bump,
+        bump,
     )]
     pub sla_authority: SystemAccount<'info>,
-    
+
     // @fixme make sure mint is same as defined in initialization
     #[account(
-        constraint = mint.is_initialized == true,         
+        constraint = mint.is_initialized == true,
         constraint = mint.key() == sla.mint_address,
 )]
     pub mint: Account<'info, Mint>,
 
     #[account(
         mut,
-        token::mint=mint, 
+        token::mint=mint,
         token::authority=sla_authority,
         seeds = [POOL_SEED.as_bytes(), sla.key().as_ref()],
         bump,
     )]
     pub pool: Box<Account<'info, TokenAccount>>,
-
 
     #[account(
         seeds = [
@@ -53,10 +50,6 @@ pub struct StakeUser<'info> {
     pub ut_mint: Box<Account<'info, Mint>>,
 
     #[account(
-        // @fixme this needs to be removed and used init
-        init_if_needed,
-        space = Lockup::LEN,
-        payer = staker,
         seeds = [
             staker.key().as_ref(),
             LOCKUP_USER_SEED.as_bytes(),
@@ -113,22 +106,37 @@ pub fn handler(ctx: Context<StakeUser>, token_amount: u64) -> Result<()> {
         user_pool_size_dec.checked_add(token_amount_dec).unwrap()
     );
 
+    let mut tokens_to_mint = token_amount;
     // @todo add test for this
-    let tokens_to_mint = token_amount_dec
-        .checked_div(user_pool_size_dec.checked_div(ut_supply_dec).unwrap())
-        .unwrap()
-        .floor()
-        .to_u64()
-        .unwrap();
+    if user_pool_size_dec != ut_supply_dec {
+        // @todo add test for this
+        tokens_to_mint = token_amount_dec
+            .checked_div(user_pool_size_dec.checked_div(ut_supply_dec).unwrap())
+            .unwrap()
+            .floor()
+            .to_u64()
+            .unwrap();
+    }
 
     token::transfer(ctx.accounts.transfer_context(), token_amount)?;
     let sla = &mut ctx.accounts.sla;
 
     // @todo add test for this
-    sla.user_pool_size = sla.user_pool_size.checked_add(token_amount as u128).unwrap();
+    sla.user_pool_size = sla
+        .user_pool_size
+        .checked_add(token_amount as u128)
+        .unwrap();
 
     let sla_key = sla.key().clone();
-    let seeds = &[SLA_AUTHORITY_SEED.as_bytes(), sla_key.as_ref(), &[sla.authority_bump]];
+    let authority_bump = *ctx
+        .bumps
+        .get("sla_authority")
+        .expect("sla_authority should exists");
+    let seeds = &[
+        SLA_AUTHORITY_SEED.as_bytes(),
+        sla_key.as_ref(),
+        &[authority_bump],
+    ];
     let signer_seeds = &[&seeds[..]];
 
     let mint_context = CpiContext::new_with_signer(

@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::constants::*;
+use crate::errors::ErrorCode;
 use crate::events::*;
 use crate::state::sla::{PeriodGenerator, PeriodLength};
 use crate::state::sla::{Sla, Slo};
@@ -102,13 +103,17 @@ pub fn handler(
 
     // check that the SLA registry still has space
     require_gt!(312499, sla_registry.sla_account_addresses.len());
+
+    // @todo add test for this
+    require!(
+        !sla_registry.sla_account_addresses.contains(&sla.key()),
+        ErrorCode::SLaAlreadyInitialized
+    );
+
     sla_registry.sla_account_addresses.push(sla.key());
     msg!("{}", sla_registry.sla_account_addresses[0]);
 
     // SLA initialization
-
-    // SLA initialization
-    sla.authority_bump = *ctx.bumps.get("sla_authority").unwrap();
     sla.leverage = leverage;
     sla.messenger_address = messenger_address;
     sla.provider_pool_size = 0;

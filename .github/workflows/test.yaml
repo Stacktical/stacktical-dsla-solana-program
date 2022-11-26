@@ -37,5 +37,5 @@ jobs:
       - run: cargo fmt -- --check
       # - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
-      - run: anchor run lint
+      # - run: anchor run lint
       - run: anchor test

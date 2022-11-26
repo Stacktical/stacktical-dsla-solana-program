@@ -21,7 +21,6 @@ pub struct Sla {
     pub user_pool_size: u128,
     pub ut_supply: u128,
     pub pt_supply: u128,
-    pub authority_bump: u8,
 }
 
 impl Sla {
@@ -34,8 +33,8 @@ impl Sla {
         16 + // provider_pool_size
         16 + // user_pool_size
         16 + // ut_supply
-        16 +  // pt_supply
-        1; // authority_bump
+        16   // pt_supply
+        ;
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
@@ -200,11 +199,9 @@ impl PeriodGenerator {
             ErrorCode::InvalidPeriodId
         );
         match self.period_length {
-            PeriodLength::Custom {
-                length: period_length,
-            } => Ok(self
+            PeriodLength::Custom { length } => Ok(self
                 .start
-                .checked_add(period_length.checked_mul(period_id as u128).unwrap())
+                .checked_add(length.checked_mul(period_id as u128).unwrap())
                 .unwrap()),
             PeriodLength::Monthly => unimplemented!(),
             PeriodLength::Yearly => unimplemented!(),
@@ -217,12 +214,13 @@ impl PeriodGenerator {
     /// * `period_id` - the period id of which to get the end timestamp of
     pub fn get_end(&self, period_id: usize) -> Result<u128> {
         match self.period_length {
-            PeriodLength::Custom {
-                length: period_length,
-            } => Ok(self
-                .get_start(period_id as usize)?
-                .checked_add(period_length.checked_sub(1).unwrap())
-                .unwrap()),
+            PeriodLength::Custom { length } => {
+                msg!(length.to_string().as_ref());
+                Ok(self
+                    .get_start(period_id as usize)?
+                    .checked_add(length.checked_sub(1).unwrap())
+                    .unwrap())
+            }
             PeriodLength::Monthly => unimplemented!(),
             PeriodLength::Yearly => unimplemented!(),
         }
@@ -255,12 +253,10 @@ impl PeriodGenerator {
             Ok(SlaStatus::NotStarted)
         } else {
             match self.period_length {
-                PeriodLength::Custom {
-                    length: period_length,
-                } => {
+                PeriodLength::Custom { length } => {
                     // @remind look into this division might cause problems
                     let period_id = ((current_timestamp.checked_sub(self.start).unwrap())
-                        .checked_div(period_length)
+                        .checked_div(length)
                         .unwrap()) as usize;
                     Ok(SlaStatus::Active {
                         period_id: period_id as u32,

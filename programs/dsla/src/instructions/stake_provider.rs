@@ -3,8 +3,9 @@ use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
 use rust_decimal::prelude::*;
 
 use crate::constants::*;
+use crate::errors::ErrorCode;
 use crate::events::StakedProviderSideEvent;
-use crate::state::sla::{Sla};
+use crate::state::sla::Sla;
 use crate::state::{Lockup, SlaStatus};
 
 /// Instruction to stake on both sides
@@ -14,15 +15,13 @@ pub struct StakeProvider<'info> {
     #[account(mut)]
     pub staker: Signer<'info>,
 
-    #[account(mut, 
-        constraint = sla.period_data.get_current_period_id()? != SlaStatus::Ended)
-    ]
+    #[account(mut)]
     pub sla: Account<'info, Sla>,
 
     #[account(
         mut,
         seeds = [SLA_AUTHORITY_SEED.as_bytes(),sla.key().as_ref()],
-        bump = sla.authority_bump,
+        bump,
     )]
     pub sla_authority: SystemAccount<'info>,
 
@@ -35,7 +34,7 @@ pub struct StakeProvider<'info> {
 
     #[account(
         mut,
-        token::mint=mint, 
+        token::mint=mint,
         token::authority=sla_authority,
         seeds = [POOL_SEED.as_bytes(), sla.key().as_ref()],
         bump,
@@ -52,11 +51,10 @@ pub struct StakeProvider<'info> {
     )]
     pub pt_mint: Box<Account<'info, Mint>>,
 
-
-
     /// The account to claim the money from
-    #[account(mut, 
-        token::mint=mint, 
+    #[account(
+        mut,
+        token::mint=mint,
         token::authority=staker,
     )]
     pub staker_token_account: Box<Account<'info, TokenAccount>>,
@@ -66,10 +64,6 @@ pub struct StakeProvider<'info> {
     pub staker_pt_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        // @fixme this needs to be removed and used init
-        init_if_needed,
-        space = Lockup::LEN,
-        payer = staker,
         seeds = [
             staker.key().as_ref(),
             LOCKUP_PROVIDER_SEED.as_bytes(),
@@ -98,28 +92,45 @@ impl<'info> StakeProvider<'info> {
 }
 
 pub fn handler(ctx: Context<StakeProvider>, token_amount: u64) -> Result<()> {
+    require!(
+        ctx.accounts.sla.period_data.get_current_period_id()? != SlaStatus::Ended,
+        ErrorCode::CannotStakeAfterSlaEnded
+    );
+
     let token_amount_dec = Decimal::from_u64(token_amount).unwrap();
     let provider_pool_size_dec = Decimal::from_u128(ctx.accounts.sla.provider_pool_size).unwrap();
     let pt_supply_dec = Decimal::from_u128(ctx.accounts.sla.pt_supply).unwrap();
 
-    // @fixme deal with stake before validation and withdrawals after
-
+    let mut tokens_to_mint = token_amount;
     // @todo add test for this
-    let tokens_to_mint = token_amount_dec
-        .checked_div(provider_pool_size_dec.checked_div(pt_supply_dec).unwrap())
-        .unwrap()
-        .floor()
-        .to_u64()
-        .unwrap();
+    if provider_pool_size_dec != pt_supply_dec {
+        tokens_to_mint = token_amount_dec
+            .checked_div(provider_pool_size_dec.checked_div(pt_supply_dec).unwrap())
+            .unwrap()
+            .floor()
+            .to_u64()
+            .unwrap();
+    }
 
     token::transfer(ctx.accounts.transfer_context(), token_amount)?;
     let sla = &mut ctx.accounts.sla;
 
     // @todo add test for this
-    sla.provider_pool_size = sla.provider_pool_size.checked_add(token_amount as u128).unwrap();
+    sla.provider_pool_size = sla
+        .provider_pool_size
+        .checked_add(token_amount as u128)
+        .unwrap();
 
     let sla_key = sla.key().clone();
-    let seeds = &[SLA_AUTHORITY_SEED.as_bytes(), sla_key.as_ref(), &[sla.authority_bump]];
+    let authority_bump = *ctx
+        .bumps
+        .get("sla_authority")
+        .expect("sla_authority should exists");
+    let seeds = &[
+        SLA_AUTHORITY_SEED.as_bytes(),
+        sla_key.as_ref(),
+        &[authority_bump],
+    ];
     let signer_seeds = &[&seeds[..]];
 
     let mint_context = CpiContext::new_with_signer(
@@ -129,7 +140,7 @@ pub fn handler(ctx: Context<StakeProvider>, token_amount: u64) -> Result<()> {
             mint: ctx.accounts.pt_mint.to_account_info(),
             authority: ctx.accounts.sla_authority.to_account_info(),
         },
-        signer_seeds
+        signer_seeds,
     );
 
     token::mint_to(mint_context, tokens_to_mint)?;

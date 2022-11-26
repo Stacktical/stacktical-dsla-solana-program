@@ -48,6 +48,10 @@ pub mod dsla {
         instructions::withdraw_provider::handler(ctx, token_amount)
     }
 
+    pub fn init_lockup_accounts(ctx: Context<InitLockupAccounts>) -> Result<()> {
+        instructions::init_lockup_accounts::handler(ctx)
+    }
+
     pub fn deploy_sla(
         ctx: Context<DeploySla>,
         slo: Slo,

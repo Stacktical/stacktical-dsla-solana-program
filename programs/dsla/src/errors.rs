@@ -19,6 +19,8 @@ pub enum ErrorCode {
     CannotStakeAfterSlaEnded = 7007,
     #[msg("Withdrawal should be at least 1")]
     WithdrawalIsZero = 7008,
+    #[msg("SLA with the same address can only be initialized once")]
+    SLaAlreadyInitialized = 7009,
 }
 
 #[error_code]

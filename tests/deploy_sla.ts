@@ -2,9 +2,8 @@ import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { expect } from "chai";
 import { Dsla } from "../target/types/dsla";
-import { Keypair } from "@solana/web3.js";
 import { NATIVE_MINT } from "@solana/spl-token";
-import { DEPLOYER, SLA_REGISTRY_KEYPAIR } from "./constants";
+import { SLA_DEPLOYERS, SLA_REGISTRY_KEYPAIR, SLA_KEYPAIRS } from "./constants";
 describe("Deploy SLA", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.local();
@@ -12,16 +11,14 @@ describe("Deploy SLA", () => {
   anchor.setProvider(provider);
   const program = anchor.workspace.Dsla as Program<Dsla>;
 
-  const slaKeypairs = [
-    Keypair.generate(),
-    Keypair.generate(),
-    Keypair.generate(),
-  ];
-
   it("Deploys an SLA 1", async () => {
-    let start = new anchor.BN("7000000");
-    let n_periods = new anchor.BN("100");
-    let period_length = { custom: { lenght: 128 } };
+    let now = Date.now() + 1000 * 1;
+
+    let start = new anchor.BN(now);
+    let nPeriods = new anchor.BN("100");
+
+    let length = new anchor.BN(1000 * 60 * 60);
+    let periodLength = { custom: { length } };
 
     let sloType = { greaterThan: {} };
     let sloValue = {
@@ -43,22 +40,22 @@ describe("Deploy SLA", () => {
           messengerAddress,
           leverage,
           start,
-          n_periods,
-          period_length
+          nPeriods,
+          periodLength
         )
         .accounts({
-          deployer: DEPLOYER.publicKey,
+          deployer: SLA_DEPLOYERS[0].publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
-          sla: slaKeypairs[0].publicKey,
+          sla: SLA_KEYPAIRS[0].publicKey,
           mint: NATIVE_MINT,
         })
-        .signers([DEPLOYER, slaKeypairs[0]])
+        .signers([SLA_DEPLOYERS[0], SLA_KEYPAIRS[0]])
         .rpc();
     } catch (err) {
       console.log(err);
     }
 
-    const expectedSlaAccountAddresses = [slaKeypairs[0].publicKey];
+    const expectedSlaAccountAddresses = [SLA_KEYPAIRS[0].publicKey];
     const actualSlaAccountAddresses = (
       await program.account.slaRegistry.fetch(SLA_REGISTRY_KEYPAIR.publicKey)
     ).slaAccountAddresses;
@@ -76,13 +73,14 @@ describe("Deploy SLA", () => {
     expect(
       actualSlaAccountAddresses[0].toString(),
       "match to wrong address"
-    ).to.not.equal(slaKeypairs[1].publicKey.toString());
+    ).to.not.equal(SLA_KEYPAIRS[1].publicKey.toString());
   });
 
   it("Deploys an SLA 2", async () => {
     let start = new anchor.BN("10000000");
-    let n_periods = new anchor.BN("5");
-    let period_length = { custom: { lenght: 10000 } };
+    let nPeriods = new anchor.BN("5");
+    let length = new anchor.BN("10000");
+    let periodLength = { custom: { length } };
 
     let sloType = { smallerThan: {} };
     let sloValue = {
@@ -96,7 +94,6 @@ describe("Deploy SLA", () => {
     const messengerAddress = anchor.web3.Keypair.generate().publicKey;
 
     const leverage = new anchor.BN("5");
-
     try {
       await program.methods
         .deploySla(
@@ -104,24 +101,24 @@ describe("Deploy SLA", () => {
           messengerAddress,
           leverage,
           start,
-          n_periods,
-          period_length
+          nPeriods,
+          periodLength
         )
         .accounts({
-          deployer: DEPLOYER.publicKey,
+          deployer: SLA_DEPLOYERS[1].publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
-          sla: slaKeypairs[1].publicKey,
+          sla: SLA_KEYPAIRS[1].publicKey,
           mint: NATIVE_MINT,
         })
-        .signers([DEPLOYER, slaKeypairs[1]])
+        .signers([SLA_DEPLOYERS[1], SLA_KEYPAIRS[1]])
         .rpc();
     } catch (err) {
       console.log(err);
     }
 
     const expectedSlaAccountAddresses = [
-      slaKeypairs[0].publicKey,
-      slaKeypairs[1].publicKey,
+      SLA_KEYPAIRS[0].publicKey,
+      SLA_KEYPAIRS[1].publicKey,
     ];
     const actualSlaAccountAddresses = (
       await program.account.slaRegistry.fetch(SLA_REGISTRY_KEYPAIR.publicKey)

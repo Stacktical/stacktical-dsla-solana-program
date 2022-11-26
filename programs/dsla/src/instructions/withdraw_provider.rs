@@ -3,7 +3,7 @@ use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 use rust_decimal::prelude::*;
 
 use crate::constants::*;
-use crate::state::sla::{Sla};
+use crate::state::sla::Sla;
 use crate::state::Lockup;
 
 /// Instruction to claim all rewards up to the latest available
@@ -21,7 +21,7 @@ pub struct WithdrawProvider<'info> {
     #[account(
         mut,
         seeds = [SLA_AUTHORITY_SEED.as_bytes(),sla.key().as_ref()],
-        bump = sla.authority_bump,
+        bump,
     )]
     pub sla_authority: SystemAccount<'info>,
 
@@ -56,7 +56,7 @@ pub struct WithdrawProvider<'info> {
     #[account(
         mut,
         seeds = [POOL_SEED.as_bytes(), sla.key().as_ref()],
-        token::mint=mint, 
+        token::mint=mint,
         token::authority=sla_authority,
         bump,
     )]
@@ -71,7 +71,6 @@ pub struct WithdrawProvider<'info> {
         bump,
     )]
     pub pt_mint: Box<Account<'info, Mint>>,
-
 
     // @fixme make sure this is the DSLA mint and not something else
     #[account(constraint = dsla_mint.is_initialized == true)]
@@ -135,7 +134,10 @@ pub fn handler(ctx: Context<WithdrawProvider>, burn_amount: u64) -> Result<()> {
     // TRANSFER TOKENS
     let transfer_cpi_context = transfer_context;
     token::transfer(transfer_cpi_context, tokens_to_withdraw)?;
-    sla.provider_pool_size = sla.provider_pool_size.checked_sub(tokens_to_withdraw as u128).unwrap();
+    sla.provider_pool_size = sla
+        .provider_pool_size
+        .checked_sub(tokens_to_withdraw as u128)
+        .unwrap();
 
     Ok(())
 }

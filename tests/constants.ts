@@ -1,8 +1,16 @@
 import * as anchor from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 export const SLA_REGISTRY_SPACE = 10_000_000;
 
-export const DEPLOYER = {
+export const STATUS_REGISTRY_SEED: string = "status-registry";
+export const POOL_SEED: string = "vault";
+export const UT_MINT_SEED: string = "ut-mint";
+export const PT_MINT_SEED: string = "pt-mint";
+export const GOVERNANCE_SEED: string = "governance";
+export const UT_ACCOUNT_SEED: string = "ut-account";
+export const PT_ACCOUNT_SEED: string = "pt-account";
+
+export const SLA_REGISTRY_DEPLOYER = {
   publicKey: new PublicKey("7AnuoPY7GqB1MdwLnSoeQh5YULCD6hjyFfSv2yPqYUfu"),
   secretKey: Uint8Array.from([
     127, 39, 233, 13, 12, 209, 1, 226, 123, 216, 96, 124, 99, 211, 222, 148,
@@ -21,7 +29,7 @@ export const SLA_REGISTRY_KEYPAIR = {
     18, 191, 102, 208, 239, 204, 54, 15, 163, 41, 14, 251, 217, 105,
   ]),
 };
-async function generateSlaList() {}
+
 export const GOVERNANCE_PARAMETERS = {
   dslaBurnRate: new anchor.BN(10),
   dslaDepositByPeriod: new anchor.BN(10),
@@ -33,3 +41,25 @@ export const GOVERNANCE_PARAMETERS = {
   maxLeverage: new anchor.BN(10),
   burnDsla: true,
 };
+
+export const SLA_DEPLOYERS = [
+  Keypair.generate(),
+  Keypair.generate(),
+  Keypair.generate(),
+];
+
+export const SLA_KEYPAIRS = [
+  Keypair.generate(),
+  Keypair.generate(),
+  Keypair.generate(),
+];
+
+export const STAKERS = [
+  Keypair.generate(),
+  Keypair.generate(),
+  Keypair.generate(),
+  Keypair.generate(),
+  Keypair.generate(),
+  Keypair.generate(),
+  Keypair.generate(),
+];
