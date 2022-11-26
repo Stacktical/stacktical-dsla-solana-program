@@ -121,7 +121,6 @@ pub fn handler(
     sla.user_pool_size = 0;
     sla.slo = slo;
     sla.period_data = PeriodGenerator::new(start, period_length, n_periods);
-
     sla.mint_address = ctx.accounts.mint.key();
 
     emit!(DeployedSlaEvent {

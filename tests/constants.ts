@@ -1,12 +1,5 @@
 import * as anchor from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-export const STATUS_REGISTRY_SEED: string = "status-registry";
-export const POOL_SEED: string = "vault";
-export const UT_MINT_SEED: string = "ut-mint";
-export const PT_MINT_SEED: string = "pt-mint";
-export const GOVERNANCE_SEED: string = "governance";
-export const UT_ACCOUNT_SEED: string = "ut-account";
-export const PT_ACCOUNT_SEED: string = "pt-account";
 export const SLA_REGISTRY_SPACE = 10_000_000;
 
 export const DEPLOYER = {

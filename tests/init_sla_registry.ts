@@ -11,7 +11,6 @@ import {
 } from "@solana/web3.js";
 import {
   DEPLOYER,
-  GOVERNANCE_SEED,
   SLA_REGISTRY_SPACE,
   GOVERNANCE_PARAMETERS,
   SLA_REGISTRY_KEYPAIR,
@@ -54,16 +53,10 @@ describe("Initialize SLA registry", () => {
   });
 
   it("initializes an SLA registry", async () => {
-    const [governancePda, _governanceBump] = await PublicKey.findProgramAddress(
-      [anchor.utils.bytes.utf8.encode(GOVERNANCE_SEED)],
-      program.programId
-    );
-
     await program.methods
       .initSlaRegistry(GOVERNANCE_PARAMETERS)
       .accounts({
         deployer: DEPLOYER.publicKey,
-        governance: governancePda,
         slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
       })
       .signers([DEPLOYER])

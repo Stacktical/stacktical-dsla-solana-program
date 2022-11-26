@@ -12,6 +12,8 @@ pub struct Sla {
     pub slo: Slo,
     ///  leverage for the SLA between provider and user pool
     pub leverage: DslaDecimal,
+
+    /// @fixme use this to make sure the mint is never allowed to change
     /// address of the coin to be used as SLA reward for users and providers
     pub mint_address: Pubkey,
     /// The account derived by the program, which has authority over all

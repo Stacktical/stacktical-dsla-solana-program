@@ -17,16 +17,7 @@ import {
   mintToChecked,
   NATIVE_MINT,
 } from "@solana/spl-token";
-import {
-  SLA_REGISTRY_KEYPAIR,
-  STATUS_REGISTRY_SEED,
-  PROVIDER_POOL_SEED,
-  PT_ACCOUNT_SEED,
-  PT_MINT_SEED,
-  USER_POOL_SEED,
-  UT_ACCOUNT_SEED,
-  UT_MINT_SEED,
-} from "./constants";
+import { SLA_REGISTRY_KEYPAIR } from "./constants";
 
 describe("Stake", () => {
   // Configure the client to use the local cluster.
@@ -113,71 +104,6 @@ describe("Stake", () => {
 
     const token_amount = new anchor.BN(LAMPORTS_PER_SOL * 10);
 
-    const [statusRegistryPda, _statusRegistryBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(STATUS_REGISTRY_SEED),
-          slaKeypairs[0].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-
-    const [userPoolPda, _userPoolBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(USER_POOL_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [providerPoolPda, _providerPoolBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(PROVIDER_POOL_SEED),
-          slaKeypairs[0].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-
-    const [utMintPda, _utMintBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(UT_MINT_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [ptMintPda, _ptMintBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(PT_MINT_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [utAccountPda, _utAccountBump] = await PublicKey.findProgramAddress(
-      [
-        staker.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode(UT_ACCOUNT_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [ptAccountPda, _ptAccountBump] = await PublicKey.findProgramAddress(
-      [
-        staker.publicKey.toBuffer(),
-        anchor.utils.bytes.utf8.encode(PT_ACCOUNT_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-    const [slaAuthorityPda, _slaAuthorityBump] =
-      await PublicKey.findProgramAddress(
-        [slaKeypairs[0].publicKey.toBuffer()],
-        program.programId
-      );
-
     try {
       await program.methods
         .deploySla(ipfsHash, slo, messengerAddress, leverage)
@@ -185,13 +111,7 @@ describe("Stake", () => {
           deployer: deployer.publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
           sla: slaKeypairs[0].publicKey,
-          slaAuthority: slaAuthorityPda,
-          statusRegistry: statusRegistryPda,
           mint: mint,
-          providerPool: providerPoolPda,
-          userPool: userPoolPda,
-          utMint: utMintPda,
-          ptMint: ptMintPda,
           systemProgram: SystemProgram.programId,
         })
         .signers([deployer, slaKeypairs[0]])
@@ -206,10 +126,6 @@ describe("Stake", () => {
         .accounts({
           signer: staker.publicKey,
           sla: slaKeypairs[0].publicKey,
-          stakerUtAccount: utAccountPda,
-          stakerPtAccount: ptAccountPda,
-          utMint: utMintPda,
-          ptMint: ptMintPda,
           systemProgram: SystemProgram.programId,
         })
         .signers([staker])
@@ -224,14 +140,7 @@ describe("Stake", () => {
         .accounts({
           staker: staker.publicKey,
           sla: slaKeypairs[0].publicKey,
-          slaAuthority: slaAuthorityPda,
           stakerTokenAccount,
-          stakerUtAccount: utAccountPda,
-          stakerPtAccount: ptAccountPda,
-          userPool: userPoolPda,
-          providerPool: providerPoolPda,
-          utMint: utMintPda,
-          ptMint: ptMintPda,
           systemProgram: SystemProgram.programId,
         })
         .signers([staker])
