@@ -43,6 +43,7 @@ pub struct DeploySla<'info> {
     )]
     pub status_registry: Account<'info, StatusRegistry>,
 
+    #[account(constraint = mint.is_initialized == true)]
     pub mint: Account<'info, Mint>,
 
     #[account(

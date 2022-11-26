@@ -21,22 +21,31 @@ pub struct StakeUser<'info> {
         bump = sla.authority_bump_seed[0],
     )]
     pub sla_authority: Account<'info, SlaAuthority>,
+    
+    // @fixme make sure mint is same as defined in initialization
+    #[account(constraint = mint.is_initialized == true)]
+    pub mint: Account<'info, Mint>,
 
     #[account(
         mut,
+        token::mint=mint, 
+        token::authority=sla_authority,
         seeds = [POOL_SEED.as_bytes(), sla.key().as_ref()],
         bump,
     )]
     pub pool: Box<Account<'info, TokenAccount>>,
+
 
     #[account(
         seeds = [
             UT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
         ],
+        constraint = ut_mint.is_initialized == true,
         bump,
     )]
     pub ut_mint: Box<Account<'info, Mint>>,
+
     #[account(
         // @fixme this needs to be removed and used init
         init_if_needed,
@@ -52,10 +61,11 @@ pub struct StakeUser<'info> {
     pub ut_lockup: Box<Account<'info, Lockup>>,
 
     /// The account to claim the money from
+    #[account(mut, token::mint=mint, token::authority=staker)]
     pub staker_token_account: Box<Account<'info, TokenAccount>>,
 
     /// ut tokens
-    #[account(mut)]
+    #[account(mut, token::mint=ut_mint, token::authority=staker)]
     pub staker_ut_account: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,

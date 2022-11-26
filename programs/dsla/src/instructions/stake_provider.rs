@@ -13,6 +13,7 @@ pub struct StakeProvider<'info> {
     // provide or user
     #[account(mut)]
     pub staker: Signer<'info>,
+
     pub sla: Account<'info, Sla>,
 
     #[account(
@@ -21,9 +22,15 @@ pub struct StakeProvider<'info> {
         bump = sla.authority_bump_seed[0],
     )]
     pub sla_authority: Account<'info, SlaAuthority>,
+    
+    // @fixme make sure mint is same as defined in initialization
+    #[account(constraint = mint.is_initialized == true)]
+    pub mint: Account<'info, Mint>,
 
     #[account(
         mut,
+        token::mint=mint, 
+        token::authority=sla_authority,
         seeds = [POOL_SEED.as_bytes(), sla.key().as_ref()],
         bump,
     )]
@@ -34,15 +41,19 @@ pub struct StakeProvider<'info> {
             PT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
         ],
+        constraint = pt_mint.is_initialized == true,
         bump,
     )]
     pub pt_mint: Box<Account<'info, Mint>>,
 
+
+
     /// The account to claim the money from
+    #[account(mut, token::mint=mint, token::authority=staker)]
     pub staker_token_account: Box<Account<'info, TokenAccount>>,
 
     /// pt tokens
-    #[account(mut)]
+    #[account(mut, token::mint=pt_mint, token::authority=staker)]
     pub staker_pt_account: Box<Account<'info, TokenAccount>>,
 
     #[account(

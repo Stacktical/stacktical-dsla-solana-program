@@ -25,14 +25,14 @@ pub struct WithdrawProvider<'info> {
     pub sla_authority: Account<'info, SlaAuthority>,
 
     /// The token account to claimer the money in
-    #[account(mut)]
+    #[account(mut, token::mint=mint, token::authority=withdrawer)]
     pub withdrawer_token_account: Box<Account<'info, TokenAccount>>,
 
-    #[account(mut)]
+    #[account(mut, token::mint=dsla_mint, token::authority=withdrawer)]
     pub withdrawer_dsla_account: Box<Account<'info, TokenAccount>>,
 
     /// The token account with pt tokens
-    #[account(mut)]
+    #[account(mut, token::mint=pt_mint, token::authority=withdrawer)]
     pub withdrawer_pt_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
@@ -45,9 +45,15 @@ pub struct WithdrawProvider<'info> {
     )]
     pub pt_lockup: Box<Account<'info, Lockup>>,
 
+    // @fixme make sure mint is same as defined in initialization
+    #[account(constraint = mint.is_initialized == true)]
+    pub mint: Account<'info, Mint>,
+
     #[account(
         mut,
         seeds = [POOL_SEED.as_bytes(), sla.key().as_ref()],
+        token::mint=mint, 
+        token::authority=sla_authority,
         bump,
     )]
     pub pool: Box<Account<'info, TokenAccount>>,
@@ -57,10 +63,14 @@ pub struct WithdrawProvider<'info> {
             PT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
         ],
+        constraint = pt_mint.is_initialized == true,
         bump,
     )]
     pub pt_mint: Box<Account<'info, Mint>>,
 
+
+    // @fixme make sure this is the DSLA mint and not something else
+    #[account(constraint = dsla_mint.is_initialized == true)]
     pub dsla_mint: Box<Account<'info, Mint>>,
 
     pub token_program: Program<'info, Token>,
