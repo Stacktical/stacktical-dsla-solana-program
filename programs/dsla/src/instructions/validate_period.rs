@@ -81,7 +81,7 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
 
             // 3. UPDATE STATUS
             let sla = &mut ctx.accounts.sla;
-            let periods_left = status_registry.len() - period;
+            let periods_left = status_registry.len().checked_sub(period).unwrap();
 
             if respected {
                 let reward = get_reward(
@@ -90,8 +90,9 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
                     periods_left as u64,
                     sla.provider_pool_size,
                 )?;
-                sla.provider_pool_size -= reward as u128;
-                sla.user_pool_size += reward as u128;
+                sla.provider_pool_size =
+                    sla.provider_pool_size.checked_sub(reward as u128).unwrap();
+                sla.user_pool_size = sla.user_pool_size.checked_add(reward as u128).unwrap();
                 status_registry[period] = Status::Respected {
                     value: sli_dsla_decimal,
                 };
@@ -102,8 +103,9 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
                     periods_left as u64,
                     sla.user_pool_size,
                 )?;
-                sla.user_pool_size -= reward as u128;
-                sla.provider_pool_size += reward as u128;
+                sla.user_pool_size = sla.user_pool_size.checked_sub(reward as u128).unwrap();
+                sla.provider_pool_size =
+                    sla.provider_pool_size.checked_add(reward as u128).unwrap();
                 status_registry[period] = Status::NotRespected {
                     value: sli_dsla_decimal,
                 };

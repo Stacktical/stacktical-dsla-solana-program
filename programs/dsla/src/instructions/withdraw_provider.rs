@@ -3,7 +3,7 @@ use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 use rust_decimal::prelude::*;
 
 use crate::constants::*;
-use crate::state::sla::{Sla, SlaAuthority};
+use crate::state::sla::{Sla};
 use crate::state::Lockup;
 
 /// Instruction to claim all rewards up to the latest available
@@ -15,14 +15,15 @@ pub struct WithdrawProvider<'info> {
     pub withdrawer: Signer<'info>,
 
     /// the SLA
+    #[account(mut)]
     pub sla: Account<'info, Sla>,
 
     #[account(
         mut,
-        seeds = [sla.key().as_ref()],
-        bump = sla.authority_bump_seed[0],
+        seeds = [SLA_AUTHORITY_SEED.as_bytes(),sla.key().as_ref()],
+        bump = sla.authority_bump,
     )]
-    pub sla_authority: Account<'info, SlaAuthority>,
+    pub sla_authority: SystemAccount<'info>,
 
     /// The token account to claimer the money in
     #[account(mut, token::mint=mint, token::authority=withdrawer)]
@@ -46,7 +47,10 @@ pub struct WithdrawProvider<'info> {
     pub pt_lockup: Box<Account<'info, Lockup>>,
 
     // @fixme make sure mint is same as defined in initialization
-    #[account(constraint = mint.is_initialized == true)]
+    #[account(
+        constraint = mint.is_initialized == true,
+        constraint = mint.key() == sla.mint_address,
+    )]
     pub mint: Account<'info, Mint>,
 
     #[account(
@@ -74,6 +78,8 @@ pub struct WithdrawProvider<'info> {
     pub dsla_mint: Box<Account<'info, Mint>>,
 
     pub token_program: Program<'info, Token>,
+
+    // @fixme is this needed?
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
 }
@@ -114,7 +120,7 @@ pub fn handler(ctx: Context<WithdrawProvider>, burn_amount: u64) -> Result<()> {
     let sla = &mut ctx.accounts.sla;
 
     // @todo add test
-    sla.pt_supply -= burn_amount as u128;
+    sla.pt_supply = sla.pt_supply.checked_sub(burn_amount as u128).unwrap();
 
     lockup.withdraw(burn_amount)?;
 
@@ -129,7 +135,7 @@ pub fn handler(ctx: Context<WithdrawProvider>, burn_amount: u64) -> Result<()> {
     // TRANSFER TOKENS
     let transfer_cpi_context = transfer_context;
     token::transfer(transfer_cpi_context, tokens_to_withdraw)?;
-    sla.provider_pool_size -= tokens_to_withdraw as u128;
+    sla.provider_pool_size = sla.provider_pool_size.checked_sub(tokens_to_withdraw as u128).unwrap();
 
     Ok(())
 }

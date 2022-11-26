@@ -4,8 +4,8 @@ use rust_decimal::prelude::*;
 
 use crate::constants::*;
 use crate::events::StakedUserSideEvent;
-use crate::state::sla::{Sla, SlaAuthority};
-use crate::state::Lockup;
+use crate::state::sla::{Sla};
+use crate::state::{Lockup, SlaStatus};
 
 /// Instruction to stake on both sides
 #[derive(Accounts)]
@@ -13,17 +13,23 @@ pub struct StakeUser<'info> {
     // provide or user
     #[account(mut)]
     pub staker: Signer<'info>,
+    #[account(mut, 
+        constraint = sla.period_data.get_current_period_id()? != SlaStatus::Ended)
+    ]
     pub sla: Account<'info, Sla>,
 
     #[account(
         mut,
-        seeds = [sla.key().as_ref()],
-        bump = sla.authority_bump_seed[0],
+        seeds = [SLA_AUTHORITY_SEED.as_bytes(),sla.key().as_ref()],
+        bump = sla.authority_bump,
     )]
-    pub sla_authority: Account<'info, SlaAuthority>,
+    pub sla_authority: SystemAccount<'info>,
     
     // @fixme make sure mint is same as defined in initialization
-    #[account(constraint = mint.is_initialized == true)]
+    #[account(
+        constraint = mint.is_initialized == true,         
+        constraint = mint.key() == sla.mint_address,
+)]
     pub mint: Account<'info, Mint>,
 
     #[account(
@@ -119,11 +125,11 @@ pub fn handler(ctx: Context<StakeUser>, token_amount: u64) -> Result<()> {
     let sla = &mut ctx.accounts.sla;
 
     // @todo add test for this
-    sla.user_pool_size += token_amount as u128;
+    sla.user_pool_size = sla.user_pool_size.checked_add(token_amount as u128).unwrap();
 
-    let auth_seed = sla.authority_seed;
-    let seeds = &[auth_seed.as_ref(), &sla.authority_bump_seed];
-    let signer = &[&seeds[..]];
+    let sla_key = sla.key().clone();
+    let seeds = &[SLA_AUTHORITY_SEED.as_bytes(), sla_key.as_ref(), &[sla.authority_bump]];
+    let signer_seeds = &[&seeds[..]];
 
     let mint_context = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
@@ -132,12 +138,12 @@ pub fn handler(ctx: Context<StakeUser>, token_amount: u64) -> Result<()> {
             mint: ctx.accounts.ut_mint.to_account_info(),
             authority: ctx.accounts.sla_authority.to_account_info(),
         },
-        signer,
+        signer_seeds,
     );
 
     token::mint_to(mint_context, tokens_to_mint)?;
     // @todo add test for this
-    sla.ut_supply += tokens_to_mint as u128;
+    sla.ut_supply = sla.ut_supply.checked_add(tokens_to_mint as u128).unwrap();
 
     let lockup = &mut ctx.accounts.ut_lockup;
     let period_id = ctx.accounts.sla.period_data.get_current_period_id()?;

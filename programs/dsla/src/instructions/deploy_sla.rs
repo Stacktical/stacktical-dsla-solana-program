@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::constants::*;
 use crate::events::*;
 use crate::state::sla::{PeriodGenerator, PeriodLength};
-use crate::state::sla::{Sla, SlaAuthority, Slo};
+use crate::state::sla::{Sla, Slo};
 use crate::state::sla_registry::SlaRegistry;
 use crate::state::status_registry::StatusRegistry;
 use crate::state::DslaDecimal;
@@ -26,13 +26,10 @@ pub struct DeploySla<'info> {
     pub sla: Account<'info, Sla>,
 
     #[account(
-        init,
-        payer = deployer,
-        space = 8,
-        seeds = [sla.key().as_ref()],
+        seeds = [SLA_AUTHORITY_SEED.as_bytes(), sla.key().as_ref()],
         bump
     )]
-    pub sla_authority: Account<'info, SlaAuthority>,
+    pub sla_authority: SystemAccount<'info>,
 
     #[account(
         init,
@@ -109,12 +106,9 @@ pub fn handler(
     msg!("{}", sla_registry.sla_account_addresses[0]);
 
     // SLA initialization
-    let initial_seeds = &[sla.to_account_info().key.as_ref()];
-    let (authority, authority_seed) = Pubkey::find_program_address(initial_seeds, ctx.program_id);
 
-    sla.sla_authority = authority;
-    sla.authority_seed = sla.key();
-    sla.authority_bump_seed = [authority_seed];
+    // SLA initialization
+    sla.authority_bump = *ctx.bumps.get("sla_authority").unwrap();
     sla.leverage = leverage;
     sla.messenger_address = messenger_address;
     sla.provider_pool_size = 0;

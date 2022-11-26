@@ -4,30 +4,30 @@ use anchor_lang::prelude::*;
 #[derive(Eq, PartialEq)]
 pub enum ErrorCode {
     #[msg("precision is not divisible by 100")]
-    InvalidPrecision = 1001,
+    InvalidPrecision = 7001,
     #[msg("period ID entered is not valid")]
-    InvalidPeriodId = 1002,
+    InvalidPeriodId = 7002,
     #[msg("trying to verify an already verified period")]
-    AlreadyVerifiedPeriod = 1003,
+    AlreadyVerifiedPeriod = 7003,
     #[msg("Failed to convert to a decimal")]
-    DecimalConversionError = 1004,
+    DecimalConversionError = 7004,
     #[msg("operation failed with an overflow")]
-    CheckedOperationOverflow = 1005,
+    CheckedOperationOverflow = 7005,
     #[msg("Not enough available tokens for withdrawal")]
-    NoAvailableTokensForWithdrawal = 1006,
+    NoAvailableTokensForWithdrawal = 7006,
     #[msg("Cannot Stake After SLA has ended")]
-    CannotStakeAfterSlaEnded = 1007,
+    CannotStakeAfterSlaEnded = 7007,
     #[msg("Withdrawal should be at least 1")]
-    WithdrawalIsZero = 1008,
+    WithdrawalIsZero = 7008,
 }
 
 #[error_code]
 #[derive(Eq, PartialEq)]
 pub enum FeedErrorCode {
     #[msg("Not a valid Switchboard account")]
-    InvalidSwitchboardAccount = 2001,
+    InvalidSwitchboardAccount = 8001,
     #[msg("Switchboard feed has not been updated in 5 minutes")]
-    StaleFeed = 2002,
+    StaleFeed = 8002,
     #[msg("Switchboard feed exceeded provided confidence interval")]
-    ConfidenceIntervalExceeded = 2003,
+    ConfidenceIntervalExceeded = 8003,
 }

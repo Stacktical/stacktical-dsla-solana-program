@@ -3,7 +3,7 @@ use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 use rust_decimal::prelude::*;
 
 use crate::constants::*;
-use crate::state::sla::{Sla, SlaAuthority};
+use crate::state::sla::{Sla};
 use crate::state::Lockup;
 
 /// Instruction to claim all rewards up to the latest available
@@ -15,14 +15,15 @@ pub struct WithdrawUser<'info> {
     pub withdrawer: Signer<'info>,
 
     /// the SLA
+    #[account(mut)]
     pub sla: Account<'info, Sla>,
 
     #[account(
         mut,
-        seeds = [sla.key().as_ref()],
-        bump = sla.authority_bump_seed[0],
+        seeds = [SLA_AUTHORITY_SEED.as_bytes(),sla.key().as_ref()],
+        bump = sla.authority_bump,
     )]
-    pub sla_authority: Account<'info, SlaAuthority>,
+    pub sla_authority: SystemAccount<'info>,
 
     /// The token account to claimer the money in
     #[account(mut, token::mint=mint, token::authority=withdrawer)]
@@ -36,7 +37,10 @@ pub struct WithdrawUser<'info> {
     pub withdrawer_ut_account: Box<Account<'info, TokenAccount>>,
 
     // @fixme make sure mint is same as defined in initialization
-    #[account(constraint = mint.is_initialized == true)]
+    #[account(
+        constraint = mint.is_initialized == true,
+        constraint = mint.key() == sla.mint_address,
+    )]
     pub mint: Account<'info, Mint>,
 
     #[account(
@@ -107,7 +111,7 @@ pub fn handler(ctx: Context<WithdrawUser>, burn_amount: u64) -> Result<()> {
         },
     );
     token::burn(burn_cpi_context, burn_amount)?;
-    sla.ut_supply -= burn_amount as u128;
+    sla.ut_supply = sla.ut_supply.checked_sub(burn_amount as u128).unwrap();
 
     lockup.withdraw(burn_amount)?;
 
@@ -122,7 +126,7 @@ pub fn handler(ctx: Context<WithdrawUser>, burn_amount: u64) -> Result<()> {
     // TRANSFER TOKENS
     let transfer_cpi_context = transfer_context;
     token::transfer(transfer_cpi_context, tokens_to_withdraw)?;
-    sla.user_pool_size -= tokens_to_withdraw as u128;
+    sla.user_pool_size = sla.user_pool_size.checked_sub(tokens_to_withdraw as u128).unwrap();
 
     Ok(())
 }

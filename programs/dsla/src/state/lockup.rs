@@ -35,16 +35,26 @@ impl Lockup {
             SlaStatus::Active { period_id } => {
                 let period_id = period_id as u64;
 
-                match period_id.cmp(&(self.locked_from_period_id + 1)) {
+                match period_id.cmp(&(self.locked_from_period_id.checked_add(1).unwrap())) {
                     Ordering::Greater => {
-                        self.available_tokens += self.locked_tokens_prev + self.locked_tokens;
+                        self.available_tokens = self
+                            .available_tokens
+                            .checked_add(
+                                self.locked_tokens_prev
+                                    .checked_add(self.locked_tokens)
+                                    .unwrap(),
+                            )
+                            .unwrap();
                         self.locked_tokens_prev = 0;
                         self.locked_tokens = 0;
                         self.locked_from_period_id = period_id;
                     }
                     Ordering::Less => {}
                     Ordering::Equal => {
-                        self.available_tokens += self.locked_tokens_prev;
+                        self.available_tokens = self
+                            .available_tokens
+                            .checked_add(self.locked_tokens_prev)
+                            .unwrap();
                         self.locked_tokens_prev = self.locked_tokens;
                         self.locked_tokens = 0;
                         self.locked_from_period_id = period_id;
@@ -52,7 +62,14 @@ impl Lockup {
                 }
             }
             SlaStatus::Ended => {
-                self.available_tokens += self.locked_tokens + self.locked_tokens_prev;
+                self.available_tokens = self
+                    .available_tokens
+                    .checked_add(
+                        self.locked_tokens_prev
+                            .checked_add(self.locked_tokens)
+                            .unwrap(),
+                    )
+                    .unwrap();
                 self.locked_tokens = 0;
                 self.locked_tokens_prev = 0;
                 self.locked_from_period_id = 0;
@@ -64,24 +81,34 @@ impl Lockup {
     pub fn stake_update(&mut self, stake_size: u64, status: SlaStatus) -> Result<()> {
         match status {
             SlaStatus::NotStarted => {
-                self.locked_tokens_prev += stake_size;
+                self.locked_tokens_prev = self.locked_tokens_prev.checked_add(stake_size).unwrap();
                 self.locked_from_period_id = 0;
             }
             SlaStatus::Active { period_id } => {
                 let period_id = period_id as u64;
                 if self.locked_from_period_id == period_id {
-                    self.locked_tokens += stake_size;
+                    self.locked_tokens = self.locked_tokens.checked_add(stake_size).unwrap();
                 }
-                match period_id.cmp(&(self.locked_from_period_id + 1)) {
+                match period_id.cmp(&(self.locked_from_period_id.checked_add(1).unwrap())) {
                     Ordering::Greater => {
-                        self.available_tokens += self.locked_tokens_prev + self.locked_tokens;
+                        self.available_tokens = self
+                            .available_tokens
+                            .checked_add(
+                                self.locked_tokens_prev
+                                    .checked_add(self.locked_tokens)
+                                    .unwrap(),
+                            )
+                            .unwrap();
                         self.locked_tokens_prev = 0;
                         self.locked_tokens = stake_size;
                         self.locked_from_period_id = period_id;
                     }
                     Ordering::Less => {}
                     Ordering::Equal => {
-                        self.available_tokens += self.locked_tokens_prev;
+                        self.available_tokens = self
+                            .available_tokens
+                            .checked_add(self.locked_tokens_prev)
+                            .unwrap();
                         self.locked_tokens_prev = self.locked_tokens;
                         self.locked_tokens = stake_size;
                         self.locked_from_period_id = period_id;
@@ -103,7 +130,7 @@ impl Lockup {
         if self.available_tokens < withdraw_size {
             return err!(ErrorCode::NoAvailableTokensForWithdrawal);
         }
-        self.available_tokens -= withdraw_size;
+        self.available_tokens = self.available_tokens.checked_sub(withdraw_size).unwrap();
         Ok(())
     }
 }

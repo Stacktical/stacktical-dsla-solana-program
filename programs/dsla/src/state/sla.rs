@@ -3,8 +3,6 @@ use anchor_lang::prelude::*;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 
 #[account]
-pub struct SlaAuthority {}
-#[account]
 pub struct Sla {
     /// address of the messeger providing the data
     pub messenger_address: Pubkey,
@@ -12,13 +10,9 @@ pub struct Sla {
     pub slo: Slo,
     ///  leverage for the SLA between provider and user pool
     pub leverage: DslaDecimal,
-
     /// @fixme use this to make sure the mint is never allowed to change
     /// address of the coin to be used as SLA reward for users and providers
     pub mint_address: Pubkey,
-    /// The account derived by the program, which has authority over all
-    /// assets in the SLA.
-    pub sla_authority: Pubkey,
     /// all the data regarding periods.
     pub period_data: PeriodGenerator,
     /// amount of tokens in Provider pool
@@ -27,16 +21,21 @@ pub struct Sla {
     pub user_pool_size: u128,
     pub ut_supply: u128,
     pub pt_supply: u128,
-    /// The address used as the seed for generating the SLA authority
-    /// address. Typically this is the SLA account's own address.
-    pub authority_seed: Pubkey,
-    /// The bump seed value for generating the authority address.
-    pub authority_bump_seed: [u8; 1],
+    pub authority_bump: u8,
 }
 
 impl Sla {
-    // discriminator + messenger_address + SLO + leverage + ipfs_hash + mint + authority + mint_address
-    pub const LEN: usize = 8 + 32 + Slo::LEN + 12 + 32 + 32 + 32 + 16 + 16 + 32;
+    pub const LEN: usize = 8 + // discriminator
+        32 + // messenger_address
+        Slo::LEN + // SLO
+        12 + // leverage
+        32 + // mint_address
+        PeriodGenerator::LEN + // period_data
+        16 + // provider_pool_size
+        16 + // user_pool_size
+        16 + // ut_supply
+        16 +  // pt_supply
+        1; // authority_bump
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
@@ -160,7 +159,11 @@ pub enum PeriodLength {
     Yearly,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy)]
+impl PeriodLength {
+    const LEN: usize = 1 + 16;
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq)]
 pub enum SlaStatus {
     NotStarted,
     Active { period_id: u32 },
@@ -168,8 +171,8 @@ pub enum SlaStatus {
 }
 
 impl PeriodGenerator {
-    /// start + period_length + n_periods + bump
-    pub const MAX_SIZE: usize = 16 + 16 + 16 + 1;
+    /// start + period_length + n_periods
+    pub const LEN: usize = 16 + PeriodLength::LEN + 4;
 
     /// minumum delay from now for the creation of a new period generator
     pub const MIN_DELAY: u128 = 600000;
@@ -199,7 +202,10 @@ impl PeriodGenerator {
         match self.period_length {
             PeriodLength::Custom {
                 length: period_length,
-            } => Ok(self.start + (period_length * period_id as u128)),
+            } => Ok(self
+                .start
+                .checked_add(period_length.checked_mul(period_id as u128).unwrap())
+                .unwrap()),
             PeriodLength::Monthly => unimplemented!(),
             PeriodLength::Yearly => unimplemented!(),
         }
@@ -213,7 +219,10 @@ impl PeriodGenerator {
         match self.period_length {
             PeriodLength::Custom {
                 length: period_length,
-            } => Ok(self.get_start(period_id as usize)? + (period_length - 1)),
+            } => Ok(self
+                .get_start(period_id as usize)?
+                .checked_add(period_length.checked_sub(1).unwrap())
+                .unwrap()),
             PeriodLength::Monthly => unimplemented!(),
             PeriodLength::Yearly => unimplemented!(),
         }
@@ -240,7 +249,7 @@ impl PeriodGenerator {
         // @remind to be tested using the client needs the underlying blockchain for time
         let current_timestamp = Clock::get()?.unix_timestamp as u128;
 
-        if current_timestamp > self.get_end((self.n_periods - 1) as usize)? {
+        if current_timestamp > self.get_end((self.n_periods.checked_sub(1).unwrap()) as usize)? {
             Ok(SlaStatus::Ended)
         } else if self.start >= current_timestamp {
             Ok(SlaStatus::NotStarted)
@@ -250,7 +259,9 @@ impl PeriodGenerator {
                     length: period_length,
                 } => {
                     // @remind look into this division might cause problems
-                    let period_id = ((current_timestamp - self.start) / period_length) as usize;
+                    let period_id = ((current_timestamp.checked_sub(self.start).unwrap())
+                        .checked_div(period_length)
+                        .unwrap()) as usize;
                     Ok(SlaStatus::Active {
                         period_id: period_id as u32,
                     })
