@@ -4,7 +4,7 @@ import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import {
   STAKERS,
   SLA_KEYPAIRS,
-  PT_MINT_SEED,
+  UT_MINT_SEED,
   MINT_AUTHORITY,
 } from "./constants";
 import {
@@ -14,9 +14,9 @@ import {
 import { fund_account } from "./utils";
 import { mint, program, connection } from "./init";
 
-describe("Stake Provider", () => {
-  it("stakes provider side", async () => {
-    const token_amount = new anchor.BN(LAMPORTS_PER_SOL * 10);
+describe("Stake User", () => {
+  it("stakes user side", async () => {
+    const token_amount = new anchor.BN(LAMPORTS_PER_SOL * 1);
 
     let stakerTokenAccount = await getOrCreateAssociatedTokenAccount(
       connection, // connection
@@ -35,29 +35,29 @@ describe("Stake Provider", () => {
       8
     );
 
-    const [ptMintPda] = await PublicKey.findProgramAddress(
+    const [utMintPda] = await PublicKey.findProgramAddress(
       [
-        anchor.utils.bytes.utf8.encode(PT_MINT_SEED),
+        anchor.utils.bytes.utf8.encode(UT_MINT_SEED),
         SLA_KEYPAIRS[0].publicKey.toBuffer(),
       ],
       program.programId
     );
 
-    let stakerPtAccount = await getOrCreateAssociatedTokenAccount(
+    let stakerUtAccount = await getOrCreateAssociatedTokenAccount(
       connection,
       STAKERS[0], // fee payer
-      ptMintPda, // mint
+      utMintPda, // mint
       STAKERS[0].publicKey // owner,
     );
 
     try {
       await program.methods
-        .stakeProvider(token_amount)
+        .stakeUser(token_amount)
         .accounts({
           staker: STAKERS[0].publicKey,
           sla: SLA_KEYPAIRS[0].publicKey,
           stakerTokenAccount: stakerTokenAccount.address,
-          stakerPtAccount: stakerPtAccount.address,
+          stakerUtAccount: stakerUtAccount.address,
           mint: mint,
         })
         .signers([STAKERS[0]])

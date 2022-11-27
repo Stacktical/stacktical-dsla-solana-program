@@ -40,6 +40,7 @@ pub struct StakeUser<'info> {
     pub pool: Box<Account<'info, TokenAccount>>,
 
     #[account(
+        mut,
         seeds = [
             UT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
@@ -50,6 +51,7 @@ pub struct StakeUser<'info> {
     pub ut_mint: Box<Account<'info, Mint>>,
 
     #[account(
+        mut,
         seeds = [
             staker.key().as_ref(),
             LOCKUP_USER_SEED.as_bytes(),
@@ -99,6 +101,13 @@ pub fn handler(ctx: Context<StakeUser>, token_amount: u64) -> Result<()> {
                 .floor(),
         )
         .unwrap();
+
+    msg!(
+        "this is provider_pool_size: {}",
+        ctx.accounts.sla.provider_pool_size
+    );
+    msg!("this is leverage: {}", leverage);
+    msg!("this is adjusted_pool_leverage: {}", adjusted_pool_leverage);
 
     // @todo add test for this
     require_gt!(
