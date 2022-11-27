@@ -2,254 +2,64 @@ import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { expect } from "chai";
 import { Dsla } from "../target/types/dsla";
-import { SystemProgram, Keypair, PublicKey } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, createMint, NATIVE_MINT } from "@solana/spl-token";
 import {
-  DEPLOYER,
-  STATUS_REGISTRY_SEED,
-  PROVIDER_POOL_SEED,
-  PT_MINT_SEED,
+  SLA_DEPLOYERS,
   SLA_REGISTRY_KEYPAIR,
-  USER_POOL_SEED,
-  UT_MINT_SEED,
+  SLA_KEYPAIRS,
+  SLAS,
 } from "./constants";
+import { program, mint } from "./init";
+
 describe("Deploy SLA", () => {
-  // Configure the client to use the local cluster.
-  const provider = anchor.AnchorProvider.local();
-  // Configure the client to use the local cluster.
-  anchor.setProvider(provider);
-  const program = anchor.workspace.Dsla as Program<Dsla>;
+  let expectedSlaAccountAddresses = [];
 
-  const slaKeypairs = [
-    Keypair.generate(),
-    Keypair.generate(),
-    Keypair.generate(),
-  ];
+  SLAS.forEach((sla) => {
+    it(`Deploys SLA ${sla.id}`, async () => {
+      // DEPLOY SLA
+      try {
+        await program.methods
+          .deploySla(
+            sla.slo,
+            sla.messengerAddress,
+            sla.leverage,
+            sla.start,
+            sla.nPeriods,
+            sla.periodLength
+          )
+          .accounts({
+            deployer: SLA_DEPLOYERS[sla.id].publicKey,
+            slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
+            sla: SLA_KEYPAIRS[sla.id].publicKey,
+            mint: mint,
+          })
+          .signers([SLA_DEPLOYERS[sla.id], SLA_KEYPAIRS[sla.id]])
+          .rpc();
+      } catch (err) {
+        console.log(err);
+      }
 
-  it("Deploys an SLA 1", async () => {
-    const ipfsHash = "t";
-    let sloType = { greaterThan: {} };
-    let sloValue = {
-      mantissa: new anchor.BN("100"),
-      scale: new anchor.BN("0"),
-    };
-    const slo = {
-      sloValue,
-      sloType,
-    };
-    const messengerAddress = anchor.web3.Keypair.generate().publicKey;
-    const periods = [
-      {
-        start: new anchor.BN("1000000"),
-        end: new anchor.BN("1900000"),
-        status: { notVerified: {} },
-      },
-    ];
-    const leverage = new anchor.BN("1");
+      // VERIFY CORRECT DEPLOYMENT
+      expectedSlaAccountAddresses.push(SLA_KEYPAIRS[sla.id].publicKey);
+      const actualSlaAccountAddresses = (
+        await program.account.slaRegistry.fetch(SLA_REGISTRY_KEYPAIR.publicKey)
+      ).slaAccountAddresses;
 
-    const [statusRegistryPda, _statusRegistryBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(STATUS_REGISTRY_SEED),
-          slaKeypairs[0].publicKey.toBuffer(),
-        ],
-        program.programId
+      expect(
+        actualSlaAccountAddresses[sla.id].toString(),
+        "SLA registry address doesn't match  the expected address"
+      ).to.equal(expectedSlaAccountAddresses[sla.id].toString());
+
+      expect(
+        actualSlaAccountAddresses.length,
+        "SLA registry lenghth doesn't match"
+      ).to.equal(expectedSlaAccountAddresses.length);
+
+      expect(
+        actualSlaAccountAddresses[sla.id].toString(),
+        "match to wrong address"
+      ).to.not.equal(
+        SLA_KEYPAIRS[(sla.id + 1) % SLA_KEYPAIRS.length].publicKey.toString()
       );
-
-    const [userPoolPda, _userPoolBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(USER_POOL_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [providerPoolPda, _providerPoolBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(PROVIDER_POOL_SEED),
-          slaKeypairs[0].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-
-    const [utMintPda, _utMintBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(UT_MINT_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [ptMintPda, _ptMintBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(PT_MINT_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [slaAuthorityPda, _slaAuthorityBump] =
-      await PublicKey.findProgramAddress(
-        [slaKeypairs[0].publicKey.toBuffer()],
-        program.programId
-      );
-
-    try {
-      await program.methods
-        .deploySla(ipfsHash, slo, messengerAddress, leverage)
-        .accounts({
-          deployer: DEPLOYER.publicKey,
-          slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
-          sla: slaKeypairs[0].publicKey,
-          slaAuthority: slaAuthorityPda,
-          mint: NATIVE_MINT,
-          providerPool: providerPoolPda,
-          statusRegistry: statusRegistryPda,
-          userPool: userPoolPda,
-          utMint: utMintPda,
-          ptMint: ptMintPda,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([DEPLOYER, slaKeypairs[0]])
-        .rpc();
-    } catch (err) {
-      console.log(err);
-    }
-
-    const expectedSlaAccountAddresses = [slaKeypairs[0].publicKey];
-    const actualSlaAccountAddresses = (
-      await program.account.slaRegistry.fetch(SLA_REGISTRY_KEYPAIR.publicKey)
-    ).slaAccountAddresses;
-
-    expect(
-      actualSlaAccountAddresses[0].toString(),
-      "SLA registry address doesn't match  the expected address"
-    ).to.equal(expectedSlaAccountAddresses[0].toString());
-
-    expect(
-      actualSlaAccountAddresses.length,
-      "SLA registry lenghth doesn't match"
-    ).to.equal(expectedSlaAccountAddresses.length);
-
-    expect(
-      actualSlaAccountAddresses[0].toString(),
-      "match to wrong address"
-    ).to.not.equal(slaKeypairs[1].publicKey.toString());
-  });
-
-  it("Deploys an SLA 2", async () => {
-    const ipfsHash = "tt";
-    let sloType = { smallerThan: {} };
-    let sloValue = {
-      mantissa: new anchor.BN("100"),
-      scale: new anchor.BN("0"),
-    };
-    const slo = {
-      sloValue,
-      sloType,
-    };
-    const messengerAddress = anchor.web3.Keypair.generate().publicKey;
-    const periods = [
-      {
-        start: new anchor.BN("99999999"),
-        end: new anchor.BN("10000000000"),
-        status: { notVerified: {} },
-      },
-    ];
-    const leverage = new anchor.BN("5");
-
-    const [statusRegistryPda, _statusRegistryBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(STATUS_REGISTRY_SEED),
-          slaKeypairs[1].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-
-    const [userPoolPda, _userPoolBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(USER_POOL_SEED),
-        slaKeypairs[1].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [providerPoolPda, _providerPoolBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(PROVIDER_POOL_SEED),
-          slaKeypairs[1].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-
-    const [utMintPda, _utMintBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(UT_MINT_SEED),
-        slaKeypairs[1].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [ptMintPda, _ptMintBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(PT_MINT_SEED),
-        slaKeypairs[1].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [slaAuthorityPda, _slaAuthorityBump] =
-      await PublicKey.findProgramAddress(
-        [slaKeypairs[1].publicKey.toBuffer()],
-        program.programId
-      );
-
-    try {
-      await program.methods
-        .deploySla(ipfsHash, slo, messengerAddress, leverage)
-        .accounts({
-          deployer: DEPLOYER.publicKey,
-          slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
-          sla: slaKeypairs[1].publicKey,
-          slaAuthority: slaAuthorityPda,
-          mint: NATIVE_MINT,
-          providerPool: providerPoolPda,
-          statusRegistry: statusRegistryPda,
-          userPool: userPoolPda,
-          utMint: utMintPda,
-          ptMint: ptMintPda,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([DEPLOYER, slaKeypairs[1]])
-        .rpc();
-    } catch (err) {
-      console.log(err);
-    }
-
-    const expectedSlaAccountAddresses = [
-      slaKeypairs[0].publicKey,
-      slaKeypairs[1].publicKey,
-    ];
-    const actualSlaAccountAddresses = (
-      await program.account.slaRegistry.fetch(SLA_REGISTRY_KEYPAIR.publicKey)
-    ).slaAccountAddresses;
-
-    expect(
-      actualSlaAccountAddresses[0].toString(),
-      "SLA registry address doesn't match  the expected address"
-    ).to.equal(expectedSlaAccountAddresses[0].toString());
-
-    expect(
-      actualSlaAccountAddresses[1].toString(),
-      "SLA registry address doesn't match  the expected address"
-    ).to.equal(expectedSlaAccountAddresses[1].toString());
-
-    expect(
-      actualSlaAccountAddresses.length,
-      "SLA registry lenghth doesn't match"
-    ).to.equal(expectedSlaAccountAddresses.length);
+    });
   });
 });

@@ -7,30 +7,22 @@ import {
   Transaction,
   sendAndConfirmTransaction,
   LAMPORTS_PER_SOL,
-  PublicKey,
 } from "@solana/web3.js";
 import {
-  DEPLOYER,
-  GOVERNANCE_SEED,
+  SLA_REGISTRY_DEPLOYER,
   SLA_REGISTRY_SPACE,
   GOVERNANCE_PARAMETERS,
   SLA_REGISTRY_KEYPAIR,
 } from "./constants";
+import { connection, program } from "./init";
 
 describe("Initialize SLA registry", () => {
-  // Configure the client to use the local cluster.
-  const provider = anchor.AnchorProvider.local();
-  // Configure the client to use the local cluster.
-  anchor.setProvider(provider);
-  let connection = provider.connection;
-  const program = anchor.workspace.Dsla as Program<Dsla>;
-
   before(async function () {
     const rentExemptionAmount =
       await connection.getMinimumBalanceForRentExemption(SLA_REGISTRY_SPACE);
 
     const createAccountParams = {
-      fromPubkey: DEPLOYER.publicKey,
+      fromPubkey: SLA_REGISTRY_DEPLOYER.publicKey,
       newAccountPubkey: SLA_REGISTRY_KEYPAIR.publicKey,
       lamports: rentExemptionAmount,
       space: SLA_REGISTRY_SPACE,
@@ -38,7 +30,7 @@ describe("Initialize SLA registry", () => {
     };
 
     let airdropSignature = await connection.requestAirdrop(
-      DEPLOYER.publicKey,
+      SLA_REGISTRY_DEPLOYER.publicKey,
       LAMPORTS_PER_SOL * 1000
     );
     await connection.confirmTransaction(airdropSignature);
@@ -48,25 +40,19 @@ describe("Initialize SLA registry", () => {
     );
 
     await sendAndConfirmTransaction(connection, createAccountTransaction, [
-      DEPLOYER,
+      SLA_REGISTRY_DEPLOYER,
       SLA_REGISTRY_KEYPAIR,
     ]);
   });
 
   it("initializes an SLA registry", async () => {
-    const [governancePda, _governanceBump] = await PublicKey.findProgramAddress(
-      [anchor.utils.bytes.utf8.encode(GOVERNANCE_SEED)],
-      program.programId
-    );
-
     await program.methods
       .initSlaRegistry(GOVERNANCE_PARAMETERS)
       .accounts({
-        deployer: DEPLOYER.publicKey,
-        governance: governancePda,
+        deployer: SLA_REGISTRY_DEPLOYER.publicKey,
         slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
       })
-      .signers([DEPLOYER])
+      .signers([SLA_REGISTRY_DEPLOYER])
       .rpc();
 
     const expectedSlaAccountAddresses = [];

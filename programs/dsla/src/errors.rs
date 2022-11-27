@@ -3,43 +3,33 @@ use anchor_lang::prelude::*;
 #[error_code]
 #[derive(Eq, PartialEq)]
 pub enum ErrorCode {
-    #[msg("Could not find a bump for this key.")]
-    BumpNotFound = 1001,
     #[msg("precision is not divisible by 100")]
-    InvalidPrecision = 1002,
+    InvalidPrecision = 7001,
     #[msg("period ID entered is not valid")]
-    InvalidPeriodId = 1003,
-    #[msg("the start is too close")]
-    InvalidPeriodStart = 1004,
-    #[msg("the period lenght is too short")]
-    InvalidPeriodLength = 1005,
-    #[msg("Number of periods cannot be 0")]
-    ZeroNumberOfPeriods = 1006,
-    #[msg("Number of periods is capped based on account storage requirment")]
-    MaxNumberOfPeriods = 1007,
-    #[msg("all periods should be set as unverified")]
-    PeriodAlreadyVerified = 1008,
-    #[msg("decimals is different")]
-    DifferentDecimals = 1009,
+    InvalidPeriodId = 7002,
     #[msg("trying to verify an already verified period")]
-    AlreadyVerifiedPeriod = 1010,
+    AlreadyVerifiedPeriod = 7003,
     #[msg("Failed to convert to a decimal")]
-    DecimalConversionError = 1011,
+    DecimalConversionError = 7004,
     #[msg("operation failed with an overflow")]
-    CheckedOperationOverflow = 1012,
-    #[msg("The staking windows has closed")]
-    StakingWindowClosed = 1013,
-    #[msg("The claiming window is closed")]
-    ClaimingWindowClosed = 1014,
+    CheckedOperationOverflow = 7005,
+    #[msg("Not enough available tokens for withdrawal")]
+    NoAvailableTokensForWithdrawal = 7006,
+    #[msg("Cannot Stake After SLA has ended")]
+    CannotStakeAfterSlaEnded = 7007,
+    #[msg("Withdrawal should be at least 1")]
+    WithdrawalIsZero = 7008,
+    #[msg("SLA with the same address can only be initialized once")]
+    SLaAlreadyInitialized = 7009,
 }
 
 #[error_code]
 #[derive(Eq, PartialEq)]
 pub enum FeedErrorCode {
     #[msg("Not a valid Switchboard account")]
-    InvalidSwitchboardAccount = 2001,
+    InvalidSwitchboardAccount = 8001,
     #[msg("Switchboard feed has not been updated in 5 minutes")]
-    StaleFeed = 2002,
+    StaleFeed = 8002,
     #[msg("Switchboard feed exceeded provided confidence interval")]
-    ConfidenceIntervalExceeded = 2003,
+    ConfidenceIntervalExceeded = 8003,
 }

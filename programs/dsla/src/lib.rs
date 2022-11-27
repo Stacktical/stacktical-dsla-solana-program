@@ -1,8 +1,11 @@
 use anchor_lang::prelude::Result;
 use anchor_lang::prelude::*;
 
+/// storage for all the constants in the protocol
 pub mod constants;
+/// all the DSLA specific errors
 pub mod errors;
+/// all the DSLA specific events
 pub mod events;
 pub mod instructions;
 pub mod state;
@@ -13,6 +16,7 @@ use crate::state::governance::Governance;
 use crate::state::sla::{DslaDecimal, PeriodLength, Slo};
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+/// the main program
 #[program]
 pub mod dsla {
     use super::*;
@@ -24,23 +28,28 @@ pub mod dsla {
         instructions::init_sla_registry::handler(ctx, governance_parameters)
     }
 
-    pub fn init_user_accounts(ctx: Context<InitUserAccounts>) -> Result<()> {
-        instructions::init_user_accounts::handler(ctx)
-    }
-    pub fn init_provider_accounts(ctx: Context<InitProviderAccounts>) -> Result<()> {
-        instructions::init_provider_accounts::handler(ctx)
+    pub fn stake_user(ctx: Context<StakeUser>, token_amount: u64) -> Result<()> {
+        instructions::stake_user::handler(ctx, token_amount)
     }
 
-    pub fn stake(ctx: Context<Stake>, token_amount: u64) -> Result<()> {
-        instructions::stake::handler(ctx, token_amount)
+    pub fn stake_provider(ctx: Context<StakeProvider>, token_amount: u64) -> Result<()> {
+        instructions::stake_provider::handler(ctx, token_amount)
     }
 
     pub fn validate_period(ctx: Context<ValidatePeriod>, period: u64) -> Result<()> {
         instructions::validate_period::handler(ctx, period as usize)
     }
 
-    pub fn claim(ctx: Context<Claim>) -> Result<()> {
-        instructions::claim::handler(ctx)
+    pub fn withdraw_user(ctx: Context<WithdrawUser>, token_amount: u64) -> Result<()> {
+        instructions::withdraw_user::handler(ctx, token_amount)
+    }
+
+    pub fn withdraw_provider(ctx: Context<WithdrawProvider>, token_amount: u64) -> Result<()> {
+        instructions::withdraw_provider::handler(ctx, token_amount)
+    }
+
+    pub fn init_lockup_accounts(ctx: Context<InitLockupAccounts>) -> Result<()> {
+        instructions::init_lockup_accounts::handler(ctx)
     }
 
     pub fn deploy_sla(
@@ -49,7 +58,7 @@ pub mod dsla {
         messenger_address: Pubkey,
         leverage: DslaDecimal,
         start: u128,
-        n_periods: usize,
+        n_periods: u32,
         period_length: PeriodLength,
     ) -> Result<()> {
         instructions::deploy_sla::handler(
@@ -63,3 +72,5 @@ pub mod dsla {
         )
     }
 }
+
+// @remind deal with all the unwrap() troughout the code

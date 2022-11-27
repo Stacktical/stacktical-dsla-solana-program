@@ -10,14 +10,7 @@ import {
 } from "@solana/web3.js";
 import * as splToken from "@solana/spl-token";
 
-import {
-  SLA_REGISTRY_KEYPAIR,
-  STATUS_REGISTRY_SEED,
-  PROVIDER_POOL_SEED,
-  PT_MINT_SEED,
-  USER_POOL_SEED,
-  UT_MINT_SEED,
-} from "./constants";
+import { SLA_REGISTRY_KEYPAIR } from "./constants";
 
 import { SwitchboardTestContext } from "@switchboard-xyz/sbv2-utils";
 import { AggregatorAccount } from "@switchboard-xyz/switchboard-v2";
@@ -106,54 +99,6 @@ describe("Validate", () => {
     ];
     const leverage = new anchor.BN("1");
 
-    const [statusRegistryPda, _statusRegistryBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(STATUS_REGISTRY_SEED),
-          slaKeypairs[0].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-
-    const [userPoolPda, _userPoolBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(USER_POOL_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [providerPoolPda, _providerPoolBump] =
-      await PublicKey.findProgramAddress(
-        [
-          anchor.utils.bytes.utf8.encode(PROVIDER_POOL_SEED),
-          slaKeypairs[0].publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-
-    const [utMintPda, _utMintBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(UT_MINT_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [ptMintPda, _ptMintBump] = await PublicKey.findProgramAddress(
-      [
-        anchor.utils.bytes.utf8.encode(PT_MINT_SEED),
-        slaKeypairs[0].publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-
-    const [slaAuthorityPda, _slaAuthorityBump] =
-      await PublicKey.findProgramAddress(
-        [slaKeypairs[0].publicKey.toBuffer()],
-        program.programId
-      );
-
     try {
       await program.methods
         .deploySla(ipfsHash, slo, messengerAddress, leverage)
@@ -161,13 +106,7 @@ describe("Validate", () => {
           deployer: deployer.publicKey,
           slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
           sla: slaKeypairs[0].publicKey,
-          slaAuthority: slaAuthorityPda,
-          statusRegistry: statusRegistryPda,
           mint: mint,
-          providerPool: providerPoolPda,
-          userPool: userPoolPda,
-          utMint: utMintPda,
-          ptMint: ptMintPda,
           systemProgram: SystemProgram.programId,
         })
         .signers([deployer, slaKeypairs[0]])
@@ -189,7 +128,6 @@ describe("Validate", () => {
     await program.methods.validatePeriod(new anchor.BN("0")).accounts({
       validator: deployer.publicKey,
       sla: slaKeypairs[0].publicKey,
-      statusRegistry: statusRegistryPda,
       aggregator: aggregatorAccount.publicKey,
     });
   });

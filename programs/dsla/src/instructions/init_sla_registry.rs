@@ -4,6 +4,7 @@ use crate::constants::*;
 use crate::state::governance::Governance;
 use crate::state::sla_registry::SlaRegistry;
 
+/// Instruction to initialize the SLARegistry
 #[derive(Accounts)]
 pub struct InitSlaRegistry<'info> {
     #[account(mut)]
