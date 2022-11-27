@@ -27,6 +27,7 @@ pub struct DeploySla<'info> {
     pub sla: Account<'info, Sla>,
 
     #[account(
+        mut,
         seeds = [SLA_AUTHORITY_SEED.as_bytes(), sla.key().as_ref()],
         bump
     )]

@@ -42,6 +42,7 @@ pub struct StakeProvider<'info> {
     pub pool: Box<Account<'info, TokenAccount>>,
 
     #[account(
+        mut,
         seeds = [
             PT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
@@ -64,6 +65,7 @@ pub struct StakeProvider<'info> {
     pub staker_pt_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
+        mut,
         seeds = [
             staker.key().as_ref(),
             LOCKUP_PROVIDER_SEED.as_bytes(),
@@ -126,6 +128,7 @@ pub fn handler(ctx: Context<StakeProvider>, token_amount: u64) -> Result<()> {
         .bumps
         .get("sla_authority")
         .expect("sla_authority should exists");
+
     let seeds = &[
         SLA_AUTHORITY_SEED.as_bytes(),
         sla_key.as_ref(),

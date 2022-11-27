@@ -1,6 +1,6 @@
 pub const DISCRIMINATOR_LENGTH: usize = 8;
 pub const PUBLIC_KEY_LENGTH: usize = 32;
-pub const SLA_AUTHORITY_SEED: &str = "governance";
+pub const SLA_AUTHORITY_SEED: &str = "sla-authority";
 pub const STATUS_REGISTRY_SEED: &str = "status-registry";
 pub const POOL_SEED: &str = "vault";
 pub const UT_MINT_SEED: &str = "ut-mint";

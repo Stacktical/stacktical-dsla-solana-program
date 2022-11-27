@@ -1,31 +1,38 @@
 import * as anchor from "@project-serum/anchor";
-import { Program } from "@project-serum/anchor";
 import { expect } from "chai";
-import { Dsla } from "../target/types/dsla";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { NATIVE_MINT } from "@solana/spl-token";
-import { STAKERS, SLA_KEYPAIRS, PT_MINT_SEED } from "./constants";
-import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import {
+  STAKERS,
+  SLA_KEYPAIRS,
+  PT_MINT_SEED,
+  MINT_AUTHORITY,
+} from "./constants";
+import {
+  getOrCreateAssociatedTokenAccount,
+  mintToChecked,
+} from "@solana/spl-token";
 import { fund_account } from "./utils";
-import { mintToChecked } from "@solana/spl-token";
-import { transferChecked } from "@solana/spl-token";
+import { mint, program, connection } from "./init";
 
 describe("Stake", () => {
-  // Configure the client to use the local cluster.
-  const provider = anchor.AnchorProvider.local();
-  // Configure the client to use the local cluster.
-  anchor.setProvider(provider);
-  let connection = provider.connection;
-  const program = anchor.workspace.Dsla as Program<Dsla>;
-
   it("stakes provider side", async () => {
     const token_amount = new anchor.BN(LAMPORTS_PER_SOL * 10);
 
     let stakerTokenAccount = await getOrCreateAssociatedTokenAccount(
       connection, // connection
       STAKERS[0], // fee payer
-      NATIVE_MINT, // mint
+      mint, // mint
       STAKERS[0].publicKey // owner,
+    );
+
+    await mintToChecked(
+      connection,
+      STAKERS[0],
+      stakerTokenAccount.mint,
+      stakerTokenAccount.address,
+      MINT_AUTHORITY,
+      LAMPORTS_PER_SOL * 100,
+      8
     );
 
     const [ptMintPda] = await PublicKey.findProgramAddress(
@@ -51,7 +58,7 @@ describe("Stake", () => {
           sla: SLA_KEYPAIRS[0].publicKey,
           stakerTokenAccount: stakerTokenAccount.address,
           stakerPtAccount: stakerPtAccount.address,
-          mint: NATIVE_MINT,
+          mint: mint,
         })
         .signers([STAKERS[0]])
         .rpc();

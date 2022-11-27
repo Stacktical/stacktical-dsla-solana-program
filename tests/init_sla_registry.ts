@@ -14,15 +14,9 @@ import {
   GOVERNANCE_PARAMETERS,
   SLA_REGISTRY_KEYPAIR,
 } from "./constants";
+import { connection, program } from "./init";
 
 describe("Initialize SLA registry", () => {
-  // Configure the client to use the local cluster.
-  const provider = anchor.AnchorProvider.local();
-  // Configure the client to use the local cluster.
-  anchor.setProvider(provider);
-  let connection = provider.connection;
-  const program = anchor.workspace.Dsla as Program<Dsla>;
-
   before(async function () {
     const rentExemptionAmount =
       await connection.getMinimumBalanceForRentExemption(SLA_REGISTRY_SPACE);
