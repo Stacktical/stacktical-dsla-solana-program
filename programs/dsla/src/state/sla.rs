@@ -2,6 +2,7 @@ use crate::errors::ErrorCode;
 use anchor_lang::prelude::*;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 
+/// `Sla` is Service level agreement account containing all the variables to make it possible
 #[account]
 pub struct Sla {
     /// address of the messeger providing the data
@@ -19,7 +20,9 @@ pub struct Sla {
     pub provider_pool_size: u128,
     /// amount of tokens in User pool
     pub user_pool_size: u128,
+    /// total user token supply
     pub ut_supply: u128,
+    /// total provider token supply
     pub pt_supply: u128,
 }
 
@@ -37,6 +40,7 @@ impl Sla {
         ;
 }
 
+/// `Slo` is service level obejective and contains a Decimal number that is the expected value and  SloType
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Slo {
     pub slo_value: DslaDecimal,
@@ -121,6 +125,9 @@ pub enum SloType {
     GreaterOrEqualTo,
 }
 
+/// struct to deal with floating point numbers
+///  - `mantissa` -> the value without any decimals and non decimal
+///  - `scale` -> how many places from the right to put the decimal point
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub struct DslaDecimal {
     mantissa: i64,

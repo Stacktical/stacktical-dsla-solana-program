@@ -3,11 +3,13 @@ use anchor_lang::prelude::*;
 
 /// storage for all the constants in the protocol
 pub mod constants;
-/// all the DSLA specific errors
+///  DSLA specific errors
 pub mod errors;
-/// all the DSLA specific events
+///  DSLA specific events
 pub mod events;
+/// available instructions
 pub mod instructions;
+/// Accounts and structs used in the instructions
 pub mod state;
 
 use instructions::*;
@@ -21,11 +23,22 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod dsla {
     use super::*;
 
-    pub fn init_sla_registry(
-        ctx: Context<InitSlaRegistry>,
+    pub fn init_governance(
+        ctx: Context<InitGovernance>,
         governance_parameters: Governance,
     ) -> Result<()> {
-        instructions::init_sla_registry::handler(ctx, governance_parameters)
+        instructions::init_governance::handler(ctx, governance_parameters)
+    }
+
+    pub fn modify_governance(
+        ctx: Context<ModifyGovernance>,
+        governance_parameters: Governance,
+    ) -> Result<()> {
+        instructions::modify_governance::handler(ctx, governance_parameters)
+    }
+
+    pub fn init_sla_registry(ctx: Context<InitSlaRegistry>) -> Result<()> {
+        instructions::init_sla_registry::handler(ctx)
     }
 
     pub fn stake_user(ctx: Context<StakeUser>, token_amount: u64) -> Result<()> {
@@ -72,5 +85,3 @@ pub mod dsla {
         )
     }
 }
-
-// @remind deal with all the unwrap() troughout the code

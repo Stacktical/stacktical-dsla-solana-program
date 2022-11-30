@@ -9,6 +9,7 @@ pub struct InitializedStatusRegistryEvent {
     pub periods: Vec<Status>,
 }
 
+/// event for the succeful deployment of an sla, exposes the sla account address
 #[event]
 pub struct DeployedSlaEvent {
     pub sla_account_address: Pubkey,
