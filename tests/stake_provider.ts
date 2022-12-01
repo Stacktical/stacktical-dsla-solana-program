@@ -17,7 +17,7 @@ import { BN } from "bn.js";
 
 describe("Stake Provider", () => {
   it("stakes provider side", async () => {
-    const tokenAmount = new BN(LAMPORTS_PER_SOL * 10);
+    const tokenAmount = new anchor.BN(LAMPORTS_PER_SOL * 10);
 
     let stakerTokenAccount = await getOrCreateAssociatedTokenAccount(
       connection, // connection
@@ -50,11 +50,19 @@ describe("Stake Provider", () => {
       ptMintPda, // mint
       STAKERS[0].publicKey // owner,
     );
-    let slaAccount = await program.account.sla.fetch(SLA_KEYPAIRS[0].publicKey);
-    expect(slaAccount.providerPoolSize.eq(new BN(0)), "provider pool is not 0")
-      .to.be.true;
-    expect(slaAccount.providerPoolSize.gt(new BN(0)), "provider pool is not 0")
-      .to.be.false;
+    let stakerPtAccountAmount = new anchor.BN(stakerPtAccount.amount);
+    expect(
+      stakerPtAccountAmount.eq(new anchor.BN(0)),
+      "provider token account is not empty"
+    ).to.be.true;
+
+    let providerPoolSize = (
+      await program.account.sla.fetch(SLA_KEYPAIRS[0].publicKey)
+    ).providerPoolSize;
+    expect(providerPoolSize.eq(new anchor.BN(0)), "provider pool is not 0").to
+      .be.true;
+    expect(providerPoolSize.gt(new anchor.BN(0)), "provider pool is not 0").to
+      .be.false;
 
     try {
       await program.methods
@@ -71,13 +79,32 @@ describe("Stake Provider", () => {
     } catch (err) {
       console.log(err);
     }
-    slaAccount = await program.account.sla.fetch(SLA_KEYPAIRS[0].publicKey);
+
+    stakerPtAccountAmount = new anchor.BN(
+      (
+        await getOrCreateAssociatedTokenAccount(
+          connection,
+          STAKERS[0], // fee payer
+          ptMintPda, // mint
+          STAKERS[0].publicKey // owner,
+        )
+      ).amount
+    );
     expect(
-      slaAccount.providerPoolSize.eq(tokenAmount),
+      stakerPtAccountAmount.eq(new anchor.BN(tokenAmount)),
+      "provider token account amount does not equal staked token Amount"
+    ).to.be.true;
+
+    providerPoolSize = (
+      await program.account.sla.fetch(SLA_KEYPAIRS[0].publicKey)
+    ).providerPoolSize;
+
+    expect(
+      providerPoolSize.eq(tokenAmount),
       "provider pool size is not equal to the staked token amount size"
     ).to.be.true;
     expect(
-      slaAccount.providerPoolSize.lt(tokenAmount),
+      providerPoolSize.lt(tokenAmount),
       "provider pool size is not equal to the staked token amount size"
     ).to.be.false;
 

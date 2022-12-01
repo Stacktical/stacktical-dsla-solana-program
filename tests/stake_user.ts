@@ -15,8 +15,8 @@ import { fund_account } from "./utils";
 import { mint, program, connection } from "./init";
 
 describe("Stake User", () => {
-  it("stakes user side", async () => {
-    const token_amount = new anchor.BN(LAMPORTS_PER_SOL * 1);
+  it("checks that it stakes user side", async () => {
+    const tokenAmount = new anchor.BN(LAMPORTS_PER_SOL * 1);
 
     let stakerTokenAccount = await getOrCreateAssociatedTokenAccount(
       connection, // connection
@@ -50,9 +50,21 @@ describe("Stake User", () => {
       STAKERS[0].publicKey // owner,
     );
 
+    let stakerUtAccountAmount = new anchor.BN(stakerUtAccount.amount);
+    expect(
+      stakerUtAccountAmount.eq(new anchor.BN(0)),
+      "user token account is not empty"
+    ).to.be.true;
+
+    let slaAccount = await program.account.sla.fetch(SLA_KEYPAIRS[0].publicKey);
+    expect(slaAccount.userPoolSize.eq(new anchor.BN(0)), "user pool is not 0")
+      .to.be.true;
+    expect(slaAccount.userPoolSize.gt(new anchor.BN(0)), "user pool is not 0")
+      .to.be.false;
+
     try {
       await program.methods
-        .stakeUser(token_amount)
+        .stakeUser(tokenAmount)
         .accounts({
           staker: STAKERS[0].publicKey,
           sla: SLA_KEYPAIRS[0].publicKey,
@@ -65,5 +77,30 @@ describe("Stake User", () => {
     } catch (err) {
       console.log(err);
     }
+
+    stakerUtAccountAmount = new anchor.BN(
+      (
+        await getOrCreateAssociatedTokenAccount(
+          connection,
+          STAKERS[0], // fee payer
+          utMintPda, // mint
+          STAKERS[0].publicKey // owner,
+        )
+      ).amount
+    );
+    expect(
+      stakerUtAccountAmount.eq(new anchor.BN(tokenAmount)),
+      "user token account amount does not equal staked token Amount"
+    ).to.be.true;
+
+    slaAccount = await program.account.sla.fetch(SLA_KEYPAIRS[0].publicKey);
+    expect(
+      slaAccount.userPoolSize.eq(tokenAmount),
+      "user pool size is not equal to the staked token amount size"
+    ).to.be.true;
+    expect(
+      slaAccount.userPoolSize.lt(tokenAmount),
+      "user pool size is not equal to the staked token amount size"
+    ).to.be.false;
   });
 });
