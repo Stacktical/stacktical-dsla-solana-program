@@ -31,18 +31,34 @@ export const SLA_REGISTRY_KEYPAIR = {
 };
 
 export const MINT_AUTHORITY: Keypair = Keypair.generate();
-
+export const DSLA_MINT_AUTHORITY: Keypair = Keypair.generate();
 export const GOVERNANCE_PARAMETERS = {
-  dslaBurnRate: new anchor.BN(10),
-  dslaDepositByPeriod: new anchor.BN(10),
-  dslaPlatformReward: new anchor.BN(10),
-  dslaMessengerReward: new anchor.BN(10),
-  dslaUserReward: new anchor.BN(10),
-  dslaBurnedByVerification: new anchor.BN(10),
-  maxTokenLength: new anchor.BN(10),
+  dslaDepositByPeriod: new anchor.BN("250000000"),
+  dslaProtocolRewardRate: {
+    mantissa: new anchor.BN("50"),
+    scale: new anchor.BN("2"),
+  }, // 50%
+  dslaValidatorRewardRate: {
+    mantissa: new anchor.BN("25"),
+    scale: new anchor.BN("2"),
+  }, // 25%
+  dslaBurnedByVerificationRate: {
+    mantissa: new anchor.BN("25"),
+    scale: new anchor.BN("2"),
+  }, // 25%,
+  slaDeployerRewardsRate: {
+    mantissa: new anchor.BN("3"),
+    scale: new anchor.BN("3"),
+  }, // 0.3%
+  protocolRewardsRate: {
+    mantissa: new anchor.BN("15"),
+    scale: new anchor.BN("4"),
+  }, // 0.15%
   maxLeverage: new anchor.BN(10),
   burnDsla: true,
 };
+
+export const SLA_PROTOCOL_DEPLOYER: Keypair = Keypair.generate();
 
 export const SLA_DEPLOYERS: Keypair[] = [
   Keypair.generate(),

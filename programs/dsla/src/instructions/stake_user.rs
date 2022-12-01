@@ -62,11 +62,11 @@ pub struct StakeUser<'info> {
     pub ut_lockup: Box<Account<'info, Lockup>>,
 
     /// The account to claim the money from
-    #[account(mut, token::mint=mint, token::authority=staker)]
+    #[account(mut, associated_token::mint=mint, associated_token::authority=staker)]
     pub staker_token_account: Box<Account<'info, TokenAccount>>,
 
     /// ut tokens
-    #[account(mut, token::mint=ut_mint, token::authority=staker)]
+    #[account(mut, associated_token::mint=ut_mint, associated_token::authority=staker)]
     pub staker_ut_account: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,

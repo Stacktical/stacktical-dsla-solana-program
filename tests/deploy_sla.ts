@@ -8,7 +8,7 @@ import {
   SLA_KEYPAIRS,
   SLAS,
 } from "./constants";
-import { program, mint } from "./init";
+import { program, mint, dsla_mint } from "./init";
 
 describe("Deploy SLA", () => {
   let expectedSlaAccountAddresses = [];
@@ -31,6 +31,7 @@ describe("Deploy SLA", () => {
             slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,
             sla: SLA_KEYPAIRS[sla.id].publicKey,
             mint: mint,
+            dslaMint: dsla_mint,
           })
           .signers([SLA_DEPLOYERS[sla.id], SLA_KEYPAIRS[sla.id]])
           .rpc();

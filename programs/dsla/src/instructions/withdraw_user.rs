@@ -26,14 +26,14 @@ pub struct WithdrawUser<'info> {
     pub sla_authority: SystemAccount<'info>,
 
     /// The token account to claimer the money in
-    #[account(mut, token::mint=mint, token::authority=withdrawer)]
+    #[account(mut, associated_token::mint=mint, associated_token::authority=withdrawer)]
     pub withdrawer_token_account: Box<Account<'info, TokenAccount>>,
 
-    #[account(mut, token::mint=dsla_mint, token::authority=withdrawer)]
+    #[account(mut, associated_token::mint=dsla_mint, associated_token::authority=withdrawer)]
     pub withdrawer_dsla_account: Box<Account<'info, TokenAccount>>,
 
     /// The token account with ut tokens
-    #[account(mut, token::mint=ut_mint, token::authority=withdrawer)]
+    #[account(mut, associated_token::mint=ut_mint, associated_token::authority=withdrawer)]
     pub withdrawer_ut_account: Box<Account<'info, TokenAccount>>,
 
     // @fixme make sure mint is same as defined in initialization

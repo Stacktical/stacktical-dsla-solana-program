@@ -58,6 +58,20 @@ pub struct DeploySla<'info> {
     #[account(
         init,
         payer = deployer,
+        seeds = [DSLA_POOL_SEED.as_bytes(), sla.key().as_ref()],
+        token::mint = dsla_mint,
+        token::authority = sla_authority,
+        bump,
+    )]
+    pub dsla_pool: Box<Account<'info, TokenAccount>>,
+
+    // @todo add constraint to check for correct DSLA mint address
+    #[account(constraint = mint.is_initialized == true)]
+    pub dsla_mint: Box<Account<'info, Mint>>,
+
+    #[account(
+        init,
+        payer = deployer,
         seeds = [
             UT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
@@ -122,6 +136,7 @@ pub fn handler(
     sla.slo = slo;
     sla.period_data = PeriodGenerator::new(start, period_length, n_periods);
     sla.mint_address = ctx.accounts.mint.key();
+    sla.sla_deployer_address = ctx.accounts.deployer.key();
 
     emit!(DeployedSlaEvent {
         sla_account_address: sla.key()

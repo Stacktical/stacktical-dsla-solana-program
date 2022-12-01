@@ -1,7 +1,4 @@
-import * as anchor from "@project-serum/anchor";
-import { Program } from "@project-serum/anchor";
 import { expect } from "chai";
-import { Dsla } from "../target/types/dsla";
 import {
   SystemProgram,
   Transaction,
@@ -11,7 +8,6 @@ import {
 import {
   SLA_REGISTRY_DEPLOYER,
   SLA_REGISTRY_SPACE,
-  GOVERNANCE_PARAMETERS,
   SLA_REGISTRY_KEYPAIR,
 } from "./constants";
 import { connection, program } from "./init";
@@ -47,7 +43,7 @@ describe("Initialize SLA registry", () => {
 
   it("initializes an SLA registry", async () => {
     await program.methods
-      .initSlaRegistry(GOVERNANCE_PARAMETERS)
+      .initSlaRegistry()
       .accounts({
         deployer: SLA_REGISTRY_DEPLOYER.publicKey,
         slaRegistry: SLA_REGISTRY_KEYPAIR.publicKey,

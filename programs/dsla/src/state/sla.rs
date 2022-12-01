@@ -5,13 +5,14 @@ use rust_decimal::{prelude::FromPrimitive, Decimal};
 /// `Sla` is Service level agreement account containing all the variables to make it possible
 #[account]
 pub struct Sla {
+    /// address of who deployed the SLA
+    pub sla_deployer_address: Pubkey,
     /// address of the messeger providing the data
     pub messenger_address: Pubkey,
     /// service level objective, the objective to achieve for the provider to be rewarded
     pub slo: Slo,
     ///  leverage for the SLA between provider and user pool
     pub leverage: DslaDecimal,
-    /// @fixme use this to make sure the mint is never allowed to change
     /// address of the coin to be used as SLA reward for users and providers
     pub mint_address: Pubkey,
     /// all the data regarding periods.
@@ -28,6 +29,7 @@ pub struct Sla {
 
 impl Sla {
     pub const LEN: usize = 8 + // discriminator
+        32 + // sla_deployer_address
         32 + // messenger_address
         Slo::LEN + // SLO
         12 + // leverage
@@ -115,6 +117,7 @@ impl Slo {
     }
 }
 
+/// what type of service level objective is this `Slo`
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy)]
 pub enum SloType {
     EqualTo,
@@ -126,8 +129,8 @@ pub enum SloType {
 }
 
 /// struct to deal with floating point numbers
-///  - `mantissa` -> the value without any decimals and non decimal
-///  - `scale` -> how many places from the right to put the decimal point
+///  - `mantissa` the value without any decimals and non decimal
+///  - `scale` how many places from the right to put the decimal point
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub struct DslaDecimal {
     mantissa: i64,

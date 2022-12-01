@@ -1,7 +1,5 @@
 use anchor_lang::prelude::*;
 
-use crate::program::Dsla;
-
 use super::DslaDecimal;
 
 /// collection fo all the parametric Governances one account for all SLAs
@@ -28,11 +26,11 @@ pub struct Governance {
 impl Governance {
     pub const LEN: usize = 8  // discriminator
     + 16 // dsla_deposit_by_period 
-    + 16 // dsla_platform_reward
-    + 16 // dsla_messenger_reward
-    + 16 // dsla_user_reward
-    + 16 // dsla_burned_by_verification
-    + 16 // max_token_length
+    + 12 // dsla_protocol_reward_rate
+    + 12 // dsla_validator_reward_rate
+    + 12 // dsla_burned_by_verification_rate
+    + 12 // sla_deployer_rewards_rate
+    + 12 // protocol_rewards_rate
     + 12  // max_leverage
     + 1; // burn_dsla
 }
