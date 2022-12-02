@@ -5,6 +5,7 @@ import {
   STAKERS,
   MINT_AUTHORITY,
   DSLA_MINT_AUTHORITY,
+  PROVIDER,
 } from "./constants";
 import { fund_account } from "./utils";
 import * as anchor from "@project-serum/anchor";
@@ -14,16 +15,14 @@ import { Dsla } from "../target/types/dsla";
 import { PublicKey } from "@solana/web3.js";
 
 // Configure the client to use the local cluster.
-let provider = anchor.AnchorProvider.local();
-// Configure the client to use the local cluster.
-anchor.setProvider(provider);
-export const connection: anchor.web3.Connection = provider.connection;
+anchor.setProvider(PROVIDER);
+export const connection: anchor.web3.Connection = PROVIDER.connection;
 export const program: Program<Dsla> = anchor.workspace.Dsla as Program<Dsla>;
 export var mint: PublicKey;
 export var dsla_mint: PublicKey;
 
 // Will run after every test in every file
-before(async function () {
+before(async () => {
   await fund_account(connection, SLA_PROTOCOL_DEPLOYER.publicKey);
   await fund_account(connection, SLA_REGISTRY_DEPLOYER.publicKey);
   await fund_account(connection, MINT_AUTHORITY.publicKey);

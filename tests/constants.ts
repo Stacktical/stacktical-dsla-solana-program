@@ -1,6 +1,9 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 export const SLA_REGISTRY_SPACE = 10_000_000;
 import { BN } from "@project-serum/anchor";
+import * as anchor from "@project-serum/anchor";
+
+export const PROVIDER = anchor.AnchorProvider.env();
 
 // SEEDS
 export const STATUS_REGISTRY_SEED: string = "status-registry";
@@ -16,7 +19,19 @@ export const SLA_REGISTRY_DEPLOYER = Keypair.generate();
 export const SLA_REGISTRY_KEYPAIR = Keypair.generate();
 export const MINT_AUTHORITY: Keypair = Keypair.generate();
 export const DSLA_MINT_AUTHORITY: Keypair = Keypair.generate();
-export const SLA_PROTOCOL_DEPLOYER: Keypair = Keypair.generate();
+export const SLA_PROTOCOL_DEPLOYER = {
+  publicKey: new PublicKey([
+    131, 218, 37, 152, 136, 89, 103, 247, 100, 150, 178, 36, 20, 126, 167, 1,
+    62, 222, 89, 85, 140, 166, 178, 104, 13, 240, 220, 225, 14, 40, 31, 138,
+  ]),
+  secretKey: Uint8Array.from([
+    56, 189, 248, 64, 27, 134, 132, 60, 134, 157, 195, 19, 58, 95, 51, 132, 55,
+    97, 137, 140, 73, 81, 38, 120, 237, 204, 113, 205, 132, 69, 21, 18, 131,
+    218, 37, 152, 136, 89, 103, 247, 100, 150, 178, 36, 20, 126, 167, 1, 62,
+    222, 89, 85, 140, 166, 178, 104, 13, 240, 220, 225, 14, 40, 31, 138,
+  ]),
+};
+
 export const SLA_DEPLOYERS: Keypair[] = [
   Keypair.generate(),
   Keypair.generate(),
@@ -43,6 +58,7 @@ export const MESSENGER_ADDRESSES: PublicKey[] = [
 ];
 
 // VARIABLES
+// Configure the client to use the env cluster.
 let dslaDepositByPeriod = 250000000;
 export const GOVERNANCE_PARAMETERS = {
   dslaDepositByPeriod: new BN(dslaDepositByPeriod),

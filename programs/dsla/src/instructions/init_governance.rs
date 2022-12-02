@@ -1,8 +1,8 @@
 use crate::constants::*;
 use crate::errors::ErrorCode;
+use crate::program::Dsla;
 use crate::state::governance::Governance;
 use anchor_lang::prelude::*;
-// use crate::program::Dsla;
 
 /// Instruction to initialize the SLARegistry
 #[derive(Accounts)]
@@ -19,11 +19,10 @@ pub struct InitGovernance<'info> {
     )]
     pub governance: Account<'info, Governance>,
 
-    // @todo readd before devnet deployment
-    // #[account(constraint = program.programdata_address()? == Some(program_data.key()))]
-    // pub program: Program<'info, Dsla>,
-    // #[account(constraint = program_data.upgrade_authority_address == Some(program_upgrade_authority.key()))]
-    // pub program_data: Account<'info, ProgramData>,
+    #[account(address = crate::ID)]
+    pub program: Program<'info, Dsla>,
+    #[account(constraint = program_data.upgrade_authority_address == Some(program_upgrade_authority.key()))]
+    pub program_data: Account<'info, ProgramData>,
     pub system_program: Program<'info, System>,
 }
 

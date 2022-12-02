@@ -1,6 +1,6 @@
 use crate::constants::*;
 use crate::errors::ErrorCode;
-// use crate::program::Dsla;
+use crate::program::Dsla;
 use crate::state::governance::Governance;
 use anchor_lang::prelude::*;
 
@@ -15,10 +15,10 @@ pub struct ModifyGovernance<'info> {
         bump
     )]
     pub governance: Account<'info, Governance>,
-    // #[account(constraint = program.programdata_address()? == Some(program_upgrade_authority.key()))]
-    // pub program: Program<'info, Dsla>,
-    // #[account(constraint = program_data.upgrade_authority_address == Some(program_upgrade_authority.key()))]
-    // pub program_data: Account<'info, ProgramData>,
+    #[account(address = crate::ID)]
+    pub program: Program<'info, Dsla>,
+    #[account(constraint = program_data.upgrade_authority_address == Some(program_upgrade_authority.key()))]
+    pub program_data: Account<'info, ProgramData>,
     pub system_program: Program<'info, System>,
 }
 

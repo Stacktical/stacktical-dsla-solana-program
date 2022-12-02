@@ -90,30 +90,17 @@ impl<'info> StakeUser<'info> {
 pub fn handler(ctx: Context<StakeUser>, token_amount: u64) -> Result<()> {
     let leverage = &ctx.accounts.sla.leverage.to_decimal();
     let token_amount_dec = Decimal::from_u64(token_amount).unwrap();
+    let provider_pool_size_dec = Decimal::from_u128(ctx.accounts.sla.provider_pool_size).unwrap();
     let user_pool_size_dec = Decimal::from_u128(ctx.accounts.sla.user_pool_size).unwrap();
     let ut_supply_dec = Decimal::from_u128(ctx.accounts.sla.ut_supply).unwrap();
 
     // @todo add test for this
-    let adjusted_pool_leverage = leverage
-        .checked_mul(
-            Decimal::from_u128(ctx.accounts.sla.provider_pool_size)
-                .unwrap()
-                .floor(),
-        )
+    let leverage_adjusted_user_pool = leverage
+        .checked_mul(user_pool_size_dec.checked_add(token_amount_dec).unwrap())
         .unwrap();
 
-    msg!(
-        "this is provider_pool_size: {}",
-        ctx.accounts.sla.provider_pool_size
-    );
-    msg!("this is leverage: {}", leverage);
-    msg!("this is adjusted_pool_leverage: {}", adjusted_pool_leverage);
-
-    // @todo add test for this
-    require_gt!(
-        adjusted_pool_leverage,
-        user_pool_size_dec.checked_add(token_amount_dec).unwrap()
-    );
+    // @todo add test and error for this
+    require_gte!(provider_pool_size_dec, leverage_adjusted_user_pool);
 
     let mut tokens_to_mint = token_amount;
     // @todo add test for this
