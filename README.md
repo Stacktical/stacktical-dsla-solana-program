@@ -25,3 +25,8 @@ To run the built-in tests and confirm install, run the following commands:
 
 `yarn install`
 `anchor test`
+
+## Docs
+`yarn install`
+`anchor build`
+`cargo doc --open`
