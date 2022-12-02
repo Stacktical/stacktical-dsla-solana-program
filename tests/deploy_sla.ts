@@ -1,7 +1,4 @@
-import * as anchor from "@project-serum/anchor";
-import { Program } from "@project-serum/anchor";
 import { expect } from "chai";
-import { Dsla } from "../target/types/dsla";
 import {
   SLA_DEPLOYERS,
   SLA_REGISTRY_KEYPAIR,

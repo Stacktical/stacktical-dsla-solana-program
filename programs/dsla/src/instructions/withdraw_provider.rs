@@ -89,7 +89,6 @@ pub struct WithdrawProvider<'info> {
 }
 
 pub fn handler(ctx: Context<WithdrawProvider>, burn_amount: u64) -> Result<()> {
-    // @todo add DSLA burn
     let burn_amount_dec = Decimal::from_u64(burn_amount).unwrap();
     let provider_pool_size_dec = Decimal::from_u128(ctx.accounts.sla.provider_pool_size).unwrap();
     let pt_supply_dec = Decimal::from_u128(ctx.accounts.sla.pt_supply).unwrap();
@@ -136,7 +135,6 @@ pub fn handler(ctx: Context<WithdrawProvider>, burn_amount: u64) -> Result<()> {
             authority: ctx.accounts.sla_authority.to_account_info(),
         },
     );
-
     // let provider_amount;
     // let protocol_amount;
     // let deployer_amount;

@@ -81,7 +81,6 @@ pub struct WithdrawUser<'info> {
 }
 
 pub fn handler(ctx: Context<WithdrawUser>, burn_amount: u64) -> Result<()> {
-    // @todo add DSLA burn
     let burn_amount_dec = Decimal::from_u64(burn_amount).unwrap();
     let user_pool_size_dec = Decimal::from_u128(ctx.accounts.sla.user_pool_size).unwrap();
     let ut_supply_dec = Decimal::from_u128(ctx.accounts.sla.ut_supply).unwrap();

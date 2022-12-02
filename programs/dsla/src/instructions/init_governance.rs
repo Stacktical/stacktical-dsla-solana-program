@@ -1,7 +1,8 @@
 use crate::constants::*;
-// use crate::program::Dsla;
+use crate::errors::ErrorCode;
 use crate::state::governance::Governance;
 use anchor_lang::prelude::*;
+// use crate::program::Dsla;
 
 /// Instruction to initialize the SLARegistry
 #[derive(Accounts)]
@@ -27,6 +28,13 @@ pub struct InitGovernance<'info> {
 }
 
 pub fn handler(ctx: Context<InitGovernance>, governance_parameters: Governance) -> Result<()> {
+    require!(
+        governance_parameters.dsla_deposit_by_period
+            == (governance_parameters.dsla_burned_by_verification
+                + governance_parameters.dsla_validator_reward
+                + governance_parameters.dsla_protocol_reward),
+        ErrorCode::NonValidGovernanceParameters
+    );
     ctx.accounts.governance.set_inner(governance_parameters);
 
     msg!("Governance Initialised successfully");

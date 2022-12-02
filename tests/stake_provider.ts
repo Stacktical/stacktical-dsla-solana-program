@@ -1,4 +1,6 @@
+import { BN } from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
+
 import { expect } from "chai";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import {
@@ -11,13 +13,11 @@ import {
   getOrCreateAssociatedTokenAccount,
   mintToChecked,
 } from "@solana/spl-token";
-import { fund_account } from "./utils";
 import { mint, program, connection } from "./init";
-import { BN } from "bn.js";
 
 describe("Stake Provider", () => {
   it("stakes provider side", async () => {
-    const tokenAmount = new anchor.BN(LAMPORTS_PER_SOL * 10);
+    const tokenAmount = new BN(LAMPORTS_PER_SOL * 10);
 
     let stakerTokenAccount = await getOrCreateAssociatedTokenAccount(
       connection, // connection
@@ -50,19 +50,18 @@ describe("Stake Provider", () => {
       ptMintPda, // mint
       STAKERS[0].publicKey // owner,
     );
-    let stakerPtAccountAmount = new anchor.BN(stakerPtAccount.amount);
+    let stakerPtAccountAmount = new BN(stakerPtAccount.amount);
     expect(
-      stakerPtAccountAmount.eq(new anchor.BN(0)),
+      stakerPtAccountAmount.eq(new BN(0)),
       "provider token account is not empty"
     ).to.be.true;
 
     let providerPoolSize = (
       await program.account.sla.fetch(SLA_KEYPAIRS[0].publicKey)
     ).providerPoolSize;
-    expect(providerPoolSize.eq(new anchor.BN(0)), "provider pool is not 0").to
-      .be.true;
-    expect(providerPoolSize.gt(new anchor.BN(0)), "provider pool is not 0").to
-      .be.false;
+    expect(providerPoolSize.eq(new BN(0)), "provider pool is not 0").to.be.true;
+    expect(providerPoolSize.gt(new BN(0)), "provider pool is not 0").to.be
+      .false;
 
     try {
       await program.methods
@@ -80,7 +79,7 @@ describe("Stake Provider", () => {
       console.log(err);
     }
 
-    stakerPtAccountAmount = new anchor.BN(
+    stakerPtAccountAmount = new BN(
       (
         await getOrCreateAssociatedTokenAccount(
           connection,
@@ -91,7 +90,7 @@ describe("Stake Provider", () => {
       ).amount
     );
     expect(
-      stakerPtAccountAmount.eq(new anchor.BN(tokenAmount)),
+      stakerPtAccountAmount.eq(new BN(tokenAmount)),
       "provider token account amount does not equal staked token Amount"
     ).to.be.true;
 

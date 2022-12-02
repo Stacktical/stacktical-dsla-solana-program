@@ -7,7 +7,7 @@ use crate::state::sla::{PeriodGenerator, PeriodLength};
 use crate::state::sla::{Sla, Slo};
 use crate::state::sla_registry::SlaRegistry;
 use crate::state::status_registry::StatusRegistry;
-use crate::state::DslaDecimal;
+use crate::state::{DslaDecimal, Governance};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 /// Instruction to deploy a new SLA
@@ -69,6 +69,12 @@ pub struct DeploySla<'info> {
     #[account(constraint = mint.is_initialized == true)]
     pub dsla_mint: Box<Account<'info, Mint>>,
 
+    // keep this here to check that governance account has been initialized before deploying an SLA
+    #[account(
+        seeds = [GOVERNANCE_SEED.as_bytes()],
+        bump
+    )]
+    pub governance: Account<'info, Governance>,
     #[account(
         init,
         payer = deployer,

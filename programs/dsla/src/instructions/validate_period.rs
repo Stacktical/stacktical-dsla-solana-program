@@ -7,6 +7,7 @@ use crate::constants::*;
 use crate::errors::{ErrorCode, FeedErrorCode};
 use crate::state::sla::{DslaDecimal, Sla, Slo};
 use crate::state::status_registry::{Status, StatusRegistry};
+use crate::state::Governance;
 
 /// Instruction to validate a period x, anyone can validate
 #[derive(Accounts)]
@@ -23,6 +24,11 @@ pub struct ValidatePeriod<'info> {
         constraint = *aggregator.to_account_info().owner == SWITCHBOARD_PROGRAM_ID @ FeedErrorCode::InvalidSwitchboardAccount
     )]
     pub aggregator: AccountLoader<'info, AggregatorAccountData>,
+    #[account(
+        seeds = [GOVERNANCE_SEED.as_bytes()],
+        bump
+    )]
+    pub governance: Account<'info, Governance>,
     pub sla: Account<'info, Sla>,
     pub validator: Signer<'info>,
 }
