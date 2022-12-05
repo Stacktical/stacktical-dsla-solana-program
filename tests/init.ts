@@ -13,6 +13,8 @@ import { createMint } from "@solana/spl-token";
 import { Program } from "@project-serum/anchor";
 import { Dsla } from "../target/types/dsla";
 import { PublicKey } from "@solana/web3.js";
+import { SwitchboardTestContext } from "@switchboard-xyz/sbv2-utils";
+import { AggregatorAccount } from "@switchboard-xyz/switchboard-v2";
 
 // Configure the client to use the local cluster.
 anchor.setProvider(PROVIDER);
@@ -20,7 +22,8 @@ export const connection: anchor.web3.Connection = PROVIDER.connection;
 export const program: Program<Dsla> = anchor.workspace.Dsla as Program<Dsla>;
 export var mint: PublicKey;
 export var dsla_mint: PublicKey;
-
+export var aggregatorAccount: AggregatorAccount;
+export var switchboard: SwitchboardTestContext;
 // Will run after every test in every file
 before(async () => {
   await fund_account(connection, SLA_PROTOCOL_DEPLOYER.publicKey);
@@ -50,4 +53,12 @@ before(async () => {
     DSLA_MINT_AUTHORITY.publicKey, // freeze authority (you can use `null` to disable it. when you disable it, you can't turn it on again)
     18 // decimals
   );
+
+  // load the Switchboard env to dictate which queue to create feed for
+  // switchboard = await SwitchboardTestContext.loadFromEnv(
+  //   anchor.AnchorProvider.env()
+  // );
+  // create a static feed that will always resolve to 100
+  // then call openRound and wait for the oracle to process the update
+  // aggregatorAccount = await switchboard.createStaticFeed(100);
 });

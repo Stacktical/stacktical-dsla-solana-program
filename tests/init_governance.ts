@@ -1,9 +1,14 @@
 // import { PublicKey } from "@solana/web3.js";
-import { SLA_PROTOCOL_DEPLOYER, GOVERNANCE_PARAMETERS } from "./constants";
-import { connection, program } from "./init";
+import {
+  SLA_PROTOCOL_DEPLOYER,
+  GOVERNANCE_PARAMETERS,
+  STAKERS,
+} from "./constants";
+import { program, connection } from "./init";
 import { AnchorError, BN, web3 } from "@project-serum/anchor";
 import { expect } from "chai";
 import { PublicKey } from "@solana/web3.js";
+import { fetchData } from "@project-serum/anchor/dist/cjs/utils/registry";
 
 describe("Initialize the Governance PDA", () => {
   let programDataAddress: PublicKey;
@@ -16,7 +21,28 @@ describe("Initialize the Governance PDA", () => {
     )[0];
   });
 
-  it("should fail to initialize governance PDA", async () => {
+  it("should fail to initialize governance PDA because it's not the program upgrade authority", async () => {
+    try {
+      await program.methods
+        .initGovernance(GOVERNANCE_PARAMETERS)
+        .accounts({
+          programUpgradeAuthority: STAKERS[0].publicKey,
+          programData: programDataAddress,
+          program: program.programId,
+        })
+        .signers([STAKERS[0]])
+        .rpc();
+      chai.assert(false, "should've failed but didn't ");
+    } catch (_err) {
+      expect(_err).to.be.instanceOf(AnchorError);
+      const err: AnchorError = _err;
+      expect(err.error.errorCode.code).to.equal("ConstraintRaw");
+      expect(err.error.errorCode.number).to.equal(2003);
+      expect(err.program.equals(program.programId)).is.true;
+    }
+  });
+
+  it("should fail to initialize governance PDA because of bad parameters", async () => {
     let gov_params = { ...GOVERNANCE_PARAMETERS };
     gov_params.dslaProtocolReward = gov_params.dslaProtocolReward.add(
       new BN(1)

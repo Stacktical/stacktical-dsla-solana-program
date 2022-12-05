@@ -1,3 +1,5 @@
+import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import { Keypair } from "@solana/web3.js";
 import { expect } from "chai";
 import {
   SLA_DEPLOYERS,
@@ -5,13 +7,20 @@ import {
   SLA_KEYPAIRS,
   SLAS,
 } from "./constants";
-import { program, mint, dsla_mint } from "./init";
+import { connection, program, mint, dsla_mint } from "./init";
 
 describe("Deploy SLA", () => {
   let expectedSlaAccountAddresses = [];
 
   SLAS.forEach((sla) => {
     it(`Deploys SLA ${sla.id}`, async () => {
+      let deployerDslaTokenAccount = await getOrCreateAssociatedTokenAccount(
+        connection, // connection
+        SLA_DEPLOYERS[sla.id], // fee payer
+        dsla_mint, // mint
+        SLA_DEPLOYERS[sla.id].publicKey // owner,
+      );
+
       // DEPLOY SLA
       try {
         await program.methods
@@ -29,6 +38,8 @@ describe("Deploy SLA", () => {
             sla: SLA_KEYPAIRS[sla.id].publicKey,
             mint: mint,
             dslaMint: dsla_mint,
+            deployerDslaTokenAccount: deployerDslaTokenAccount.address,
+            aggregator: Keypair.generate().publicKey,
           })
           .signers([SLA_DEPLOYERS[sla.id], SLA_KEYPAIRS[sla.id]])
           .rpc();

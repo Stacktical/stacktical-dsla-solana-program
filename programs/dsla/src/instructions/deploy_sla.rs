@@ -1,14 +1,15 @@
 use anchor_lang::prelude::*;
+use switchboard_v2::{AggregatorAccountData, SWITCHBOARD_PROGRAM_ID};
 
 use crate::constants::*;
-use crate::errors::ErrorCode;
+use crate::errors::{ErrorCode, FeedErrorCode};
 use crate::events::*;
 use crate::state::sla::{PeriodGenerator, PeriodLength};
 use crate::state::sla::{Sla, Slo};
 use crate::state::sla_registry::SlaRegistry;
 use crate::state::status_registry::StatusRegistry;
 use crate::state::{DslaDecimal, Governance};
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 /// Instruction to deploy a new SLA
 #[derive(Accounts)]
@@ -55,6 +56,9 @@ pub struct DeploySla<'info> {
     )]
     pub pool: Box<Account<'info, TokenAccount>>,
 
+    // @todo add constraint to check for correct DSLA mint address
+    #[account(constraint = dsla_mint.is_initialized == true)]
+    pub dsla_mint: Box<Account<'info, Mint>>,
     #[account(
         init,
         payer = deployer,
@@ -65,9 +69,9 @@ pub struct DeploySla<'info> {
     )]
     pub dsla_pool: Box<Account<'info, TokenAccount>>,
 
-    // @todo add constraint to check for correct DSLA mint address
-    #[account(constraint = mint.is_initialized == true)]
-    pub dsla_mint: Box<Account<'info, Mint>>,
+    /// The token account to pay the DSLA fee from
+    #[account(mut, associated_token::mint=dsla_mint, associated_token::authority=deployer)]
+    pub deployer_dsla_token_account: Box<Account<'info, TokenAccount>>,
 
     // keep this here to check that governance account has been initialized before deploying an SLA
     #[account(
@@ -89,6 +93,11 @@ pub struct DeploySla<'info> {
     pub ut_mint: Box<Account<'info, Mint>>,
 
     #[account(
+        constraint = *aggregator.to_account_info().owner == SWITCHBOARD_PROGRAM_ID @ FeedErrorCode::InvalidSwitchboardAccount
+    )]
+    pub aggregator: AccountLoader<'info, AggregatorAccountData>,
+
+    #[account(
         init,
         payer = deployer,
         seeds = [
@@ -108,6 +117,18 @@ pub struct DeploySla<'info> {
     pub system_program: Program<'info, System>,
 }
 
+impl<'info> DeploySla<'info> {
+    fn transfer_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.deployer_dsla_token_account.to_account_info(),
+                to: self.dsla_pool.to_account_info(),
+                authority: self.deployer.to_account_info(),
+            },
+        )
+    }
+}
 pub fn handler(
     ctx: Context<DeploySla>,
     slo: Slo,
@@ -117,22 +138,35 @@ pub fn handler(
     n_periods: u32,
     period_length: PeriodLength,
 ) -> Result<()> {
-    let sla = &mut ctx.accounts.sla;
-
-    // SLA REGISTRY
-    let sla_registry = &mut ctx.accounts.sla_registry;
-
     // check that the SLA registry still has space
-    require_gt!(312499, sla_registry.sla_account_addresses.len());
+    require_gt!(
+        312499,
+        ctx.accounts.sla_registry.sla_account_addresses.len()
+    );
 
     // @todo add test for this
     require!(
-        !sla_registry.sla_account_addresses.contains(&sla.key()),
+        !ctx.accounts
+            .sla_registry
+            .sla_account_addresses
+            .contains(&ctx.accounts.sla.key()),
         ErrorCode::SLaAlreadyInitialized
     );
 
-    sla_registry.sla_account_addresses.push(sla.key());
-    msg!("{}", sla_registry.sla_account_addresses[0]);
+    ctx.accounts
+        .sla_registry
+        .sla_account_addresses
+        .push(ctx.accounts.sla.key());
+    msg!("{}", ctx.accounts.sla_registry.sla_account_addresses[0]);
+
+    let transfer_amount = ctx
+        .accounts
+        .governance
+        .dsla_deposit_by_period
+        .checked_mul(n_periods as u64)
+        .unwrap();
+    token::transfer(ctx.accounts.transfer_context(), transfer_amount)?;
+    let sla = &mut ctx.accounts.sla;
 
     // SLA initialization
     sla.leverage = leverage;
@@ -143,11 +177,11 @@ pub fn handler(
     sla.period_data = PeriodGenerator::new(start, period_length, n_periods);
     sla.mint_address = ctx.accounts.mint.key();
     sla.sla_deployer_address = ctx.accounts.deployer.key();
+    sla.aggregator_address = ctx.accounts.aggregator.key();
 
     emit!(DeployedSlaEvent {
         sla_account_address: sla.key()
     });
 
-    msg!("SLA deployed");
     Ok(())
 }

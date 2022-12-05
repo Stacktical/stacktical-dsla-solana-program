@@ -88,6 +88,7 @@ pub struct WithdrawUser<'info> {
     pub token_program: Program<'info, Token>,
     #[account(address = crate::ID)]
     pub program: Program<'info, Dsla>,
+    // @fixme this need to be checked, that only allowed program_data is the one linked to the program
     pub program_data: Account<'info, ProgramData>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,

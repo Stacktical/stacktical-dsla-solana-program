@@ -79,6 +79,7 @@ pub struct WithdrawProvider<'info> {
 
     #[account(address = crate::ID)]
     pub program: Program<'info, Dsla>,
+    // @fixme this need to be checked, that only allowed program_data is the one linked to the program
     pub program_data: Account<'info, ProgramData>,
 
     // @todo test if effectvily only the `associated_token::authority` can be passed here

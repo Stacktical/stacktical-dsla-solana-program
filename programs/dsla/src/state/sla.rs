@@ -9,6 +9,8 @@ pub struct Sla {
     pub sla_deployer_address: Pubkey,
     /// address of the messeger providing the data
     pub messenger_address: Pubkey,
+    /// address of the switchboard aggregator account
+    pub aggregator_address: Pubkey,
     /// service level objective, the objective to achieve for the provider to be rewarded
     pub slo: Slo,
     ///  leverage for the SLA between provider and user pool
@@ -29,6 +31,7 @@ pub struct Sla {
 
 impl Sla {
     pub const LEN: usize = 8 + // discriminator
+        32 + // aggregator_address
         32 + // sla_deployer_address
         32 + // messenger_address
         Slo::LEN + // SLO
