@@ -14,7 +14,6 @@ pub mod state;
 
 use instructions::*;
 
-use crate::state::governance::Governance;
 use crate::state::sla::{DslaDecimal, PeriodLength, Slo};
 
 declare_id!("DDqoT9zs2YCd4SkL2MYuB8KBbBLowstkT38pdAoM5yXA");
@@ -25,16 +24,46 @@ pub mod dsla {
 
     pub fn init_governance(
         ctx: Context<InitGovernance>,
-        governance_parameters: Governance,
+        dsla_deposit_by_period: u64,
+        dsla_protocol_reward: u64,
+        dsla_validator_reward: u64,
+        dsla_burned_by_verification: u64,
+        sla_deployer_rewards_rate: DslaDecimal,
+        protocol_rewards_rate: DslaDecimal,
+        max_leverage: DslaDecimal,
     ) -> Result<()> {
-        instructions::init_governance::handler(ctx, governance_parameters)
+        instructions::init_governance::handler(
+            ctx,
+            dsla_deposit_by_period,
+            dsla_protocol_reward,
+            dsla_validator_reward,
+            dsla_burned_by_verification,
+            sla_deployer_rewards_rate,
+            protocol_rewards_rate,
+            max_leverage,
+        )
     }
 
     pub fn modify_governance(
         ctx: Context<ModifyGovernance>,
-        governance_parameters: Governance,
+        dsla_deposit_by_period: u64,
+        dsla_protocol_reward: u64,
+        dsla_validator_reward: u64,
+        dsla_burned_by_verification: u64,
+        sla_deployer_rewards_rate: DslaDecimal,
+        protocol_rewards_rate: DslaDecimal,
+        max_leverage: DslaDecimal,
     ) -> Result<()> {
-        instructions::modify_governance::handler(ctx, governance_parameters)
+        instructions::modify_governance::handler(
+            ctx,
+            dsla_deposit_by_period,
+            dsla_protocol_reward,
+            dsla_validator_reward,
+            dsla_burned_by_verification,
+            sla_deployer_rewards_rate,
+            protocol_rewards_rate,
+            max_leverage,
+        )
     }
 
     pub fn init_sla_registry(ctx: Context<InitSlaRegistry>) -> Result<()> {

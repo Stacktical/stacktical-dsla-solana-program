@@ -19,8 +19,6 @@ pub struct Governance {
     pub protocol_rewards_rate: DslaDecimal,
     /// max leverage allowed in a DSLA
     pub max_leverage: DslaDecimal,
-    /// boolean defining if burning of DSLA is on or off
-    pub burn_dsla: bool,
 }
 
 impl Governance {
@@ -32,5 +30,5 @@ impl Governance {
     + 12 // sla_deployer_rewards_rate
     + 12 // protocol_rewards_rate
     + 12  // max_leverage
-    + 1; // burn_dsla
+    ;
 }
