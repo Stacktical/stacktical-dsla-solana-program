@@ -88,16 +88,12 @@ pub struct DeploySla<'info> {
             UT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
         ],
-        mint::decimals = 9,
+        // @fixme check that this actually work
+        mint::decimals = mint.decimals,
         mint::authority = sla_authority,
         bump,
     )]
     pub ut_mint: Box<Account<'info, Mint>>,
-
-    #[account(
-        constraint = *aggregator.to_account_info().owner == SWITCHBOARD_PROGRAM_ID @ FeedErrorCode::InvalidSwitchboardAccount
-    )]
-    pub aggregator: AccountLoader<'info, AggregatorAccountData>,
 
     #[account(
         init,
@@ -106,11 +102,16 @@ pub struct DeploySla<'info> {
             PT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
         ],
-        mint::decimals = 9,
+        mint::decimals = mint.decimals,
         mint::authority = sla_authority,
         bump
     )]
     pub pt_mint: Box<Account<'info, Mint>>,
+
+    #[account(
+        constraint = *aggregator.to_account_info().owner == SWITCHBOARD_PROGRAM_ID @ FeedErrorCode::InvalidSwitchboardAccount
+    )]
+    pub aggregator: AccountLoader<'info, AggregatorAccountData>,
 
     /// The program for interacting with the token.
     pub token_program: Program<'info, Token>,
@@ -140,11 +141,13 @@ pub fn handler(
     period_length: PeriodLength,
 ) -> Result<()> {
     // check that the SLA registry still has space
+    // @todo add error for this
     require_gt!(
         312499,
         ctx.accounts.sla_registry.sla_account_addresses.len()
     );
-
+    // @todo add error for this
+    require_gt!(9, ctx.accounts.mint.decimals);
     // @todo add test for this
     require!(
         !ctx.accounts

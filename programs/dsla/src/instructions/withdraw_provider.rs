@@ -5,7 +5,7 @@ use rust_decimal::prelude::*;
 use crate::constants::*;
 use crate::program::Dsla;
 use crate::state::sla::Sla;
-use crate::state::{Governance, Lockup};
+use crate::state::{Governance, Lockup, SlaStatus};
 
 /// Instruction to claim all rewards up to the latest available
 /// eg. if current period is 5 and I have never claimed before, I will receive all rewards up to 4th period according to the status, leverage and deviation
@@ -145,10 +145,10 @@ pub fn handler(ctx: Context<WithdrawProvider>, pt_burn_amount: u64) -> Result<()
     let pt_burn_amount_dec = Decimal::from_u64(pt_burn_amount).unwrap();
     let provider_pool_size_dec = Decimal::from_u128(ctx.accounts.sla.provider_pool_size).unwrap();
     let pt_supply_dec = Decimal::from_u128(ctx.accounts.sla.pt_supply).unwrap();
-    let period_id = ctx.accounts.sla.period_data.get_current_period_id()?;
+    let sla_status = ctx.accounts.sla.period_data.get_current_period_id()?;
 
     // REFRESH AVAILABLE TOKENS IN THE LOCKUPS
-    ctx.accounts.pt_lockup.update_available_tokens(period_id)?;
+    ctx.accounts.pt_lockup.update_available_tokens(sla_status)?;
 
     // CALCULATIONS
 
@@ -160,24 +160,30 @@ pub fn handler(ctx: Context<WithdrawProvider>, pt_burn_amount: u64) -> Result<()
     let tokens_to_withdraw_u128 = tokens_to_withdraw.to_u128().unwrap();
 
     // @todo add error here
-    require_gte!(ctx.accounts.sla.provider_pool_size, tokens_to_withdraw_u128);
-    // CHECK IF ENOUGH PROVIDER LIQUIDITY IS AVAILABLE FOR WITHDRAWAL
-    let leverage_adjusted_user_pool = leverage
-        .checked_mul(
-            Decimal::from_u128(
-                ctx.accounts
-                    .sla
-                    .user_pool_size
-                    .checked_sub(tokens_to_withdraw_u128)
+    match sla_status {
+        SlaStatus::Ended => {
+            require_gte!(ctx.accounts.sla.provider_pool_size, tokens_to_withdraw_u128);
+        }
+        _ => {
+            // CHECK IF ENOUGH PROVIDER LIQUIDITY IS AVAILABLE FOR WITHDRAWAL
+            let leverage_adjusted_user_pool = leverage
+                .checked_mul(
+                    Decimal::from_u128(
+                        ctx.accounts
+                            .sla
+                            .user_pool_size
+                            .checked_sub(tokens_to_withdraw_u128)
+                            .unwrap(),
+                    )
                     .unwrap(),
-            )
-            .unwrap(),
-        )
-        .unwrap()
-        .floor();
+                )
+                .unwrap()
+                .floor();
 
-    // @todo add error here
-    require_gte!(provider_pool_size_dec, leverage_adjusted_user_pool);
+            // @todo add error here
+            require_gte!(provider_pool_size_dec, leverage_adjusted_user_pool);
+        }
+    }
 
     // @todo add test
     let deployer_amount = tokens_to_withdraw

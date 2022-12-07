@@ -62,15 +62,11 @@ pub struct ValidatePeriod<'info> {
     // @fixme this need to be checked, that only allowed program_data is the one linked to the program
     pub program_data: Account<'info, ProgramData>,
 
-    /// CHECK: constraint is checking that this account has the right public key
-    #[account(constraint = program_data.upgrade_authority_address == Some(protocol.key()))]
-    pub protocol: AccountInfo<'info>,
-
     #[account(
         associated_token::mint = dsla_mint,
         associated_token::authority = program_data.upgrade_authority_address.unwrap()
     )]
-    pub protocol_token_account: Box<Account<'info, TokenAccount>>,
+    pub protocol_dsla_token_account: Box<Account<'info, TokenAccount>>,
     /// The program for interacting with the token.
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
@@ -93,8 +89,8 @@ impl<'info> ValidatePeriod<'info> {
             self.token_program.to_account_info(),
             Transfer {
                 from: self.dsla_pool.to_account_info(),
-                to: self.protocol_token_account.to_account_info(),
-                authority: self.protocol.to_account_info(),
+                to: self.protocol_dsla_token_account.to_account_info(),
+                authority: self.sla_authority.to_account_info(),
             },
         )
     }
@@ -204,18 +200,24 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
                 signer_seeds,
             );
 
-            token::transfer(
-                ctx.accounts.protocol_transfer_context(),
-                ctx.accounts.governance.dsla_protocol_reward,
-            )?;
-            token::transfer(
-                ctx.accounts.validator_transfer_context(),
-                ctx.accounts.governance.dsla_validator_reward,
-            )?;
-            token::burn(
-                burn_context,
-                ctx.accounts.governance.dsla_burned_by_verification,
-            )?;
+            if ctx.accounts.governance.dsla_protocol_reward > 0 {
+                token::transfer(
+                    ctx.accounts.protocol_transfer_context(),
+                    ctx.accounts.governance.dsla_protocol_reward,
+                )?;
+            }
+            if ctx.accounts.governance.dsla_validator_reward > 0 {
+                token::transfer(
+                    ctx.accounts.validator_transfer_context(),
+                    ctx.accounts.governance.dsla_validator_reward,
+                )?;
+            }
+            if ctx.accounts.governance.dsla_burned_by_verification > 0 {
+                token::burn(
+                    burn_context,
+                    ctx.accounts.governance.dsla_burned_by_verification,
+                )?;
+            }
 
             Ok(())
         }

@@ -55,8 +55,8 @@ pub struct StakeProvider<'info> {
     /// The account to claim the money from
     #[account(
         mut,
-        token::mint=mint,
-        token::authority=staker,
+        associated_token::mint=mint,
+        associated_token::authority=staker,
     )]
     pub staker_token_account: Box<Account<'info, TokenAccount>>,
 
@@ -127,7 +127,7 @@ pub fn handler(ctx: Context<StakeProvider>, token_amount: u64) -> Result<()> {
     let authority_bump = *ctx
         .bumps
         .get("sla_authority")
-        .expect("sla_authority should exists");
+        .expect("sla_authority does not exists");
 
     let seeds = &[
         SLA_AUTHORITY_SEED.as_bytes(),

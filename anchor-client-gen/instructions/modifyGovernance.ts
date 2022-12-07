@@ -1,26 +1,30 @@
-import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@project-serum/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import { PROGRAM_ID } from "../programId"
+import {
+  TransactionInstruction,
+  PublicKey,
+  AccountMeta,
+} from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@project-serum/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as types from "../types"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { PROGRAM_ID } from "../programId";
 
 export interface ModifyGovernanceArgs {
-  dslaDepositByPeriod: BN
-  dslaProtocolReward: BN
-  dslaValidatorReward: BN
-  dslaBurnedByVerification: BN
-  slaDeployerRewardsRate: types.DslaDecimalFields
-  protocolRewardsRate: types.DslaDecimalFields
-  maxLeverage: types.DslaDecimalFields
+  dslaDepositByPeriod: BN;
+  dslaProtocolReward: BN;
+  dslaValidatorReward: BN;
+  dslaBurnedByVerification: BN;
+  slaDeployerRewardsRate: types.DslaDecimalFields;
+  protocolRewardsRate: types.DslaDecimalFields;
+  maxLeverage: types.DslaDecimalFields;
 }
 
 export interface ModifyGovernanceAccounts {
   /** the account that has the authority to upgrade the program */
-  programUpgradeAuthority: PublicKey
-  governance: PublicKey
-  program: PublicKey
-  programData: PublicKey
-  systemProgram: PublicKey
+  programUpgradeAuthority: PublicKey;
+  governance: PublicKey;
+  program: PublicKey;
+  programData: PublicKey;
+  systemProgram: PublicKey;
 }
 
 export const layout = borsh.struct([
@@ -31,7 +35,7 @@ export const layout = borsh.struct([
   types.DslaDecimal.layout("slaDeployerRewardsRate"),
   types.DslaDecimal.layout("protocolRewardsRate"),
   types.DslaDecimal.layout("maxLeverage"),
-])
+]);
 
 export function modifyGovernance(
   args: ModifyGovernanceArgs,
@@ -47,9 +51,9 @@ export function modifyGovernance(
     { pubkey: accounts.program, isSigner: false, isWritable: false },
     { pubkey: accounts.programData, isSigner: false, isWritable: false },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
-  ]
-  const identifier = Buffer.from([230, 161, 114, 89, 48, 47, 170, 48])
-  const buffer = Buffer.alloc(1000)
+  ];
+  const identifier = Buffer.from([230, 161, 114, 89, 48, 47, 170, 48]);
+  const buffer = Buffer.alloc(1000);
   const len = layout.encode(
     {
       dslaDepositByPeriod: args.dslaDepositByPeriod,
@@ -65,8 +69,8 @@ export function modifyGovernance(
       maxLeverage: types.DslaDecimal.toEncodable(args.maxLeverage),
     },
     buffer
-  )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix = new TransactionInstruction({ keys, programId: PROGRAM_ID, data })
-  return ix
+  );
+  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len);
+  const ix = new TransactionInstruction({ keys, programId: PROGRAM_ID, data });
+  return ix;
 }

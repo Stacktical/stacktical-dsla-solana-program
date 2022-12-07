@@ -8,141 +8,141 @@ export type CustomError =
   | CannotStakeAfterSlaEnded
   | WithdrawalIsZero
   | SLaAlreadyInitialized
-  | NonValidGovernanceParameters
+  | NonValidGovernanceParameters;
 
 export class InvalidPrecision extends Error {
-  static readonly code = 6000
-  readonly code = 6000
-  readonly name = "InvalidPrecision"
-  readonly msg = "precision is not divisible by 100"
+  static readonly code = 6000;
+  readonly code = 6000;
+  readonly name = "InvalidPrecision";
+  readonly msg = "precision is not divisible by 100";
 
   constructor(readonly logs?: string[]) {
-    super("6000: precision is not divisible by 100")
+    super("6000: precision is not divisible by 100");
   }
 }
 
 export class InvalidPeriodId extends Error {
-  static readonly code = 6001
-  readonly code = 6001
-  readonly name = "InvalidPeriodId"
-  readonly msg = "period ID entered is not valid"
+  static readonly code = 6001;
+  readonly code = 6001;
+  readonly name = "InvalidPeriodId";
+  readonly msg = "period ID entered is not valid";
 
   constructor(readonly logs?: string[]) {
-    super("6001: period ID entered is not valid")
+    super("6001: period ID entered is not valid");
   }
 }
 
 export class AlreadyVerifiedPeriod extends Error {
-  static readonly code = 6002
-  readonly code = 6002
-  readonly name = "AlreadyVerifiedPeriod"
-  readonly msg = "trying to verify an already verified period"
+  static readonly code = 6002;
+  readonly code = 6002;
+  readonly name = "AlreadyVerifiedPeriod";
+  readonly msg = "trying to verify an already verified period";
 
   constructor(readonly logs?: string[]) {
-    super("6002: trying to verify an already verified period")
+    super("6002: trying to verify an already verified period");
   }
 }
 
 export class DecimalConversionError extends Error {
-  static readonly code = 6003
-  readonly code = 6003
-  readonly name = "DecimalConversionError"
-  readonly msg = "Failed to convert to a decimal"
+  static readonly code = 6003;
+  readonly code = 6003;
+  readonly name = "DecimalConversionError";
+  readonly msg = "Failed to convert to a decimal";
 
   constructor(readonly logs?: string[]) {
-    super("6003: Failed to convert to a decimal")
+    super("6003: Failed to convert to a decimal");
   }
 }
 
 export class CheckedOperationOverflow extends Error {
-  static readonly code = 6004
-  readonly code = 6004
-  readonly name = "CheckedOperationOverflow"
-  readonly msg = "operation failed with an overflow"
+  static readonly code = 6004;
+  readonly code = 6004;
+  readonly name = "CheckedOperationOverflow";
+  readonly msg = "operation failed with an overflow";
 
   constructor(readonly logs?: string[]) {
-    super("6004: operation failed with an overflow")
+    super("6004: operation failed with an overflow");
   }
 }
 
 export class NoAvailableTokensForWithdrawal extends Error {
-  static readonly code = 6005
-  readonly code = 6005
-  readonly name = "NoAvailableTokensForWithdrawal"
-  readonly msg = "Not enough available tokens for withdrawal"
+  static readonly code = 6005;
+  readonly code = 6005;
+  readonly name = "NoAvailableTokensForWithdrawal";
+  readonly msg = "Not enough available tokens for withdrawal";
 
   constructor(readonly logs?: string[]) {
-    super("6005: Not enough available tokens for withdrawal")
+    super("6005: Not enough available tokens for withdrawal");
   }
 }
 
 export class CannotStakeAfterSlaEnded extends Error {
-  static readonly code = 6006
-  readonly code = 6006
-  readonly name = "CannotStakeAfterSlaEnded"
-  readonly msg = "Cannot Stake After SLA has ended"
+  static readonly code = 6006;
+  readonly code = 6006;
+  readonly name = "CannotStakeAfterSlaEnded";
+  readonly msg = "Cannot Stake After SLA has ended";
 
   constructor(readonly logs?: string[]) {
-    super("6006: Cannot Stake After SLA has ended")
+    super("6006: Cannot Stake After SLA has ended");
   }
 }
 
 export class WithdrawalIsZero extends Error {
-  static readonly code = 6007
-  readonly code = 6007
-  readonly name = "WithdrawalIsZero"
-  readonly msg = "Withdrawal should be at least 1"
+  static readonly code = 6007;
+  readonly code = 6007;
+  readonly name = "WithdrawalIsZero";
+  readonly msg = "Withdrawal should be at least 1";
 
   constructor(readonly logs?: string[]) {
-    super("6007: Withdrawal should be at least 1")
+    super("6007: Withdrawal should be at least 1");
   }
 }
 
 export class SLaAlreadyInitialized extends Error {
-  static readonly code = 6008
-  readonly code = 6008
-  readonly name = "SLaAlreadyInitialized"
-  readonly msg = "SLA with the same address can only be initialized once"
+  static readonly code = 6008;
+  readonly code = 6008;
+  readonly name = "SLaAlreadyInitialized";
+  readonly msg = "SLA with the same address can only be initialized once";
 
   constructor(readonly logs?: string[]) {
-    super("6008: SLA with the same address can only be initialized once")
+    super("6008: SLA with the same address can only be initialized once");
   }
 }
 
 export class NonValidGovernanceParameters extends Error {
-  static readonly code = 6009
-  readonly code = 6009
-  readonly name = "NonValidGovernanceParameters"
-  readonly msg = "1 or more non Valid governance Parameters"
+  static readonly code = 6009;
+  readonly code = 6009;
+  readonly name = "NonValidGovernanceParameters";
+  readonly msg = "1 or more non Valid governance Parameters";
 
   constructor(readonly logs?: string[]) {
-    super("6009: 1 or more non Valid governance Parameters")
+    super("6009: 1 or more non Valid governance Parameters");
   }
 }
 
 export function fromCode(code: number, logs?: string[]): CustomError | null {
   switch (code) {
     case 6000:
-      return new InvalidPrecision(logs)
+      return new InvalidPrecision(logs);
     case 6001:
-      return new InvalidPeriodId(logs)
+      return new InvalidPeriodId(logs);
     case 6002:
-      return new AlreadyVerifiedPeriod(logs)
+      return new AlreadyVerifiedPeriod(logs);
     case 6003:
-      return new DecimalConversionError(logs)
+      return new DecimalConversionError(logs);
     case 6004:
-      return new CheckedOperationOverflow(logs)
+      return new CheckedOperationOverflow(logs);
     case 6005:
-      return new NoAvailableTokensForWithdrawal(logs)
+      return new NoAvailableTokensForWithdrawal(logs);
     case 6006:
-      return new CannotStakeAfterSlaEnded(logs)
+      return new CannotStakeAfterSlaEnded(logs);
     case 6007:
-      return new WithdrawalIsZero(logs)
+      return new WithdrawalIsZero(logs);
     case 6008:
-      return new SLaAlreadyInitialized(logs)
+      return new SLaAlreadyInitialized(logs);
     case 6009:
-      return new NonValidGovernanceParameters(logs)
+      return new NonValidGovernanceParameters(logs);
   }
 
-  return null
+  return null;
 }

@@ -1,35 +1,39 @@
-import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@project-serum/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
-import { PROGRAM_ID } from "../programId"
+import {
+  TransactionInstruction,
+  PublicKey,
+  AccountMeta,
+} from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@project-serum/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as types from "../types"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { PROGRAM_ID } from "../programId";
 
 export interface ValidatePeriodArgs {
-  period: BN
+  period: BN;
 }
 
 export interface ValidatePeriodAccounts {
-  validator: PublicKey
-  slaAuthority: PublicKey
-  statusRegistry: PublicKey
-  sla: PublicKey
-  aggregator: PublicKey
-  governance: PublicKey
-  dslaMint: PublicKey
-  dslaPool: PublicKey
+  validator: PublicKey;
+  slaAuthority: PublicKey;
+  statusRegistry: PublicKey;
+  sla: PublicKey;
+  aggregator: PublicKey;
+  governance: PublicKey;
+  dslaMint: PublicKey;
+  dslaPool: PublicKey;
   /** The validator token account to pay the DSLA reward to */
-  validatorDslaTokenAccount: PublicKey
-  program: PublicKey
-  programData: PublicKey
-  protocol: PublicKey
-  protocolTokenAccount: PublicKey
+  validatorDslaTokenAccount: PublicKey;
+  program: PublicKey;
+  programData: PublicKey;
+  protocol: PublicKey;
+  protocolTokenAccount: PublicKey;
   /** The program for interacting with the token. */
-  tokenProgram: PublicKey
-  rent: PublicKey
-  systemProgram: PublicKey
+  tokenProgram: PublicKey;
+  rent: PublicKey;
+  systemProgram: PublicKey;
 }
 
-export const layout = borsh.struct([borsh.u64("period")])
+export const layout = borsh.struct([borsh.u64("period")]);
 
 export function validatePeriod(
   args: ValidatePeriodArgs,
@@ -60,16 +64,16 @@ export function validatePeriod(
     { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
     { pubkey: accounts.rent, isSigner: false, isWritable: false },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
-  ]
-  const identifier = Buffer.from([204, 243, 114, 76, 3, 131, 47, 171])
-  const buffer = Buffer.alloc(1000)
+  ];
+  const identifier = Buffer.from([204, 243, 114, 76, 3, 131, 47, 171]);
+  const buffer = Buffer.alloc(1000);
   const len = layout.encode(
     {
       period: args.period,
     },
     buffer
-  )
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
-  const ix = new TransactionInstruction({ keys, programId: PROGRAM_ID, data })
-  return ix
+  );
+  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len);
+  const ix = new TransactionInstruction({ keys, programId: PROGRAM_ID, data });
+  return ix;
 }
