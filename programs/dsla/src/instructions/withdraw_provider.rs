@@ -162,6 +162,7 @@ pub fn handler(ctx: Context<WithdrawProvider>, pt_burn_amount: u64) -> Result<()
     // @todo add error here
     match sla_status {
         SlaStatus::Ended => {
+            // check tokens are avaialable
             require_gte!(ctx.accounts.sla.provider_pool_size, tokens_to_withdraw_u128);
         }
         _ => {
