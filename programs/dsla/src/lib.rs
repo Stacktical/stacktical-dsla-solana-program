@@ -97,20 +97,11 @@ pub mod dsla {
     pub fn deploy_sla(
         ctx: Context<DeploySla>,
         slo: Slo,
-        messenger_address: Pubkey,
         leverage: DslaDecimal,
         start: u128,
         n_periods: u32,
         period_length: PeriodLength,
     ) -> Result<()> {
-        instructions::deploy_sla::handler(
-            ctx,
-            slo,
-            messenger_address,
-            leverage,
-            start,
-            n_periods,
-            period_length,
-        )
+        instructions::deploy_sla::handler(ctx, slo, leverage, start, n_periods, period_length)
     }
 }

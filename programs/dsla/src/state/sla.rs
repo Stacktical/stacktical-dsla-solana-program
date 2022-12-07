@@ -7,8 +7,6 @@ use rust_decimal::{prelude::FromPrimitive, Decimal};
 pub struct Sla {
     /// address of who deployed the SLA
     pub sla_deployer_address: Pubkey,
-    /// address of the messeger providing the data
-    pub messenger_address: Pubkey,
     /// address of the switchboard aggregator account
     pub aggregator_address: Pubkey,
     /// service level objective, the objective to achieve for the provider to be rewarded
@@ -45,7 +43,7 @@ impl Sla {
         ;
 }
 
-/// `Slo` is service level obejective and contains a Decimal number that is the expected value and  SloType
+/// `Slo` is service level objective and contains a Decimal number that is the expected value and  SloType
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Slo {
     pub slo_value: DslaDecimal,
@@ -132,11 +130,11 @@ pub enum SloType {
 }
 
 /// struct to deal with floating point numbers
-///  - `mantissa` the value without any decimals and non decimal
-///  - `scale` how many places from the right to put the decimal point
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub struct DslaDecimal {
+    /// the value without any decimals and non decimal
     mantissa: i64,
+    /// how many places from the right to put the decimal point
     scale: u32,
 }
 
@@ -175,6 +173,7 @@ impl PeriodLength {
     const LEN: usize = 1 + 16;
 }
 
+/// The `SlaStatus` is in an enum to define the status of the `Sla`
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone, Copy, PartialEq)]
 pub enum SlaStatus {
     NotStarted,

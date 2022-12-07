@@ -8,7 +8,7 @@ use crate::state::sla::{PeriodGenerator, PeriodLength};
 use crate::state::sla::{Sla, Slo};
 use crate::state::sla_registry::SlaRegistry;
 use crate::state::status_registry::StatusRegistry;
-use crate::state::{DslaDecimal, Governance};
+use crate::state::{DslaDecimal, Governance, SlaAuthority};
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 /// Instruction to deploy a new SLA
@@ -28,11 +28,13 @@ pub struct DeploySla<'info> {
     pub sla: Account<'info, Sla>,
 
     #[account(
-        mut,
+        init,
+        payer = deployer,
+        space = 8,
         seeds = [SLA_AUTHORITY_SEED.as_bytes(), sla.key().as_ref()],
         bump
     )]
-    pub sla_authority: SystemAccount<'info>,
+    pub sla_authority: Account<'info, SlaAuthority>,
 
     #[account(
         init,
@@ -86,7 +88,7 @@ pub struct DeploySla<'info> {
             UT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
         ],
-        mint::decimals = 6,
+        mint::decimals = 9,
         mint::authority = sla_authority,
         bump,
     )]
@@ -104,7 +106,7 @@ pub struct DeploySla<'info> {
             PT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
         ],
-        mint::decimals = 6,
+        mint::decimals = 9,
         mint::authority = sla_authority,
         bump
     )]
@@ -132,7 +134,6 @@ impl<'info> DeploySla<'info> {
 pub fn handler(
     ctx: Context<DeploySla>,
     slo: Slo,
-    messenger_address: Pubkey,
     leverage: DslaDecimal,
     start: u128,
     n_periods: u32,
@@ -170,7 +171,6 @@ pub fn handler(
 
     // SLA initialization
     sla.leverage = leverage;
-    sla.messenger_address = messenger_address;
     sla.provider_pool_size = 0;
     sla.user_pool_size = 0;
     sla.slo = slo;

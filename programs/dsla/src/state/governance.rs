@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use super::DslaDecimal;
 
-/// collection fo all the parametric Governances one account for all SLAs
+/// collection for all the parametric Governances one account for all SLAs
 #[account]
 pub struct Governance {
     /// amount of dsla to be deposited by the sla_deployer to deploy the sla for each period
@@ -13,9 +13,9 @@ pub struct Governance {
     pub dsla_validator_reward: u64,
     /// amount of dsla deposit by period to be burned
     pub dsla_burned_by_verification: u64,
-    /// percentage of withdrawal to be payed to the Deployer of the SLA
+    /// percentage of withdrawal to be paid to the Deployer of the SLA
     pub sla_deployer_rewards_rate: DslaDecimal,
-    /// percentage of withdrawal to be payed to the Deployer of the DSLA protocol
+    /// percentage of withdrawal to be paid to the Deployer of the DSLA protocol
     pub protocol_rewards_rate: DslaDecimal,
     /// max leverage allowed in a DSLA
     pub max_leverage: DslaDecimal,
