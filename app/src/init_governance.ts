@@ -32,7 +32,7 @@ export function initGovernanceTx(connection: Connection) {
 
 export async function fetch_governance_account(connection: Connection) {
   // fetch an account
-  const addr = new PublicKey('5z1QNim6rS9Y2uKqsrZaxp3eUPX8FDdX43cbTqCtzutJ');
+  const addr = PublicKey.findProgramAddressSync([Buffer.from(GOVERNANCE_SEED)], PROGRAM_ID)[0];
   const acc = await Governance.fetch(connection, addr);
   if (acc === null) {
     // the fetch method returns null when the account is uninitialized
