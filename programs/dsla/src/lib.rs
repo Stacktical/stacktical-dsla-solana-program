@@ -16,7 +16,8 @@ use instructions::*;
 
 use crate::state::sla::{DslaDecimal, PeriodLength, Slo};
 
-declare_id!("DDqoT9zs2YCd4SkL2MYuB8KBbBLowstkT38pdAoM5yXA");
+declare_id!("A3KLB7huSs6fKVAcZz1xrZ6W4iYqj1o31h3Pw9DiNAib");
+
 /// the main program
 #[program]
 pub mod dsla {

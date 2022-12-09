@@ -26,7 +26,7 @@ describe("Deploy SLA", () => {
         await program.methods
           .deploySla(
             sla.slo,
-            sla.messengerAddress,
+            sla.aggregatorAddress,
             sla.leverage,
             sla.start,
             sla.nPeriods,

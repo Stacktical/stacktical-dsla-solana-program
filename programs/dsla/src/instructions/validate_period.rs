@@ -9,7 +9,6 @@ use anchor_lang::solana_program::clock;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 use rust_decimal::prelude::*;
 use switchboard_v2::{AggregatorAccountData, SwitchboardDecimal, SWITCHBOARD_PROGRAM_ID};
-
 /// Instruction to validate a period x, anyone can validate
 #[derive(Accounts)]
 pub struct ValidatePeriod<'info> {

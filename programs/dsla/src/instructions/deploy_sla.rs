@@ -39,7 +39,7 @@ pub struct DeploySla<'info> {
     #[account(
         init,
         payer = deployer,
-        space = 10_000,
+        space = 10_000, // @fixme set the correct size depending on n_periods
         seeds = [STATUS_REGISTRY_SEED.as_bytes(), sla.key().as_ref()],
         bump
     )]
