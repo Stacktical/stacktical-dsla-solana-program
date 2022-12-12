@@ -13,7 +13,7 @@
     "@switchboard-xyz/sbv2-utils": "^0.1.53",
     "@switchboard-xyz/switchboard-v2": "^0.0.165",
     "@types/bn.js": "^5.1.1",
-    "@types/chai": "4.3.4",
+    "@types/chai": "^4.3.4",
     "@types/mocha": "^10.0.0",
     "chai": "^4.3.7",
     "jsbi": "^4.3.0",
