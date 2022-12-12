@@ -1,4 +1,3 @@
-import { publicKey } from "@project-serum/borsh";
 import { Keypair, PublicKey } from "@solana/web3.js";
 export const SLA_REGISTRY_SPACE = 5000; // MAX 10 MB
 import BN from "bn.js";
@@ -9,15 +8,19 @@ import {
   DslaDecimal,
 } from "../anchor-client-gen/types";
 // SEEDS
+export const SLA_AUTHORITY_SEED = "sla-authority";
 export const STATUS_REGISTRY_SEED = "status-registry";
-export const POOL_SEED = "vault";
 export const DSLA_POOL_SEED = "dsla-vault";
+export const POOL_SEED = "vault";
 export const UT_MINT_SEED = "ut-mint";
 export const PT_MINT_SEED = "pt-mint";
-export const GOVERNANCE_SEED = "governance";
 export const UT_ACCOUNT_SEED = "ut-account";
 export const PT_ACCOUNT_SEED = "pt-account";
-export const SLA_AUTHORITY_SEED = "sla-authority";
+export const GOVERNANCE_SEED = "governance";
+export const REWARD_SEED = "reward";
+export const PERIOD_GENERATOR_SEED = "period-generator";
+export const LOCKUP_PROVIDER_SEED = "provider-lockup";
+export const LOCKUP_USER_SEED = "user-lockup";
 
 // KEYPAIRS
 export const SLA_PROTOCOL_DEPLOYER = new Keypair({
@@ -34,9 +37,17 @@ export const SLA_PROTOCOL_DEPLOYER = new Keypair({
 });
 
 // DEVNET ADDRESSESS
-export const SLA_REGISTRIES_ADDRESSES = [
-  new PublicKey("8HrBUFLs7BZ6xpb4bbUwuptjQ1YfiGXa6EbJstpxZFkj"),
-];
+export const SLA_REGISTRY_ADDRESS = new Keypair({
+  publicKey: new PublicKey(
+    "CKe5JsWvi4axgPwpiDVB5G3UkioVNNLoTvcCztNgMobM"
+  ).toBuffer(),
+  secretKey: Uint8Array.from([
+    161, 132, 218, 215, 222, 94, 11, 251, 131, 71, 30, 31, 5, 119, 151, 181,
+    220, 243, 66, 37, 227, 77, 78, 56, 114, 18, 154, 226, 231, 147, 225, 160,
+    168, 54, 238, 71, 34, 119, 76, 147, 16, 215, 198, 203, 178, 58, 32, 163,
+    161, 89, 214, 3, 34, 71, 251, 196, 115, 183, 240, 236, 233, 47, 101, 48,
+  ]),
+});
 export const DSLA_MINT = new PublicKey(
   "F9Q9oG47N9P3GbwiD7p5VKYZ1Sw2VawnoA6KyxHxUTRj"
 );

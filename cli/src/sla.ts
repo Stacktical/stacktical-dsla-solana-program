@@ -1,6 +1,6 @@
 import {
   SLA_PROTOCOL_DEPLOYER,
-  SLA_REGISTRIES_ADDRESSES,
+  SLA_REGISTRY_ADDRESS,
   RANDOM_MINT,
   DSLA_MINT,
   //   SLA_ADDRESS,
@@ -53,6 +53,7 @@ export async function deploySlaTx(connection: Connection) {
     [Buffer.from(DSLA_POOL_SEED), slaKeypair.publicKey.toBuffer()],
     PROGRAM_ID
   )[0];
+
   const governancePda = PublicKey.findProgramAddressSync(
     [Buffer.from(GOVERNANCE_SEED)],
     PROGRAM_ID
@@ -79,7 +80,7 @@ export async function deploySlaTx(connection: Connection) {
       { ...sla },
       {
         deployer: SLA_PROTOCOL_DEPLOYER.publicKey,
-        slaRegistry: SLA_REGISTRIES_ADDRESSES[0],
+        slaRegistry: SLA_REGISTRY_ADDRESS.publicKey,
         sla: slaKeypair.publicKey,
         slaAuthority: slaAuthorityPda,
         statusRegistry: statusRegistryPda,

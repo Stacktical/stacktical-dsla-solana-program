@@ -2,7 +2,7 @@ import { initSlaRegistry } from "../anchor-client-gen/instructions";
 import {
   SLA_PROTOCOL_DEPLOYER,
   SLA_REGISTRY_SPACE,
-  SLA_REGISTRIES_ADDRESSES,
+  SLA_REGISTRY_ADDRESS,
 } from "./constants";
 import {
   Transaction,
@@ -26,6 +26,10 @@ export async function initSlaRegistryTx(connection: Connection) {
   console.log(
     "sla registry public key: ",
     slaRegistryKeypair.publicKey.toString()
+  );
+  console.log(
+    "sla registry secret key: ",
+    slaRegistryKeypair.secretKey.toString()
   );
   tx.add(
     SystemProgram.createAccount({
@@ -51,7 +55,10 @@ export async function initSlaRegistryTx(connection: Connection) {
 }
 
 export async function fetch_sla_registry_account(connection: Connection) {
-  const acc = await SlaRegistry.fetch(connection, SLA_REGISTRIES_ADDRESSES[0]);
+  const acc = await SlaRegistry.fetch(
+    connection,
+    SLA_REGISTRY_ADDRESS.publicKey
+  );
   if (acc === null) {
     console.log("account not found");
   }
