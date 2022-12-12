@@ -39,13 +39,13 @@ export const SLA_PROTOCOL_DEPLOYER = new Keypair({
 // DEVNET ADDRESSESS
 export const SLA_REGISTRY_ADDRESS = new Keypair({
   publicKey: new PublicKey(
-    "CKe5JsWvi4axgPwpiDVB5G3UkioVNNLoTvcCztNgMobM"
+    "EhvvxtcmjriJCFGTCBR8Ng81KhsbmSVw1rEXn4ja7nvg"
   ).toBuffer(),
   secretKey: Uint8Array.from([
-    161, 132, 218, 215, 222, 94, 11, 251, 131, 71, 30, 31, 5, 119, 151, 181,
-    220, 243, 66, 37, 227, 77, 78, 56, 114, 18, 154, 226, 231, 147, 225, 160,
-    168, 54, 238, 71, 34, 119, 76, 147, 16, 215, 198, 203, 178, 58, 32, 163,
-    161, 89, 214, 3, 34, 71, 251, 196, 115, 183, 240, 236, 233, 47, 101, 48,
+    5, 222, 13, 237, 210, 14, 68, 39, 28, 107, 232, 16, 48, 86, 197, 43, 249,
+    19, 198, 164, 255, 57, 113, 233, 188, 64, 2, 200, 221, 229, 252, 109, 203,
+    164, 36, 71, 51, 155, 230, 95, 87, 82, 195, 221, 154, 88, 185, 93, 188, 90,
+    157, 1, 28, 83, 178, 254, 86, 189, 210, 24, 165, 144, 82, 253,
   ]),
 });
 export const DSLA_MINT = new PublicKey(
@@ -56,6 +56,10 @@ export const RANDOM_MINT = new PublicKey(
 );
 export const AGGREGATOR_ADDRESS = new PublicKey(
   "5fbq7xq86bWFxTySesUfxxU5HWiGgx6jh1girsqRPKei"
+);
+
+export const SLA_ADDRESS = new PublicKey(
+  "D2zhnVz9baRjgekXEEP2k21gJQF8phQFTB32o7HnPaqT"
 );
 
 // VARIABLES

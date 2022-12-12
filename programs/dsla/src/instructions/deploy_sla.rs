@@ -147,7 +147,7 @@ pub fn handler(
         ctx.accounts.sla_registry.sla_account_addresses.len()
     );
     // @todo add error for this
-    require_gt!(9, ctx.accounts.mint.decimals);
+    require_gte!(9, ctx.accounts.mint.decimals);
     // @todo add test for this
     require!(
         !ctx.accounts

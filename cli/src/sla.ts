@@ -59,11 +59,11 @@ export async function deploySlaTx(connection: Connection) {
     PROGRAM_ID
   )[0];
   const utMintPda = PublicKey.findProgramAddressSync(
-    [Buffer.from(UT_MINT_SEED)],
+    [Buffer.from(UT_MINT_SEED), slaKeypair.publicKey.toBuffer()],
     PROGRAM_ID
   )[0];
   const ptMintPda = PublicKey.findProgramAddressSync(
-    [Buffer.from(PT_MINT_SEED)],
+    [Buffer.from(PT_MINT_SEED), slaKeypair.publicKey.toBuffer()],
     PROGRAM_ID
   )[0];
 
