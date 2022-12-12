@@ -6,6 +6,7 @@ import { fetch_governance_account, initGovernanceTx } from "./governance";
 import { create_aggregator_account, read_feed } from "./switchboard";
 import { initSlaRegistryTx, fetch_sla_registry_account } from "./sla_registry";
 import { deploySlaTx } from "./sla";
+import { initLockupAccountsTx } from "./lockup_accounts";
 dotenv.config();
 
 async function main() {
@@ -35,6 +36,9 @@ async function main() {
   } else if (argv["deploy_sla"]) {
     let tx = await deploySlaTx(connection);
     console.log("deployed SLA successfully with transaction id: ", tx);
+  } else if (argv["init_lockup_accounts"]) {
+    let tx = await initLockupAccountsTx(connection);
+    console.log("initialiazed lockup accounts successfully: ", tx);
   } else {
     console.log(`received no command`);
   }
