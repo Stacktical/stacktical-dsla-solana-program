@@ -5,7 +5,7 @@ use rust_decimal::prelude::*;
 use crate::constants::*;
 use crate::program::Dsla;
 use crate::state::sla::Sla;
-use crate::state::{Governance, Lockup, SlaStatus};
+use crate::state::{Governance, Lockup, SlaAuthority, SlaStatus};
 
 /// Instruction to claim all rewards up to the latest available
 /// eg. if current period is 5 and I have never claimed before, I will receive all rewards up to 4th period according to the status, leverage and deviation
@@ -24,7 +24,7 @@ pub struct WithdrawProvider<'info> {
         seeds = [SLA_AUTHORITY_SEED.as_bytes(),sla.key().as_ref()],
         bump,
     )]
-    pub sla_authority: SystemAccount<'info>,
+    pub sla_authority: Account<'info, SlaAuthority>,
 
     /// The token account to claimer the money in
     #[account(mut, associated_token::mint=mint, associated_token::authority=withdrawer)]

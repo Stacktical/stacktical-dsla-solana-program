@@ -3,7 +3,7 @@ use crate::errors::{ErrorCode, FeedErrorCode};
 use crate::program::Dsla;
 use crate::state::sla::{DslaDecimal, Sla, Slo};
 use crate::state::status_registry::{Status, StatusRegistry};
-use crate::state::Governance;
+use crate::state::{Governance, SlaAuthority};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
@@ -19,7 +19,7 @@ pub struct ValidatePeriod<'info> {
         seeds = [SLA_AUTHORITY_SEED.as_bytes(), sla.key().as_ref()],
         bump
     )]
-    pub sla_authority: SystemAccount<'info>,
+    pub sla_authority: Account<'info, SlaAuthority>,
     #[account(
         mut,
         seeds = [STATUS_REGISTRY_SEED.as_bytes(), sla.key().as_ref()],

@@ -7,6 +7,7 @@ import { create_aggregator_account, read_feed } from "./switchboard";
 import { initSlaRegistryTx, fetch_sla_registry_account } from "./sla_registry";
 import { deploySlaTx } from "./sla";
 import { initLockupAccountsTx } from "./lockup_accounts";
+import { stakerProviderTx } from "./stake_provider";
 dotenv.config();
 
 async function main() {
@@ -38,7 +39,10 @@ async function main() {
     console.log("deployed SLA successfully with transaction id: ", tx);
   } else if (argv["init_lockup_accounts"]) {
     let tx = await initLockupAccountsTx(connection);
-    console.log("initialiazed lockup accounts successfully: ", tx);
+    console.log("initialized lockup accounts successfully: ", tx);
+  } else if (argv["stake_provider"]) {
+    let tx = await stakerProviderTx(connection);
+    console.log("staked successfully: ", tx);
   } else {
     console.log(`received no command`);
   }

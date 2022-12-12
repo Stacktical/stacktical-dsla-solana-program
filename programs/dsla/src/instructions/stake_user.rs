@@ -5,7 +5,7 @@ use rust_decimal::prelude::*;
 use crate::constants::*;
 use crate::events::StakedUserSideEvent;
 use crate::state::sla::Sla;
-use crate::state::Lockup;
+use crate::state::{Lockup, SlaAuthority};
 
 /// Instruction to stake on both sides
 #[derive(Accounts)]
@@ -21,7 +21,7 @@ pub struct StakeUser<'info> {
         seeds = [SLA_AUTHORITY_SEED.as_bytes(),sla.key().as_ref()],
         bump,
     )]
-    pub sla_authority: SystemAccount<'info>,
+    pub sla_authority: Account<'info, SlaAuthority>,
 
     // @fixme make sure mint is same as defined in initialization
     #[account(
