@@ -4,11 +4,10 @@ import {
   GOVERNANCE_PARAMETERS,
   STAKERS,
 } from "./constants";
-import { program, connection } from "./init";
+import { program } from "./init";
 import { AnchorError, BN, web3 } from "@project-serum/anchor";
 import { expect } from "chai";
 import { PublicKey } from "@solana/web3.js";
-import { fetchData } from "@project-serum/anchor/dist/cjs/utils/registry";
 
 describe("Initialize the Governance PDA", () => {
   let programDataAddress: PublicKey;
@@ -24,7 +23,15 @@ describe("Initialize the Governance PDA", () => {
   it("should fail to initialize governance PDA because it's not the program upgrade authority", async () => {
     try {
       await program.methods
-        .initGovernance(GOVERNANCE_PARAMETERS)
+        .initGovernance(
+          GOVERNANCE_PARAMETERS.dslaDepositByPeriod,
+          GOVERNANCE_PARAMETERS.dslaProtocolReward,
+          GOVERNANCE_PARAMETERS.dslaValidatorReward,
+          GOVERNANCE_PARAMETERS.dslaBurnedByVerification,
+          GOVERNANCE_PARAMETERS.slaDeployerRewardsRate,
+          GOVERNANCE_PARAMETERS.protocolRewardsRate,
+          GOVERNANCE_PARAMETERS.maxLeverage
+        )
         .accounts({
           programUpgradeAuthority: STAKERS[0].publicKey,
           programData: programDataAddress,
@@ -50,7 +57,15 @@ describe("Initialize the Governance PDA", () => {
 
     try {
       await program.methods
-        .initGovernance(gov_params)
+        .initGovernance(
+          gov_params.dslaDepositByPeriod,
+          gov_params.dslaProtocolReward,
+          gov_params.dslaValidatorReward,
+          gov_params.dslaBurnedByVerification,
+          gov_params.slaDeployerRewardsRate,
+          gov_params.protocolRewardsRate,
+          gov_params.maxLeverage
+        )
         .accounts({
           programUpgradeAuthority: SLA_PROTOCOL_DEPLOYER.publicKey,
           programData: programDataAddress,
@@ -70,7 +85,15 @@ describe("Initialize the Governance PDA", () => {
 
   it("initialize governance PDA", async () => {
     await program.methods
-      .initGovernance(GOVERNANCE_PARAMETERS)
+      .initGovernance(
+        GOVERNANCE_PARAMETERS.dslaDepositByPeriod,
+        GOVERNANCE_PARAMETERS.dslaProtocolReward,
+        GOVERNANCE_PARAMETERS.dslaValidatorReward,
+        GOVERNANCE_PARAMETERS.dslaBurnedByVerification,
+        GOVERNANCE_PARAMETERS.slaDeployerRewardsRate,
+        GOVERNANCE_PARAMETERS.protocolRewardsRate,
+        GOVERNANCE_PARAMETERS.maxLeverage
+      )
       .accounts({
         programUpgradeAuthority: SLA_PROTOCOL_DEPLOYER.publicKey,
         programData: programDataAddress,

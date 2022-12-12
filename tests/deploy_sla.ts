@@ -26,7 +26,6 @@ describe("Deploy SLA", () => {
         await program.methods
           .deploySla(
             sla.slo,
-            sla.aggregatorAddress,
             sla.leverage,
             sla.start,
             sla.nPeriods,
@@ -39,7 +38,6 @@ describe("Deploy SLA", () => {
             mint: mint,
             dslaMint: dsla_mint,
             deployerDslaTokenAccount: deployerDslaTokenAccount.address,
-            aggregator: Keypair.generate().publicKey,
           })
           .signers([SLA_DEPLOYERS[sla.id], SLA_KEYPAIRS[sla.id]])
           .rpc();

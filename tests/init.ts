@@ -15,6 +15,8 @@ import { Dsla } from "../target/types/dsla";
 import { PublicKey } from "@solana/web3.js";
 import { SwitchboardTestContext } from "@switchboard-xyz/sbv2-utils";
 import { AggregatorAccount } from "@switchboard-xyz/switchboard-v2";
+import { mintToChecked } from "@solana/spl-token";
+import { createAssociatedTokenAccount } from "@solana/spl-token";
 
 // Configure the client to use the local cluster.
 anchor.setProvider(PROVIDER);
@@ -30,10 +32,6 @@ before(async () => {
   await fund_account(connection, SLA_REGISTRY_DEPLOYER.publicKey);
   await fund_account(connection, MINT_AUTHORITY.publicKey);
   await fund_account(connection, DSLA_MINT_AUTHORITY.publicKey);
-
-  SLA_DEPLOYERS.forEach(async (keypair) => {
-    await fund_account(connection, keypair.publicKey);
-  });
   STAKERS.forEach(async (keypair) => {
     await fund_account(connection, keypair.publicKey);
   });
@@ -51,8 +49,27 @@ before(async () => {
     DSLA_MINT_AUTHORITY, // fee payer
     DSLA_MINT_AUTHORITY.publicKey, // mint authority
     DSLA_MINT_AUTHORITY.publicKey, // freeze authority (you can use `null` to disable it. when you disable it, you can't turn it on again)
-    18 // decimals
+    8 // decimals
   );
+  SLA_DEPLOYERS.forEach(async (keypair) => {
+    await fund_account(connection, keypair.publicKey);
+
+    let ata = await createAssociatedTokenAccount(
+      connection, // connection
+      keypair, // fee payer
+      dsla_mint, // mint
+      keypair.publicKey // owner,
+    );
+    await mintToChecked(
+      connection,
+      keypair,
+      dsla_mint,
+      ata,
+      DSLA_MINT_AUTHORITY,
+      1_000_000_000_000,
+      8
+    );
+  });
 
   // load the Switchboard env to dictate which queue to create feed for
   // switchboard = await SwitchboardTestContext.loadFromEnv(

@@ -73,7 +73,10 @@ export const GOVERNANCE_PARAMETERS = {
     mantissa: new BN("15"),
     scale: new BN("4"),
   }, // 0.15%
-  maxLeverage: new BN(10),
+  maxLeverage: {
+    mantissa: new BN(10),
+    scale: new BN("0"),
+  },
 };
 export const SLOS = [
   {
