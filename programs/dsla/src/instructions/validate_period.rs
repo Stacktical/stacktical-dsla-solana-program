@@ -148,6 +148,10 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
                 .to_u64()
                 .unwrap();
 
+            require_gte!(
+                sla.provider_pool_size,
+                leverage_adjusted_pool.to_u128().unwrap()
+            );
             if respected {
                 sla.user_pool_size = sla.user_pool_size.checked_sub(reward as u128).unwrap();
                 sla.provider_pool_size =
