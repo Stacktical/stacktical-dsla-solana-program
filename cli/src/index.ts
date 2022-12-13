@@ -8,6 +8,9 @@ import { initSlaRegistryTx, fetch_sla_registry_account } from "./sla_registry";
 import { deploySlaTx } from "./sla";
 import { initLockupAccountsTx } from "./lockup_accounts";
 import { stakerProviderTx } from "./stake_provider";
+import { stakerUserTx } from "./stake_user";
+import { validatePeriodTx } from "./validate";
+
 dotenv.config();
 
 async function main() {
@@ -42,6 +45,12 @@ async function main() {
     console.log("initialized lockup accounts successfully: ", tx);
   } else if (argv["stake_provider"]) {
     let tx = await stakerProviderTx(connection);
+    console.log("staked successfully: ", tx);
+  } else if (argv["stake_user"]) {
+    let tx = await stakerUserTx(connection);
+    console.log("staked successfully: ", tx);
+  } else if (argv["validate_period"]) {
+    let tx = await validatePeriodTx(connection);
     console.log("staked successfully: ", tx);
   } else {
     console.log(`received no command`);
