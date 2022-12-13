@@ -1,3 +1,5 @@
+use std::ops::Mul;
+
 use crate::constants::*;
 use crate::errors::{ErrorCode, FeedErrorCode};
 use crate::program::Dsla;
@@ -95,22 +97,6 @@ impl<'info> ValidatePeriod<'info> {
     }
 }
 
-fn get_reward(slo: &Slo, sli: DslaDecimal, periods_left: u64, pool_size: u128) -> Result<u64> {
-    // @todo find a better way to set the precison
-    let precision = 18;
-    let reward = Decimal::from_u128(pool_size)
-        .unwrap()
-        .checked_div(Decimal::from_u64(periods_left).unwrap())
-        .unwrap();
-
-    Ok(reward
-        .checked_mul(slo.get_deviation(sli, precision)?)
-        .unwrap()
-        .floor()
-        .to_u64()
-        .unwrap())
-}
-
 pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
     let status_registry = &mut ctx.accounts.status_registry.status_registry;
     let slo = ctx.accounts.sla.slo.clone();
@@ -148,29 +134,31 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
             let sla = &mut ctx.accounts.sla;
             let periods_left = status_registry.len().checked_sub(period).unwrap();
 
+            let leverage_adjusted_pool = Decimal::from_u128(sla.user_pool_size)
+                .unwrap()
+                .mul(sla.leverage.to_decimal());
+            let precision = 9;
+
+            let reward = leverage_adjusted_pool
+                .checked_div(Decimal::from_usize(periods_left).unwrap())
+                .unwrap()
+                .checked_mul(slo.get_deviation(sli_dsla_decimal, precision)?)
+                .unwrap()
+                .floor()
+                .to_u64()
+                .unwrap();
+
             if respected {
-                let reward = get_reward(
-                    &slo,
-                    sli_dsla_decimal,
-                    periods_left as u64,
-                    sla.provider_pool_size,
-                )?;
+                sla.user_pool_size = sla.user_pool_size.checked_sub(reward as u128).unwrap();
                 sla.provider_pool_size =
-                    sla.provider_pool_size.checked_sub(reward as u128).unwrap();
-                sla.user_pool_size = sla.user_pool_size.checked_add(reward as u128).unwrap();
+                    sla.provider_pool_size.checked_add(reward as u128).unwrap();
                 status_registry[period] = Status::Respected {
                     value: sli_dsla_decimal,
                 };
             } else {
-                let reward = get_reward(
-                    &slo,
-                    sli_dsla_decimal,
-                    periods_left as u64,
-                    sla.user_pool_size,
-                )?;
-                sla.user_pool_size = sla.user_pool_size.checked_sub(reward as u128).unwrap();
                 sla.provider_pool_size =
-                    sla.provider_pool_size.checked_add(reward as u128).unwrap();
+                    sla.provider_pool_size.checked_sub(reward as u128).unwrap();
+                sla.user_pool_size = sla.user_pool_size.checked_add(reward as u128).unwrap();
                 status_registry[period] = Status::NotRespected {
                     value: sli_dsla_decimal,
                 };
