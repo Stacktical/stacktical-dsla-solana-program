@@ -59,7 +59,7 @@ export const AGGREGATOR_ADDRESS = new PublicKey(
 );
 
 export const SLA_ADDRESS = new PublicKey(
-  "D2zhnVz9baRjgekXEEP2k21gJQF8phQFTB32o7HnPaqT"
+  "A39fEEScS3P3mWdmZt5tPUja5QSwg85k4h4qGkyGYyJg"
 );
 
 // VARIABLES

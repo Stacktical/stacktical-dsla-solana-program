@@ -5,7 +5,6 @@ use super::DslaDecimal;
 #[account]
 pub struct StatusRegistry {
     pub status_registry: Vec<Status>,
-    pub bump: u8,
 }
 
 /// Enum defining the status
@@ -17,4 +16,10 @@ pub enum Status {
     Respected { value: DslaDecimal },
     /// Period wasn't respected with `value`
     NotRespected { value: DslaDecimal },
+}
+
+impl StatusRegistry {
+    pub fn new_vec(n_periods: u32) -> Vec<Status> {
+        vec![Status::NotVerified; n_periods as usize]
+    }
 }

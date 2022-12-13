@@ -3,9 +3,9 @@ use std::ops::Mul;
 use crate::constants::*;
 use crate::errors::{ErrorCode, FeedErrorCode};
 use crate::program::Dsla;
-use crate::state::sla::{DslaDecimal, Sla, Slo};
+use crate::state::sla::{DslaDecimal, Sla};
 use crate::state::status_registry::{Status, StatusRegistry};
-use crate::state::{Governance, SlaAuthority};
+use crate::state::{Governance, SlaAuthority, SlaStatus};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
@@ -100,9 +100,19 @@ impl<'info> ValidatePeriod<'info> {
 pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
     let status_registry = &mut ctx.accounts.status_registry.status_registry;
     let slo = ctx.accounts.sla.slo.clone();
+    let sla_status = ctx.accounts.sla.period_data.get_current_period_id()?;
 
+    require_gt!(status_registry.len(), period);
     match status_registry[period] {
+        // check that period can be validated
         Status::NotVerified => {
+            match sla_status {
+                SlaStatus::NotStarted => return err!(ErrorCode::SlaNotStarted),
+                SlaStatus::Ended => {}
+                SlaStatus::Active { period_id } => {
+                    require_gt!(period_id, period as u32);
+                }
+            }
             let max_confidence_interval = Some(100.0); // @todo change this to a protocol governance const or sla level const
             let max_staleness = 300; // @todo change this to a protocol governance variable or sla level variable
 
@@ -168,7 +178,7 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
                 };
             }
 
-            // @todo 4. REWARD VALIDATOR
+            // 4. REWARD VALIDATOR
             let sla_key = sla.key().clone();
             let authority_bump = *ctx
                 .bumps

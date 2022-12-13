@@ -23,6 +23,8 @@ pub enum ErrorCode {
     SLaAlreadyInitialized, // 6008
     #[msg("1 or more non Valid governance Parameters")]
     NonValidGovernanceParameters, // 6009
+    #[msg("Sla not started yet")]
+    SlaNotStarted, // 6010
 }
 
 #[error_code]

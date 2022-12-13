@@ -182,6 +182,9 @@ pub fn handler(
     sla.sla_deployer_address = ctx.accounts.deployer.key();
     sla.aggregator_address = ctx.accounts.aggregator.key();
 
+    // Status registry initialization
+    ctx.accounts.status_registry.status_registry = StatusRegistry::new_vec(n_periods);
+
     emit!(DeployedSlaEvent {
         sla_account_address: sla.key()
     });
