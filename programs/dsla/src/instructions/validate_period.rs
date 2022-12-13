@@ -137,7 +137,7 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
             let leverage_adjusted_pool = Decimal::from_u128(sla.user_pool_size)
                 .unwrap()
                 .mul(sla.leverage.to_decimal());
-            let precision = 9;
+            let precision = 1_000_000_000;
 
             let reward = leverage_adjusted_pool
                 .checked_div(Decimal::from_usize(periods_left).unwrap())
