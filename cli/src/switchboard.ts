@@ -1,37 +1,30 @@
-import { Connection, PublicKey } from "@solana/web3.js";
+/* eslint-disable unicorn/no-process-exit */
+import { clusterApiUrl, Connection, Keypair, PublicKey } from "@solana/web3.js";
 import {
   AggregatorAccount,
-  OracleQueueAccount,
-  loadSwitchboardProgram,
-} from "@switchboard-xyz/switchboard-v2";
+  SwitchboardProgram,
+} from "@switchboard-xyz/solana.js";
 import { SLA_PROTOCOL_DEPLOYER } from "./constants";
-import { Big } from "big.js";
+
+// SOL/USD Feed https://switchboard.xyz/explorer/2/GvDMxPzN1sCj7L26YDK2HnMRXEQmQ2aemov8YBtPS7vR
+// Create your own feed here https://publish.switchboard.xyz/
+const switchboardFeed = new PublicKey(
+  "GvDMxPzN1sCj7L26YDK2HnMRXEQmQ2aemov8YBtPS7vR"
+);
 
 export async function create_aggregator_account(connection: Connection) {
-  const program = await loadSwitchboardProgram(
+  // load the switchboard program
+  const program = await SwitchboardProgram.load(
     "devnet",
-    connection,
-    SLA_PROTOCOL_DEPLOYER
+    new Connection(clusterApiUrl("devnet")),
+    SLA_PROTOCOL_DEPLOYER // using dummy keypair since we wont be submitting any transactions
   );
 
-  const queueAccount = new OracleQueueAccount({
-    program: program,
-    // devnet permissionless queue
-    publicKey: new PublicKey("F8ce7MsckeZAbAGmxjJNetxYXQa9mKr9nnrC3qKubyYy"),
-  });
+  // load the switchboard aggregator
+  const aggregator = new AggregatorAccount(program, switchboardFeed);
 
-  return await AggregatorAccount.create(program, {
-    name: Buffer.from("ETH_USD"),
-    batchSize: 6,
-    minRequiredJobResults: 1,
-    minRequiredOracleResults: 1,
-    minUpdateDelaySeconds: 30,
-    queueAccount,
-  });
-}
-
-export async function read_feed(aggregatorAccount: AggregatorAccount) {
-  const result: Big = await aggregatorAccount.getLatestValue();
-
-  return result.toNumber();
+  console.log("aggreagator account: ", aggregator.publicKey.toString());
+  // get the result
+  const result = await aggregator.fetchLatestValue();
+  console.log(`Switchboard Result: ${result}`);
 }

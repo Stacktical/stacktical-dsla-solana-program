@@ -69,13 +69,9 @@ impl Slo {
         }
     }
 
-    pub fn get_deviation(&self, sli: DslaDecimal, precision: u128) -> Result<Decimal> {
-        if (precision % 100 != 0) || (precision == 0) {
-            return err!(ErrorCode::InvalidPrecision);
-        }
+    pub fn get_deviation(&self, sli: DslaDecimal) -> Result<Decimal> {
         let sli = sli.to_decimal();
 
-        let precision = Decimal::from_u128(precision).ok_or(ErrorCode::DecimalConversionError)?;
         let slo_type = self.slo_type;
         let slo_value = self.slo_value.to_decimal();
 
@@ -85,8 +81,6 @@ impl Slo {
         } else {
             slo_value
         })
-        .checked_mul(precision)
-        .ok_or(ErrorCode::CheckedOperationOverflow)?
         .checked_div(
             sli.checked_add(slo_value)
                 .ok_or(ErrorCode::CheckedOperationOverflow)?,
@@ -96,24 +90,17 @@ impl Slo {
         .ok_or(ErrorCode::CheckedOperationOverflow)?;
 
         if deviation
-            > (precision
-                .checked_mul(Decimal::new(25, 0))
+            > (Decimal::new(25, 0).checked_div(Decimal::new(100, 0)))
                 .ok_or(ErrorCode::CheckedOperationOverflow)?
-                .checked_div(Decimal::new(100, 0)))
-            .ok_or(ErrorCode::CheckedOperationOverflow)?
         {
-            deviation = precision
-                .checked_mul(Decimal::new(25, 0))
-                .ok_or(ErrorCode::CheckedOperationOverflow)?
+            deviation = Decimal::new(25, 0)
                 .checked_div(Decimal::new(100, 0))
                 .ok_or(ErrorCode::CheckedOperationOverflow)?;
         }
         match slo_type {
             // Deviation of 1%
-            SloType::EqualTo | SloType::NotEqualTo => Ok(precision
-                .checked_div(Decimal::new(100, 0))
-                .ok_or(ErrorCode::CheckedOperationOverflow)?),
-            _ => Ok(deviation),
+            SloType::EqualTo | SloType::NotEqualTo => Ok(Decimal::new(100, 0)),
+            _ => Ok(deviation.floor()),
         }
     }
 }

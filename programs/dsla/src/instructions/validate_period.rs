@@ -147,12 +147,11 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
             let leverage_adjusted_pool = Decimal::from_u128(sla.user_pool_size)
                 .unwrap()
                 .mul(sla.leverage.to_decimal());
-            let precision = 1_000_000_000;
 
             let reward = leverage_adjusted_pool
                 .checked_div(Decimal::from_usize(periods_left).unwrap())
                 .unwrap()
-                .checked_mul(slo.get_deviation(sli_dsla_decimal, precision)?)
+                .checked_mul(slo.get_deviation(sli_dsla_decimal)?)
                 .unwrap()
                 .floor()
                 .to_u64()
@@ -162,6 +161,9 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
                 sla.provider_pool_size,
                 leverage_adjusted_pool.to_u128().unwrap()
             );
+            msg!("user pool size: {}", sla.user_pool_size);
+            msg!("provider pool size: {}", sla.provider_pool_size);
+            msg!("reward: {}", reward);
             if respected {
                 sla.user_pool_size = sla.user_pool_size.checked_sub(reward as u128).unwrap();
                 sla.provider_pool_size =

@@ -3,7 +3,7 @@ import { Connection } from "@solana/web3.js";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import { fetch_governance_account, initGovernanceTx } from "./governance";
-import { create_aggregator_account, read_feed } from "./switchboard";
+import { create_aggregator_account } from "./switchboard";
 import { initSlaRegistryTx, fetch_sla_registry_account } from "./sla_registry";
 import { deploySlaTx } from "./sla";
 import { initLockupAccountsTx } from "./lockup_accounts";
@@ -25,10 +25,9 @@ async function main() {
     );
   } else if (argv["print_governance"]) {
     console.log(await fetch_governance_account(connection));
-  } else if (argv["create_aggregator_account"]) {
-    let aggregatorAccount = await create_aggregator_account(connection);
-    console.log(aggregatorAccount.publicKey.toString());
-    console.log(await read_feed(aggregatorAccount));
+  } else if (argv["get_feed_data"]) {
+    await create_aggregator_account(connection);
+    console.log("success");
   } else if (argv["init_sla_registry"]) {
     let tx = await initSlaRegistryTx(connection);
     console.log(

@@ -10,6 +10,7 @@ import {
   STATUS_REGISTRY_SEED,
   GOVERNANCE_SEED,
   DSLA_POOL_SEED,
+  SLAS,
 } from "./constants";
 import {
   PublicKey,
@@ -65,6 +66,7 @@ export async function validatePeriodTx(connection: Connection) {
     SLA_PROTOCOL_DEPLOYER.publicKey // owner,
   );
 
+  console.log(SLAS[0].start.toString());
   tx.add(
     validatePeriod(
       {

@@ -69,7 +69,7 @@ export async function stakerProviderTx(connection: Connection) {
   tx.add(
     stakeProvider(
       {
-        tokenAmount: new BN(10),
+        tokenAmount: new BN(10_000_000_000),
       },
       {
         staker: SLA_PROTOCOL_DEPLOYER.publicKey,

@@ -55,11 +55,11 @@ export const RANDOM_MINT = new PublicKey(
   "CiQQJhe9gp7Z2ruNY2Ck7UGQktMwNFkjWppbbPeWGpz4"
 );
 export const AGGREGATOR_ADDRESS = new PublicKey(
-  "5fbq7xq86bWFxTySesUfxxU5HWiGgx6jh1girsqRPKei"
+  "GvDMxPzN1sCj7L26YDK2HnMRXEQmQ2aemov8YBtPS7vR"
 );
 
 export const SLA_ADDRESS = new PublicKey(
-  "A39fEEScS3P3mWdmZt5tPUja5QSwg85k4h4qGkyGYyJg"
+  "21bapXHhgY5GEvjxrLu1D4iqQ2ejw3jaQCc7RVwHgsiB"
 );
 
 // VARIABLES
@@ -84,8 +84,8 @@ export const GOVERNANCE_PARAMETERS = {
 export const SLOS = [
   new Slo({
     sloValue: new DslaDecimal({
-      mantissa: new BN("1240"),
-      scale: 0,
+      mantissa: new BN("1396"),
+      scale: 2,
     }),
     sloType: new SloType.GreaterThan(),
   }),
@@ -109,16 +109,16 @@ export const SLAS = [
   {
     slo: SLOS[0],
     leverage: new DslaDecimal({ mantissa: new BN("1"), scale: 0 }),
-    start: new BN(Date.now() + 1000),
+    start: new BN(1671015900), // starts in 30 secs
     nPeriods: 100,
     periodLength: new PeriodLength.Custom({
-      length: new BN(1000 * 60 * 60),
+      length: new BN(60), //each period is 1 minute
     }),
   },
   {
     slo: SLOS[1],
     leverage: new DslaDecimal({ mantissa: new BN("2"), scale: 0 }),
-    start: new BN(Date.now() + 2000),
+    start: new BN(Date.now() / 1000 + 2000),
     nPeriods: 1,
     periodLength: new PeriodLength.Custom({
       length: new BN(1000 * 60),
@@ -127,7 +127,7 @@ export const SLAS = [
   {
     slo: SLOS[2],
     leverage: new DslaDecimal({ mantissa: new BN("05"), scale: 1 }),
-    start: new BN(Date.now() + 3000),
+    start: new BN(Date.now() / 1000 + 3000),
     nPeriods: 1000,
     periodLength: new PeriodLength.Custom({
       length: new BN(1000 * 60 * 60 * 24),
