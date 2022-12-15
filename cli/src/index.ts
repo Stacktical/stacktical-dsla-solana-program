@@ -10,6 +10,7 @@ import { initLockupAccountsTx } from "./lockup_accounts";
 import { stakerProviderTx } from "./stake_provider";
 import { stakerUserTx } from "./stake_user";
 import { validatePeriodTx } from "./validate";
+import { withdrawProviderTx, withdrawUserTx } from "./withdraw";
 
 dotenv.config();
 
@@ -51,6 +52,12 @@ async function main() {
   } else if (argv["validate_period"]) {
     let tx = await validatePeriodTx(connection);
     console.log("validated period successfully: ", tx);
+  } else if (argv["withdraw_provider"]) {
+    let tx = await withdrawProviderTx(connection);
+    console.log("withdrawn funds successfully: ", tx);
+  } else if (argv["withdraw_user"]) {
+    let tx = await withdrawUserTx(connection);
+    console.log("withdrawn funds successfully: ", tx);
   } else {
     console.log(`received no command`);
   }

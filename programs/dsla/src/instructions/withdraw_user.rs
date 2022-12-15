@@ -36,6 +36,7 @@ pub struct WithdrawUser<'info> {
 
     // @fixme make sure mint is same as defined in initialization
     #[account(
+        mut,
         constraint = mint.is_initialized == true,
         constraint = mint.key() == sla.mint_address,
     )]
@@ -51,6 +52,7 @@ pub struct WithdrawUser<'info> {
     pub pool: Box<Account<'info, TokenAccount>>,
 
     #[account(
+        mut,
         seeds = [
             UT_MINT_SEED.as_bytes(),
             sla.key().as_ref(),
@@ -60,6 +62,7 @@ pub struct WithdrawUser<'info> {
     )]
     pub ut_mint: Box<Account<'info, Mint>>,
     #[account(
+        mut,
         seeds = [
             withdrawer.key().as_ref(),
             LOCKUP_USER_SEED.as_bytes(),
@@ -69,6 +72,7 @@ pub struct WithdrawUser<'info> {
     )]
     pub ut_lockup: Box<Account<'info, Lockup>>,
     #[account(
+        mut,
         associated_token::mint = mint,
         associated_token::authority = sla.sla_deployer_address
     )]
@@ -76,6 +80,7 @@ pub struct WithdrawUser<'info> {
 
     // @todo test if effectvily only the `associated_token::authority` can be passed here
     #[account(
+            mut,
             associated_token::mint = mint,
             associated_token::authority = program_data.upgrade_authority_address.unwrap()
         )]
@@ -102,36 +107,6 @@ impl<'info> WithdrawUser<'info> {
                 mint: self.ut_mint.to_account_info(),
                 from: self.withdrawer_ut_account.to_account_info(),
                 authority: self.withdrawer.to_account_info(),
-            },
-        )
-    }
-    fn user_transfer_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
-        CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
-                from: self.pool.to_account_info(),
-                to: self.withdrawer_token_account.to_account_info(),
-                authority: self.sla_authority.to_account_info(),
-            },
-        )
-    }
-    fn deployer_transfer_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
-        CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
-                from: self.pool.to_account_info(),
-                to: self.deployer_token_account.to_account_info(),
-                authority: self.sla_authority.to_account_info(),
-            },
-        )
-    }
-    fn protocol_transfer_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
-        CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
-                from: self.pool.to_account_info(),
-                to: self.protocol_token_account.to_account_info(),
-                authority: self.sla_authority.to_account_info(),
             },
         )
     }
@@ -193,13 +168,51 @@ pub fn handler(ctx: Context<WithdrawUser>, burn_amount: u64) -> Result<()> {
         .unwrap();
 
     ctx.accounts.ut_lockup.withdraw(burn_amount)?;
+    let sla_key = ctx.accounts.sla.key().clone();
+    let authority_bump = *ctx
+        .bumps
+        .get("sla_authority")
+        .expect("sla_authority should exists");
+    let seeds = &[
+        SLA_AUTHORITY_SEED.as_bytes(),
+        sla_key.as_ref(),
+        &[authority_bump],
+    ];
 
+    let signer_seeds = &[&seeds[..]];
+    let deployer_transfer_context = CpiContext::new_with_signer(
+        ctx.accounts.token_program.to_account_info(),
+        Transfer {
+            from: ctx.accounts.pool.to_account_info(),
+            to: ctx.accounts.deployer_token_account.to_account_info(),
+            authority: ctx.accounts.sla_authority.to_account_info(),
+        },
+        signer_seeds,
+    );
+    let protocol_transfer_context = CpiContext::new_with_signer(
+        ctx.accounts.token_program.to_account_info(),
+        Transfer {
+            from: ctx.accounts.pool.to_account_info(),
+            to: ctx.accounts.protocol_token_account.to_account_info(),
+            authority: ctx.accounts.sla_authority.to_account_info(),
+        },
+        signer_seeds,
+    );
+    let user_transfer_context = CpiContext::new_with_signer(
+        ctx.accounts.token_program.to_account_info(),
+        Transfer {
+            from: ctx.accounts.pool.to_account_info(),
+            to: ctx.accounts.withdrawer_token_account.to_account_info(),
+            authority: ctx.accounts.sla_authority.to_account_info(),
+        },
+        signer_seeds,
+    );
     // @todo add test
-    token::transfer(ctx.accounts.deployer_transfer_context(), deployer_amount)?;
+    token::transfer(deployer_transfer_context, deployer_amount)?;
     // @todo add test
-    token::transfer(ctx.accounts.protocol_transfer_context(), protocol_amount)?;
+    token::transfer(protocol_transfer_context, protocol_amount)?;
     // @todo add test
-    token::transfer(ctx.accounts.user_transfer_context(), user_amount)?;
+    token::transfer(user_transfer_context, user_amount)?;
 
     ctx.accounts.sla.user_pool_size = ctx
         .accounts

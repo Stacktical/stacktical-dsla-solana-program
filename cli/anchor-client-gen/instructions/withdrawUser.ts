@@ -48,14 +48,14 @@ export function withdrawUser(
       isWritable: true,
     },
     { pubkey: accounts.withdrawerUtAccount, isSigner: false, isWritable: true },
-    { pubkey: accounts.mint, isSigner: false, isWritable: false },
+    { pubkey: accounts.mint, isSigner: false, isWritable: true },
     { pubkey: accounts.pool, isSigner: false, isWritable: true },
-    { pubkey: accounts.utMint, isSigner: false, isWritable: false },
-    { pubkey: accounts.utLockup, isSigner: false, isWritable: false },
+    { pubkey: accounts.utMint, isSigner: false, isWritable: true },
+    { pubkey: accounts.utLockup, isSigner: false, isWritable: true },
     {
       pubkey: accounts.deployerTokenAccount,
       isSigner: false,
-      isWritable: false,
+      isWritable: true,
     },
     {
       pubkey: accounts.protocolTokenAccount,

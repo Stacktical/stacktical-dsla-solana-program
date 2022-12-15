@@ -66,7 +66,6 @@ export async function validatePeriodTx(connection: Connection) {
     SLA_PROTOCOL_DEPLOYER.publicKey // owner,
   );
 
-  console.log(SLAS[0].start.toString());
   tx.add(
     validatePeriod(
       {
