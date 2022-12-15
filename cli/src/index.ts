@@ -50,7 +50,7 @@ async function main() {
     console.log("staked successfully: ", tx);
   } else if (argv["validate_period"]) {
     let tx = await validatePeriodTx(connection);
-    console.log("staked successfully: ", tx);
+    console.log("validated period successfully: ", tx);
   } else {
     console.log(`received no command`);
   }

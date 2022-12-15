@@ -12,6 +12,9 @@ pub mod instructions;
 /// Accounts and structs used in the instructions
 pub mod state;
 
+/// Logic functions independent of program level logic
+pub mod utils;
+
 use instructions::*;
 
 use crate::state::sla::{DslaDecimal, PeriodLength, Slo};

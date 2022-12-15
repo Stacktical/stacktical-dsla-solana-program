@@ -1,35 +1,31 @@
-import {
-  TransactionInstruction,
-  PublicKey,
-  AccountMeta,
-} from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@project-serum/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { PROGRAM_ID } from "../programId";
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@project-serum/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
+import { PROGRAM_ID } from "../programId"
 
 export interface StakeProviderArgs {
-  tokenAmount: BN;
+  tokenAmount: BN
 }
 
 export interface StakeProviderAccounts {
-  staker: PublicKey;
-  sla: PublicKey;
-  slaAuthority: PublicKey;
-  mint: PublicKey;
-  pool: PublicKey;
-  ptMint: PublicKey;
+  staker: PublicKey
+  sla: PublicKey
+  slaAuthority: PublicKey
+  mint: PublicKey
+  pool: PublicKey
+  ptMint: PublicKey
   /** The account to claim the money from */
-  stakerTokenAccount: PublicKey;
+  stakerTokenAccount: PublicKey
   /** pt tokens */
-  stakerPtAccount: PublicKey;
-  ptLockup: PublicKey;
-  tokenProgram: PublicKey;
-  rent: PublicKey;
-  systemProgram: PublicKey;
+  stakerPtAccount: PublicKey
+  ptLockup: PublicKey
+  tokenProgram: PublicKey
+  rent: PublicKey
+  systemProgram: PublicKey
 }
 
-export const layout = borsh.struct([borsh.u64("tokenAmount")]);
+export const layout = borsh.struct([borsh.u64("tokenAmount")])
 
 export function stakeProvider(
   args: StakeProviderArgs,
@@ -48,16 +44,16 @@ export function stakeProvider(
     { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
     { pubkey: accounts.rent, isSigner: false, isWritable: false },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
-  ];
-  const identifier = Buffer.from([18, 199, 109, 78, 14, 224, 5, 119]);
-  const buffer = Buffer.alloc(1000);
+  ]
+  const identifier = Buffer.from([18, 199, 109, 78, 14, 224, 5, 119])
+  const buffer = Buffer.alloc(1000)
   const len = layout.encode(
     {
       tokenAmount: args.tokenAmount,
     },
     buffer
-  );
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len);
-  const ix = new TransactionInstruction({ keys, programId: PROGRAM_ID, data });
-  return ix;
+  )
+  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
+  const ix = new TransactionInstruction({ keys, programId: PROGRAM_ID, data })
+  return ix
 }

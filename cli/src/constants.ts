@@ -59,7 +59,7 @@ export const AGGREGATOR_ADDRESS = new PublicKey(
 );
 
 export const SLA_ADDRESS = new PublicKey(
-  "21bapXHhgY5GEvjxrLu1D4iqQ2ejw3jaQCc7RVwHgsiB"
+  "9hGTvj7WbCrduFwh8UFNjT6Qzh4xMXcNHU1whQ1cwgbv"
 );
 
 // VARIABLES
@@ -109,7 +109,7 @@ export const SLAS = [
   {
     slo: SLOS[0],
     leverage: new DslaDecimal({ mantissa: new BN("1"), scale: 0 }),
-    start: new BN(1671015900), // starts in 30 secs
+    start: new BN(1671105900), // starts in 30 secs
     nPeriods: 100,
     periodLength: new PeriodLength.Custom({
       length: new BN(60), //each period is 1 minute

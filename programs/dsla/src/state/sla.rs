@@ -1,6 +1,6 @@
 use crate::errors::ErrorCode;
 use anchor_lang::prelude::*;
-use rust_decimal::{prelude::FromPrimitive, Decimal};
+use rust_decimal::Decimal;
 
 /// `Sla` is Service level agreement account containing all the variables to make it possible
 #[account]
@@ -66,41 +66,6 @@ impl Slo {
             SloType::SmallerOrEqualTo => Ok(sli <= slo_value),
             SloType::GreaterThan => Ok(sli > slo_value),
             SloType::GreaterOrEqualTo => Ok(sli >= slo_value),
-        }
-    }
-
-    pub fn get_deviation(&self, sli: DslaDecimal) -> Result<Decimal> {
-        let sli = sli.to_decimal();
-
-        let slo_type = self.slo_type;
-        let slo_value = self.slo_value.to_decimal();
-
-        let mut deviation: Decimal = (if sli >= slo_value {
-            sli.checked_sub(slo_value)
-                .ok_or(ErrorCode::CheckedOperationOverflow)?
-        } else {
-            slo_value
-        })
-        .checked_div(
-            sli.checked_add(slo_value)
-                .ok_or(ErrorCode::CheckedOperationOverflow)?,
-        )
-        .ok_or(ErrorCode::CheckedOperationOverflow)?
-        .checked_div(Decimal::new(2, 0))
-        .ok_or(ErrorCode::CheckedOperationOverflow)?;
-
-        if deviation
-            > (Decimal::new(25, 0).checked_div(Decimal::new(100, 0)))
-                .ok_or(ErrorCode::CheckedOperationOverflow)?
-        {
-            deviation = Decimal::new(25, 0)
-                .checked_div(Decimal::new(100, 0))
-                .ok_or(ErrorCode::CheckedOperationOverflow)?;
-        }
-        match slo_type {
-            // Deviation of 1%
-            SloType::EqualTo | SloType::NotEqualTo => Ok(Decimal::new(100, 0)),
-            _ => Ok(deviation.floor()),
         }
     }
 }

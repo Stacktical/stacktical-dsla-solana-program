@@ -1,41 +1,37 @@
-import {
-  TransactionInstruction,
-  PublicKey,
-  AccountMeta,
-} from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as borsh from "@project-serum/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import * as types from "../types"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { PROGRAM_ID } from "../programId";
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@project-serum/borsh" // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as types from "../types" // eslint-disable-line @typescript-eslint/no-unused-vars
+import { PROGRAM_ID } from "../programId"
 
 export interface DeploySlaArgs {
-  slo: types.SloFields;
-  leverage: types.DslaDecimalFields;
-  start: BN;
-  nPeriods: number;
-  periodLength: types.PeriodLengthKind;
+  slo: types.SloFields
+  leverage: types.DslaDecimalFields
+  start: BN
+  nPeriods: number
+  periodLength: types.PeriodLengthKind
 }
 
 export interface DeploySlaAccounts {
-  deployer: PublicKey;
-  slaRegistry: PublicKey;
-  sla: PublicKey;
-  slaAuthority: PublicKey;
-  statusRegistry: PublicKey;
-  mint: PublicKey;
-  pool: PublicKey;
-  dslaMint: PublicKey;
-  dslaPool: PublicKey;
+  deployer: PublicKey
+  slaRegistry: PublicKey
+  sla: PublicKey
+  slaAuthority: PublicKey
+  statusRegistry: PublicKey
+  mint: PublicKey
+  pool: PublicKey
+  dslaMint: PublicKey
+  dslaPool: PublicKey
   /** The token account to pay the DSLA fee from */
-  deployerDslaTokenAccount: PublicKey;
-  governance: PublicKey;
-  utMint: PublicKey;
-  ptMint: PublicKey;
-  aggregator: PublicKey;
+  deployerDslaTokenAccount: PublicKey
+  governance: PublicKey
+  utMint: PublicKey
+  ptMint: PublicKey
+  aggregator: PublicKey
   /** The program for interacting with the token. */
-  tokenProgram: PublicKey;
-  rent: PublicKey;
-  systemProgram: PublicKey;
+  tokenProgram: PublicKey
+  rent: PublicKey
+  systemProgram: PublicKey
 }
 
 export const layout = borsh.struct([
@@ -44,7 +40,7 @@ export const layout = borsh.struct([
   borsh.u128("start"),
   borsh.u32("nPeriods"),
   types.PeriodLength.layout("periodLength"),
-]);
+])
 
 export function deploySla(args: DeploySlaArgs, accounts: DeploySlaAccounts) {
   const keys: Array<AccountMeta> = [
@@ -69,9 +65,9 @@ export function deploySla(args: DeploySlaArgs, accounts: DeploySlaAccounts) {
     { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
     { pubkey: accounts.rent, isSigner: false, isWritable: false },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
-  ];
-  const identifier = Buffer.from([147, 228, 145, 146, 170, 51, 48, 158]);
-  const buffer = Buffer.alloc(1000);
+  ]
+  const identifier = Buffer.from([147, 228, 145, 146, 170, 51, 48, 158])
+  const buffer = Buffer.alloc(1000)
   const len = layout.encode(
     {
       slo: types.Slo.toEncodable(args.slo),
@@ -81,8 +77,8 @@ export function deploySla(args: DeploySlaArgs, accounts: DeploySlaAccounts) {
       periodLength: args.periodLength.toEncodable(),
     },
     buffer
-  );
-  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len);
-  const ix = new TransactionInstruction({ keys, programId: PROGRAM_ID, data });
-  return ix;
+  )
+  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len)
+  const ix = new TransactionInstruction({ keys, programId: PROGRAM_ID, data })
+  return ix
 }

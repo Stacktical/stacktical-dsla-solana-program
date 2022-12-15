@@ -6,11 +6,13 @@ use crate::program::Dsla;
 use crate::state::sla::{DslaDecimal, Sla};
 use crate::state::status_registry::{Status, StatusRegistry};
 use crate::state::{Governance, SlaAuthority, SlaStatus};
+use crate::utils::get_deviation;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 use rust_decimal::prelude::*;
 use switchboard_v2::{AggregatorAccountData, SwitchboardDecimal, SWITCHBOARD_PROGRAM_ID};
+
 /// Instruction to validate a period x, anyone can validate
 #[derive(Accounts)]
 pub struct ValidatePeriod<'info> {
@@ -44,9 +46,10 @@ pub struct ValidatePeriod<'info> {
     )]
     pub governance: Account<'info, Governance>,
     // @todo add constraint to check for correct DSLA mint address
-    #[account(constraint = dsla_mint.is_initialized == true)]
+    #[account(mut, constraint = dsla_mint.is_initialized == true)]
     pub dsla_mint: Box<Account<'info, Mint>>,
     #[account(
+            mut,
             seeds = [DSLA_POOL_SEED.as_bytes(), sla.key().as_ref()],
             token::mint = dsla_mint,
             token::authority = sla_authority,
@@ -64,6 +67,7 @@ pub struct ValidatePeriod<'info> {
     pub program_data: Account<'info, ProgramData>,
 
     #[account(
+        mut,
         associated_token::mint = dsla_mint,
         associated_token::authority = program_data.upgrade_authority_address.unwrap()
     )]
@@ -73,28 +77,6 @@ pub struct ValidatePeriod<'info> {
     pub rent: Sysvar<'info, Rent>,
 
     pub system_program: Program<'info, System>,
-}
-impl<'info> ValidatePeriod<'info> {
-    fn validator_transfer_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
-        CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
-                from: self.dsla_pool.to_account_info(),
-                to: self.validator_dsla_token_account.to_account_info(),
-                authority: self.sla_authority.to_account_info(),
-            },
-        )
-    }
-    fn protocol_transfer_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
-        CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
-                from: self.dsla_pool.to_account_info(),
-                to: self.protocol_dsla_token_account.to_account_info(),
-                authority: self.sla_authority.to_account_info(),
-            },
-        )
-    }
 }
 
 pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
@@ -151,7 +133,7 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
             let reward = leverage_adjusted_pool
                 .checked_div(Decimal::from_usize(periods_left).unwrap())
                 .unwrap()
-                .checked_mul(slo.get_deviation(sli_dsla_decimal)?)
+                .checked_mul(get_deviation(&slo, &sli_dsla_decimal.to_decimal())?)
                 .unwrap()
                 .floor()
                 .to_u64()
@@ -161,9 +143,7 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
                 sla.provider_pool_size,
                 leverage_adjusted_pool.to_u128().unwrap()
             );
-            msg!("user pool size: {}", sla.user_pool_size);
-            msg!("provider pool size: {}", sla.provider_pool_size);
-            msg!("reward: {}", reward);
+
             if respected {
                 sla.user_pool_size = sla.user_pool_size.checked_sub(reward as u128).unwrap();
                 sla.provider_pool_size =
@@ -191,6 +171,7 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
                 sla_key.as_ref(),
                 &[authority_bump],
             ];
+
             let signer_seeds = &[&seeds[..]];
 
             let burn_context = CpiContext::new_with_signer(
@@ -203,15 +184,35 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
                 signer_seeds,
             );
 
+            let protocol_transfer_context = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.dsla_pool.to_account_info(),
+                    to: ctx.accounts.protocol_dsla_token_account.to_account_info(),
+                    authority: ctx.accounts.sla_authority.to_account_info(),
+                },
+                signer_seeds,
+            );
+
+            let validator_transfer_context = CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.dsla_pool.to_account_info(),
+                    to: ctx.accounts.validator_dsla_token_account.to_account_info(),
+                    authority: ctx.accounts.sla_authority.to_account_info(),
+                },
+                signer_seeds,
+            );
+
             if ctx.accounts.governance.dsla_protocol_reward > 0 {
                 token::transfer(
-                    ctx.accounts.protocol_transfer_context(),
+                    protocol_transfer_context,
                     ctx.accounts.governance.dsla_protocol_reward,
                 )?;
             }
             if ctx.accounts.governance.dsla_validator_reward > 0 {
                 token::transfer(
-                    ctx.accounts.validator_transfer_context(),
+                    validator_transfer_context,
                     ctx.accounts.governance.dsla_validator_reward,
                 )?;
             }
