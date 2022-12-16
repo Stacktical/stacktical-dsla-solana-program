@@ -139,6 +139,8 @@ pub fn handler(
     start: u128,
     n_periods: u32,
     period_length: PeriodLength,
+    severity: Vec<DslaDecimal>,
+    penalty: Vec<DslaDecimal>,
 ) -> Result<()> {
     // check that the SLA registry still has space
     // @todo add error for this
@@ -156,6 +158,8 @@ pub fn handler(
             .contains(&ctx.accounts.sla.key()),
         ErrorCode::SLaAlreadyInitialized
     );
+    require_eq!(severity.len(), penalty.len());
+    require_gte!(10, severity.len());
 
     ctx.accounts
         .sla_registry
@@ -181,6 +185,8 @@ pub fn handler(
     sla.mint_address = ctx.accounts.mint.key();
     sla.sla_deployer_address = ctx.accounts.deployer.key();
     sla.aggregator_address = ctx.accounts.aggregator.key();
+    sla.penalty = severity;
+    sla.severity = penalty;
 
     // Status registry initialization
     ctx.accounts.status_registry.status_registry = StatusRegistry::new_vec(n_periods);

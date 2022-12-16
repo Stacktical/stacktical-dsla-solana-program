@@ -6,7 +6,6 @@ use crate::program::Dsla;
 use crate::state::sla::{DslaDecimal, Sla};
 use crate::state::status_registry::{Status, StatusRegistry};
 use crate::state::{Governance, SlaAuthority, SlaStatus};
-use crate::utils::get_deviation;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
@@ -133,7 +132,7 @@ pub fn handler(ctx: Context<ValidatePeriod>, period: usize) -> Result<()> {
             let reward = leverage_adjusted_pool
                 .checked_div(Decimal::from_usize(periods_left).unwrap())
                 .unwrap()
-                .checked_mul(get_deviation(&slo, &sli_dsla_decimal.to_decimal())?)
+                .checked_mul(sla.get_deviation(&sli_dsla_decimal.to_decimal())?)
                 .unwrap()
                 .floor()
                 .to_u64()

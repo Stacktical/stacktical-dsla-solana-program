@@ -12,9 +12,6 @@ pub mod instructions;
 /// Accounts and structs used in the instructions
 pub mod state;
 
-/// Logic functions independent of program level logic
-pub mod utils;
-
 use instructions::*;
 
 use crate::state::sla::{DslaDecimal, PeriodLength, Slo};
@@ -105,7 +102,18 @@ pub mod dsla {
         start: u128,
         n_periods: u32,
         period_length: PeriodLength,
+        severity: Vec<DslaDecimal>,
+        penalty: Vec<DslaDecimal>,
     ) -> Result<()> {
-        instructions::deploy_sla::handler(ctx, slo, leverage, start, n_periods, period_length)
+        instructions::deploy_sla::handler(
+            ctx,
+            slo,
+            leverage,
+            start,
+            n_periods,
+            period_length,
+            severity,
+            penalty,
+        )
     }
 }

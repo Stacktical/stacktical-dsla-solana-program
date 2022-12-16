@@ -45,7 +45,6 @@ pub struct WithdrawProvider<'info> {
     )]
     pub pt_lockup: Box<Account<'info, Lockup>>,
 
-    // @fixme make sure mint is same as defined in initialization
     #[account(
         mut,
         constraint = mint.is_initialized == true,
@@ -126,7 +125,6 @@ pub fn handler(ctx: Context<WithdrawProvider>, pt_burn_amount: u64) -> Result<()
     ctx.accounts.pt_lockup.update_available_tokens(sla_status)?;
 
     // CALCULATIONS
-
     // @todo add test
     let tokens_to_withdraw = pt_burn_amount_dec
         .checked_div(provider_pool_size_dec.checked_div(pt_supply_dec).unwrap())
@@ -243,6 +241,7 @@ pub fn handler(ctx: Context<WithdrawProvider>, pt_burn_amount: u64) -> Result<()
         },
         signer_seeds,
     );
+
     // TRANSFER TOKENS
     token::transfer(provider_transfer_context, provider_amount)?;
     token::transfer(deployer_transfer_context, deployer_amount)?;

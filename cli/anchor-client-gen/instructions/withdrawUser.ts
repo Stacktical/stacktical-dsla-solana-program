@@ -60,7 +60,7 @@ export function withdrawUser(
     {
       pubkey: accounts.protocolTokenAccount,
       isSigner: false,
-      isWritable: false,
+      isWritable: true,
     },
     { pubkey: accounts.governance, isSigner: false, isWritable: false },
     { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },

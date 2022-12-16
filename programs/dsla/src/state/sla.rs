@@ -25,6 +25,10 @@ pub struct Sla {
     pub ut_supply: u128,
     /// total provider token supply
     pub pt_supply: u128,
+    /// range of severity max of 10;
+    pub severity: Vec<DslaDecimal>,
+    /// range of penalty max of 10;
+    pub penalty: Vec<DslaDecimal>,
 }
 
 impl Sla {
@@ -39,8 +43,57 @@ impl Sla {
         16 + // provider_pool_size
         16 + // user_pool_size
         16 + // ut_supply
-        16   // pt_supply
-        ;
+        16 + // pt_supply
+        4 + (DslaDecimal::LEN * 10) + // severity
+        4 + (DslaDecimal::LEN * 10); // penalty
+
+    /// Calculate deviation between SLO and SLI
+    /// Ensures a positive deviation for greater / small comparisons
+    /// The default deviation is the percentage difference between SLI and SLO
+    ///                          | sloValue - sli |
+    /// formula =>  deviation = -------------------- %
+    ///                          (sli + sloValue) / 2
+    /// if the penalty is set to 0, default deviation will be used
+    /// if the panlty is not set, default deviation will be used
+    pub fn get_deviation(&self, sli: &Decimal) -> Result<Decimal> {
+        let mut deviation = Decimal::new(0, 0);
+
+        for (i, s) in self.severity.iter().enumerate() {
+            if sli.ge(&s.to_decimal()) {
+                deviation = self.penalty[i].to_decimal();
+            }
+        }
+
+        let slo_type = self.slo.slo_type;
+        // 25% as default
+        let deviation_cap_rate: Decimal = Decimal::new(25, 2);
+
+        if deviation.eq(&Decimal::new(0, 0)) {
+            let slo_value = self.slo.slo_value.to_decimal();
+
+            deviation = sli
+                .checked_sub(slo_value)
+                .ok_or(ErrorCode::CheckedOperationOverflow)?
+                .abs()
+                .checked_div(
+                    sli.checked_add(slo_value)
+                        .ok_or(ErrorCode::CheckedOperationOverflow)?
+                        .checked_div(Decimal::new(2, 0))
+                        .ok_or(ErrorCode::CheckedOperationOverflow)?,
+                )
+                .ok_or(ErrorCode::CheckedOperationOverflow)?;
+
+            if deviation > (deviation_cap_rate) {
+                deviation = deviation_cap_rate;
+            }
+        }
+
+        match slo_type {
+            // Deviation of 1%
+            SloType::EqualTo | SloType::NotEqualTo => Ok(deviation_cap_rate),
+            _ => Ok(deviation),
+        }
+    }
 }
 
 /// `Slo` is service level objective and contains a Decimal number that is the expected value and  SloType
@@ -52,7 +105,7 @@ pub struct Slo {
 
 impl Slo {
     /// slo_value + slo_type
-    pub const LEN: usize = 64 + 1; // @remind find out and fix for size of Decimal
+    pub const LEN: usize = DslaDecimal::LEN + SloType::LEN; // @remind find out and fix for size of Decimal
 
     pub fn is_respected(&self, sli: DslaDecimal) -> Result<bool> {
         let slo_type = self.slo_type;
@@ -81,6 +134,10 @@ pub enum SloType {
     GreaterOrEqualTo,
 }
 
+impl SloType {
+    pub const LEN: usize = 1 + 1;
+}
+
 /// struct to deal with floating point numbers
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub struct DslaDecimal {
@@ -91,6 +148,7 @@ pub struct DslaDecimal {
 }
 
 impl DslaDecimal {
+    pub const LEN: usize = 8 + 4;
     pub fn to_decimal(&self) -> Decimal {
         Decimal::new(self.mantissa, self.scale)
     }
